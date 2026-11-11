@@ -6,6 +6,13 @@ interface DragProps extends HTMLAttributes<HTMLDivElement> {
   drag?: boolean;
 }
 
+/**
+ * 可拖拽区域内的可交互区（按钮、滑块等）。
+ *
+ * - Electron：`-webkit-app-region: no-drag` 取消父级的拖动接管。
+ * - Tauri：`data-tauri-drag-region="false"` 会在拖拽判定里直接返回 false，
+ *   阻止冒泡到父级的 "deep" 拖拽区。
+ */
 const NoDrag: FC<DragProps> = ({ ref, className, drag = false, ...props }) => {
   return (
     <div
@@ -14,9 +21,11 @@ const NoDrag: FC<DragProps> = ({ ref, className, drag = false, ...props }) => {
         !drag &&
           css`
             -webkit-app-region: no-drag;
+            app-region: no-drag;
           `,
         className
       )}
+      data-tauri-drag-region={drag ? "deep" : "false"}
       {...props}
     />
   );

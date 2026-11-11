@@ -1,3 +1,4 @@
+import { RendererNet } from "@mahiru/ui/common/lib/net";
 import { apiRequest } from "@mahiru/ui/common/netease/api/request";
 import NeteaseAPIHome from "@mahiru/ui/common/netease/api/home";
 import NeteaseAPILyric from "@mahiru/ui/common/netease/api/lyric";
@@ -16,6 +17,8 @@ describe("agent NetEase API cancellation", () => {
   beforeEach(() => {
     mocks.apiRequest.mockClear();
   });
+
+  afterEach(() => vi.restoreAllMocks());
 
   it("writes the AbortSignal into object-style axios requests", () => {
     const signal = new AbortController().signal;
@@ -61,21 +64,15 @@ describe("agent NetEase API cancellation", () => {
     );
   });
 
-  it("forwards the AbortSignal to direct fetch requests", async () => {
+  it("forwards the AbortSignal to host lyric requests", async () => {
     const signal = new AbortController().signal;
-    const fetchMock = vi.fn(() =>
-      Promise.resolve({
-        json: () => Promise.resolve({})
-      })
-    );
-    vi.stubGlobal("fetch", fetchMock);
+    const request = vi.spyOn(RendererNet, "requestFromNode").mockResolvedValue(new Response("{}"));
 
     await NeteaseAPILyric.getYRC(42, signal);
 
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(request).toHaveBeenCalledWith(
       expect.stringContaining("id=42"),
-      expect.objectContaining({ signal })
+      expect.objectContaining({ signal, credentials: "include" })
     );
-    vi.unstubAllGlobals();
   });
 });

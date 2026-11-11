@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-aira-fs-save"
+description = "Enables the aira_fs_save command without any pre-configured scope."
+commands.allow = ["aira_fs_save"]
+
+[[permission]]
+identifier = "deny-aira-fs-save"
+description = "Denies the aira_fs_save command without any pre-configured scope."
+commands.deny = ["aira_fs_save"]

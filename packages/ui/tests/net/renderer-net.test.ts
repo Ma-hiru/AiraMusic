@@ -104,6 +104,28 @@ describe("RendererNet IPC serialization", () => {
     await expect(RendererNet.requestFromNode("https://y.qq.com/")).rejects.toThrow("fetch failed");
   });
 
+  it("rejects an already aborted request without invoking the host", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    await expect(
+      RendererNet.requestFromNode("https://music.163.com/", { signal: controller.signal })
+    ).rejects.toMatchObject({ name: "AbortError" });
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it("discards the host response if the request was aborted while waiting", async () => {
+    const controller = new AbortController();
+    let finish!: (result: NetFetchResponse) => void;
+    send.mockReturnValue(new Promise((resolve) => (finish = resolve)));
+    const request = RendererNet.requestFromNode("https://music.163.com/", {
+      signal: controller.signal
+    });
+    expect(send).toHaveBeenCalledOnce();
+    controller.abort();
+    finish(responseData('{"lyric":"late result"}'));
+    await expect(request).rejects.toMatchObject({ name: "AbortError" });
+  });
+
   it("searches and decrypts QQ lyrics through the real RendererNet and cloneable IPC payloads", async () => {
     const responses = [modernSearchJSON, legacySearchJSON, lyricJSON];
     send.mockImplementation(async (_event, payload) => {

@@ -5,6 +5,7 @@
     { "path": "./packages/ui/tests/tsconfig.json" },
     { "path": "./packages/app/tsconfig.json" },
     { "path": "./packages/app/tests/tsconfig.json" },
-    { "path": "./packages/agent/tests-ts/tsconfig.json" }
+    { "path": "./packages/agent/tests-ts/tsconfig.json" },
+    { "path": "./scripts/tsconfig.json" }
   ]
 }

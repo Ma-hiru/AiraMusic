@@ -21,8 +21,14 @@ const TopControl: FC = () => {
   const close = useCallback(
     async (quiting: boolean) => {
       const hidden = () => RendererWindow.current.hide();
-      const exit = () => {
-        RendererPlayerHandle[Symbol.dispose]();
+      const exit = async () => {
+        try {
+          await RendererPlayerHandle[Symbol.asyncDispose]();
+        } catch (error) {
+          Log.error("退出时保存播放状态失败", error);
+          AppToast.show({ type: "error", text: "保存播放状态失败" });
+          return;
+        }
         RendererWindow.current.hide();
         RendererWindow.all.hide();
         RendererIPC.MessageChannel.send("message_deliver_renderer_exited", "process", true);

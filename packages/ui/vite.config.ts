@@ -16,6 +16,9 @@ export default defineConfig(({ mode }) => {
   const typed_env = TypedEnv.fromEnv(env);
   mode === "development" && AppEnv.type(env);
 
+  /** 宿主实现：electron（默认）| tauri | fake。fake 用于在浏览器里验证契约，见 src/hosts/fake.ts */
+  const host = String(process.env["APP_HOST"] ?? env["APP_HOST"] ?? "electron");
+
   const defineEnv: Record<string, string> = {};
   for (const k in env) {
     defineEnv[`import.meta.env.${k}`] = JSON.stringify(env[k]);
@@ -24,6 +27,26 @@ export default defineConfig(({ mode }) => {
   return {
     define: defineEnv,
     plugins: [
+      // 假宿主必须最先注入：module script 按文档顺序执行，保证早于
+      // @mahiru/ipc/renderer 的模块级 globalThis["electron"] 读取
+      host === "fake" && {
+        name: "aira-fake-host",
+        transformIndexHtml: {
+          order: "pre" as const,
+          handler(html: string) {
+            return {
+              html,
+              tags: [
+                {
+                  tag: "script",
+                  attrs: { type: "module", src: "/src/hosts/fake.ts" },
+                  injectTo: "head-prepend" as const
+                }
+              ]
+            };
+          }
+        }
+      },
       wasm(),
       react(),
       tailwindcss(),

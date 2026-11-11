@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-aira-event"
+description = "Enables the aira_event command without any pre-configured scope."
+commands.allow = ["aira_event"]
+
+[[permission]]
+identifier = "deny-aira-event"
+description = "Denies the aira_event command without any pre-configured scope."
+commands.deny = ["aira_event"]

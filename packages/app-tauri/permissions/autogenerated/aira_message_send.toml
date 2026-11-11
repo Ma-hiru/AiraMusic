@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-aira-message-send"
+description = "Enables the aira_message_send command without any pre-configured scope."
+commands.allow = ["aira_message_send"]
+
+[[permission]]
+identifier = "deny-aira-message-send"
+description = "Denies the aira_message_send command without any pre-configured scope."
+commands.deny = ["aira_message_send"]

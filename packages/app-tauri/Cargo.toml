@@ -1,0 +1,143 @@
+[package]
+name = "aira-music-tauri"
+version = "1.4.0"
+description = "AiraMusic desktop host (Tauri)"
+authors = ["Ma-hiru"]
+edition = "2024"
+default-run = "aira-music-tauri"
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]
+
+[lib]
+name = "aira_music_tauri_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "aira-music-tauri"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
+# 单实例：等价于 Electron 的 app.requestSingleInstanceLock()
+tauri-plugin-single-instance = "2"
+# 原生文件/目录选择与保存（invoke_fs_select / invoke_fs_save）
+tauri-plugin-dialog = "2"
+
+# MCP 服务端（agent 启动前必须先就绪）
+rmcp = { version = "3", features = [
+    "server",
+    "macros",
+    "schemars",
+    "transport-streamable-http-server",
+] }
+schemars = { version = "1", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+# preserve_order：ncm 的加密/签名对 JSON 键顺序敏感，必须与 JS 对象的插入顺序一致
+serde_json = { version = "1", features = ["preserve_order"] }
+indexmap = { version = "2", features = ["serde"] }
+futures-util = "0.3"
+uuid = { version = "1", features = ["v4"] }
+anyhow = "1"
+
+# 异步 / HTTP
+tokio = { version = "1", features = ["full"] }
+axum = "0.8"
+tower-http = { version = "0.6", features = ["fs"] }
+reqwest = { version = "0.13", default-features = false, features = [
+    "json",
+    "gzip",
+    "brotli",
+    "rustls",
+    "webpki-roots",
+] }
+
+# ncm 加密栈
+aes = "0.8"
+md-5 = "0.10"
+base64 = "0.22"
+hex = "0.4"
+num-bigint = "0.4"
+rand = "0.9"
+flate2 = "1"
+# 日志导出（tar.gz）
+tar = "0.4"
+# multipart 解析（歌单封面上传）
+multer = "3"
+# NCBL 上报用的 zstd / chacha20
+zstd = "0.13"
+chacha20 = "0.9"
+# xeapi：X25519 + HKDF + AES-128-GCM
+x25519-dalek = { version = "2", features = ["static_secrets"] }
+aes-gcm = "0.10"
+sha2 = "0.10"
+hmac = "0.12"
+
+# 其他
+url = "2"
+scraper = "0.29"
+ego-tree = "0.11"
+encoding_rs = "0.8"
+
+[dev-dependencies]
+# 让 tokio 的时间可以手动推进（测试超时/取消分支）
+tokio = { version = "1", features = ["full", "test-util"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+# 系统安全存储（Electron safeStorage 的等价物）：macOS 钥匙串
+security-framework = "3"
+objc2 = "0.6"
+block2 = "0.6"
+objc2-app-kit = { version = "0.3", default-features = false, features = [
+    "std",
+    "NSWindow",
+    "NSButton",
+    "NSControl",
+    "NSView",
+    "NSResponder",
+    "NSApplication",
+    "NSImage",
+    "NSBitmapImageRep",
+    "NSGraphics",
+    # 菜单栏胶囊（platform_macos::menubar）
+    "NSStatusBar",
+    "NSStatusItem",
+    "NSFont",
+    "NSColor",
+    "NSBezierPath",
+    "NSGraphicsContext",
+    "NSAttributedString",
+    "NSStringDrawing",
+    "NSEvent",
+    "NSScreen",
+    # 全局鼠标监听（托盘面板点外面收起）
+    "block2",
+] }
+objc2-foundation = { version = "0.3", default-features = false, features = [
+    "std",
+    "NSData",
+    "NSError",
+    "NSDictionary",
+    "NSString",
+    "NSGeometry",
+    "NSAttributedString",
+    "NSRange",
+] }
+objc2-web-kit = { version = "0.3", default-features = false, features = [
+    "std",
+    "WKWebView",
+    "WKSnapshotConfiguration",
+    "block2",
+] }
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+debug = false
+debug-assertions = false
+overflow-checks = false
+panic = "abort"

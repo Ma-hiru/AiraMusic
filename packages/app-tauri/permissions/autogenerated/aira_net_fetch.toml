@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-aira-net-fetch"
+description = "Enables the aira_net_fetch command without any pre-configured scope."
+commands.allow = ["aira_net_fetch"]
+
+[[permission]]
+identifier = "deny-aira-net-fetch"
+description = "Denies the aira_net_fetch command without any pre-configured scope."
+commands.deny = ["aira_net_fetch"]

@@ -1,0 +1,27 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "AiraMusic 全部窗口的基础能力（页面由内置 listener 或 Vite dev server 提供）",
+  "windows": ["*"],
+  "remote": {
+    "urls": [
+      "http://127.0.0.1:8831",
+      "http://localhost:8831",
+      "http://127.0.0.1:8827",
+      "http://localhost:8827"
+    ]
+  },
+  "permissions": [
+    "core:default",
+    "core:window:allow-start-dragging",
+    "core:window:allow-internal-toggle-maximize",
+    "allow-aira-invoke",
+    "allow-aira-store",
+    "allow-aira-event",
+    "allow-aira-message-send",
+    "allow-aira-net-fetch",
+    "allow-aira-fs-select",
+    "allow-aira-fs-save",
+    "allow-aira-log-export"
+  ]
+}

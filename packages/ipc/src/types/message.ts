@@ -34,6 +34,8 @@ type MessageBus = {
   /** 其他窗口聚焦时命中的全局快捷键，转发给 main 统一执行 */
   bus_dispatch_shortcut: ShortcutAction;
   bus_dispatch_player_action: PlayerAction;
+  /** 宿主 → lyric：强制解锁（幂等，单向，不回报状态）。方案 B 的唯一解锁入口。 */
+  bus_deliver_lyric_lock: boolean;
   bus_deliver_focus_context: AgentFocusContext;
   bus_deliver_preview: {
     url: string;

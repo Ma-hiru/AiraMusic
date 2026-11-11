@@ -1,0 +1,653 @@
+{
+  "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0",
+  "guestToken": "guest-token-from-oracle",
+  "domain": "http://127.0.0.1:53906",
+  "cases": [
+    {
+      "name": "weapi-guest",
+      "input": {
+        "uri": "/api/v1/album/123",
+        "data": {
+          "id": "123",
+          "e_r": false,
+          "csrf_token": ""
+        },
+        "crypto": "weapi",
+        "cookie": {},
+        "ua": "",
+        "e_r": null,
+        "headers": {}
+      },
+      "request": {
+        "method": "POST",
+        "url": "/weapi/v1/album/123",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "content-type": "application/x-www-form-urlencoded",
+          "x-real-ip": "127.0.0.1",
+          "x-forwarded-for": "127.0.0.1",
+          "cookie": "__remember_me=true; ntes_kaola_ad=1; _ntes_nuid=73c288b7057cf699aefb0f8ede37bf2675102e9f28fb48cee7b114a632dde651; _ntes_nnid=73c288b7057cf699aefb0f8ede37bf2675102e9f28fb48cee7b114a632dde651%2C1794368223054; WNMCID=vyutsf.1794368223052.01.0; WEVNSM=1.0.0; osver=Microsoft-Windows-10-Professional-build-19045-64bit; deviceId=A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0; os=pc; channel=netease; appver=3.1.17.204416; NMTID=00Of4b092ecacb2bddf18a974abe67dbac3897ab0; MUSIC_A=guest-token-from-oracle",
+          "referer": "http://127.0.0.1:53906",
+          "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0",
+          "content-length": "390",
+          "accept-encoding": "gzip, compress, deflate, br",
+          "host": "127.0.0.1:53906",
+          "connection": "keep-alive"
+        },
+        "body": "params=NkCX%2FO0dowA5sgB%2B3bbOoRbcW4rp4umoBOZzsVLrHW102ruV1A3oE7jxNekr1mTO12USM3G3ZQP0yDMvl7lk5ZvODQd%2F5YrlsNFq1E2v3RQ%3D&encSecKey=419df5f0674adae04405b83ff00ecd6198975ac33260560e79a9216a77913ee1466eb416e4e65b5aeeb6518dab480d98b5d7c70188bfba3dc6ccddf81e502f4a66d78edeac2f747284cd188df451e4c09866c6785f370db2ec22b3c8a89d6c3f23fe9db5b72a0f1481ebadb8efe26456ced055619b23c1b24f6a4e6da8955b4d"
+      },
+      "plaintext": {
+        "id": "123",
+        "e_r": false,
+        "csrf_token": ""
+      },
+      "answer": {
+        "status": 200,
+        "body": {
+          "code": 200,
+          "ok": true
+        },
+        "cookie": ["NMTID=oracle-nmtid; Path=/", "MUSIC_A=oracle-guest; Path=/; HttpOnly"]
+      }
+    },
+    {
+      "name": "weapi-login",
+      "input": {
+        "uri": "/api/song/enhance/player/url",
+        "data": {
+          "ids": "[1,2]",
+          "br": 320000,
+          "e_r": false,
+          "csrf_token": "csrf-token"
+        },
+        "crypto": "weapi",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token"
+        },
+        "ua": "",
+        "e_r": null,
+        "headers": {}
+      },
+      "request": {
+        "method": "POST",
+        "url": "/weapi/song/enhance/player/url",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "content-type": "application/x-www-form-urlencoded",
+          "x-real-ip": "127.0.0.1",
+          "x-forwarded-for": "127.0.0.1",
+          "cookie": "MUSIC_U=u-token; __csrf=csrf-token; __remember_me=true; ntes_kaola_ad=1; _ntes_nuid=5bd66e2c48a2a1973e4341a7ce3ebc7afc31a7a91fe25ec591786e0130847dd4; _ntes_nnid=5bd66e2c48a2a1973e4341a7ce3ebc7afc31a7a91fe25ec591786e0130847dd4%2C1794368223062; WNMCID=vyutsf.1794368223052.01.0; WEVNSM=1.0.0; osver=Microsoft-Windows-10-Professional-build-19045-64bit; deviceId=A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0; os=pc; channel=netease; appver=3.1.17.204416; NMTID=00O9c5abc6bdafd2d34e73f6a8507d920bc98f5b4",
+          "referer": "http://127.0.0.1:53906",
+          "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0",
+          "content-length": "442",
+          "accept-encoding": "gzip, compress, deflate, br",
+          "host": "127.0.0.1:53906",
+          "connection": "keep-alive"
+        },
+        "body": "params=tzUZnV%2FQLpFG5cCgh6IUixHl8Qu18NS%2F1tGG5%2F1%2Fux7pAFHdYsT%2BlMVs8iSLIr8eKlfMTj1Un6YFr%2FmJZgHN2cEdWCyrVct5REFxmgXzdy41orpqX7HAZ5ad7y4XyNrDrXAYD5C5cTqwkpTNKb0MyQ%3D%3D&encSecKey=66a72b60902b90013b710bf5f7ff2554bc20f728f995aaa36c6563af76554868f3751771dd098c6114789e35e130680a46f2b82df25825a81a66d03a76eae8e527ba9f24af9391eefd146b7e3bbd57e4c395d861f9e2d6d9afddabe6d4921c2939b5d995b02a58b78b58956ada8bc5677197d1eb1d5aabcb036653eb8b5d2713"
+      },
+      "plaintext": {
+        "ids": "[1,2]",
+        "br": 320000,
+        "e_r": false,
+        "csrf_token": "csrf-token"
+      },
+      "answer": {
+        "status": 200,
+        "body": {
+          "code": 200,
+          "ok": true
+        },
+        "cookie": ["NMTID=oracle-nmtid; Path=/", "MUSIC_A=oracle-guest; Path=/; HttpOnly"]
+      }
+    },
+    {
+      "name": "eapi-guest",
+      "input": {
+        "uri": "/api/v2/banner/get",
+        "data": {
+          "clientType": "pc",
+          "e_r": false,
+          "header": {
+            "osver": "Microsoft-Windows-10-Professional-build-19045-64bit",
+            "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0",
+            "os": "pc",
+            "appver": "3.1.17.204416",
+            "versioncode": "140",
+            "mobilename": "",
+            "buildver": "1794368223",
+            "resolution": "1920x1080",
+            "__csrf": "",
+            "channel": "netease",
+            "requestId": "1794368223064_0384",
+            "MUSIC_A": "guest-token-from-oracle"
+          }
+        },
+        "crypto": "eapi",
+        "cookie": {},
+        "ua": "",
+        "e_r": null,
+        "headers": {}
+      },
+      "request": {
+        "method": "POST",
+        "url": "/eapi/v2/banner/get",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "content-type": "application/x-www-form-urlencoded",
+          "x-real-ip": "127.0.0.1",
+          "x-forwarded-for": "127.0.0.1",
+          "cookie": "osver=Microsoft-Windows-10-Professional-build-19045-64bit; deviceId=A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0; os=pc; appver=3.1.17.204416; versioncode=140; mobilename=; buildver=1794368223; resolution=1920x1080; __csrf=; channel=netease; requestId=1794368223064_0384; MUSIC_A=guest-token-from-oracle",
+          "user-agent": "NeteaseMusic 9.0.90/5038 (iPhone; iOS 16.2; zh_CN)",
+          "content-length": "967",
+          "accept-encoding": "gzip, compress, deflate, br",
+          "host": "127.0.0.1:53906",
+          "connection": "keep-alive"
+        },
+        "body": "params=318C28BB58E73FE0D49F8BE24280F60F48B734C591F9703EE2833D7209B55C7E03DFED957254A436C28B89E883BB1B3CD2DE1B2EE76B0A1F9D07A842171CAF335B3D4C7269BEB3897958A29F2BDD937F4E7AB312BFC1F5F7E444BC181291A8E1A484D8F6C7A2B1E5BD130F7DFEDDB87A90BCA26926ED8E0237227F9D4AC4861F2D6F8A3CE0CDA1FAA76C194F7AA21370C4689D641DCE8AE06BC50F7DB3930662C55883C30A53F71636117DA7B61B54DD82562DB2DC799F2B6930B3B2E0C012CD7D0E3A0A4FBDB84994D618B39225CCC4D970E2C95641379A40E80ED6C7B47DC82C287A5C46C34A83DF2BDD8743E07D5E79F305C7E3889F57BC55D87E9CEDCCC902F830C79D00839CF581863277C74EE2FF9B4A6F6AA94C215232ECC9C539C96E905B7B544BD75AD9B1AE0D78CC2079951EEF6B175BE666209FD897AE3BAE77096869FD0A3BBC640BBD38EB704AE42BFD8482007FABAD016EE7B1B8E955D5B06E7D64E871491D7064E99FE7FE5A864316F4BF9991F1E95B6182F6C799B43AD10E6D6D4C894758C37570DCF106100AF2A0F0C8FFDD53CC31705FB0A003F266ADF8B5CF2316D3FDF8F6BB3C4391D1857215572B563E763928CB5CE152E0025AB98309AD048CA04DF50896C0A387963D7048F6A20E19CF73B8054A132E9E7CBA9B8F"
+      },
+      "plaintext": {
+        "clientType": "pc",
+        "e_r": false,
+        "header": {
+          "osver": "Microsoft-Windows-10-Professional-build-19045-64bit",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0",
+          "os": "pc",
+          "appver": "3.1.17.204416",
+          "versioncode": "140",
+          "mobilename": "",
+          "buildver": "1794368223",
+          "resolution": "1920x1080",
+          "__csrf": "",
+          "channel": "netease",
+          "requestId": "1794368223064_0384",
+          "MUSIC_A": "guest-token-from-oracle"
+        }
+      },
+      "answer": {
+        "status": 200,
+        "body": {
+          "code": 200,
+          "ok": true
+        },
+        "cookie": ["NMTID=oracle-nmtid; Path=/", "MUSIC_A=oracle-guest; Path=/; HttpOnly"]
+      }
+    },
+    {
+      "name": "eapi-login-osx",
+      "input": {
+        "uri": "/api/w/login/cellphone",
+        "data": {
+          "type": "1",
+          "https": "true",
+          "phone": "13800000000",
+          "e_r": false,
+          "header": {
+            "osver": "15.5",
+            "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0",
+            "os": "osx",
+            "appver": "3.1.10.5100",
+            "versioncode": "140",
+            "mobilename": "",
+            "buildver": "1794368223",
+            "resolution": "1920x1080",
+            "__csrf": "csrf-from-cookie",
+            "channel": "netease",
+            "requestId": "1794368223065_0721",
+            "MUSIC_U": "u-token",
+            "NMTID": "oracle-nmtid"
+          }
+        },
+        "crypto": "eapi",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-from-cookie",
+          "os": "osx"
+        },
+        "ua": "",
+        "e_r": null,
+        "headers": {}
+      },
+      "request": {
+        "method": "POST",
+        "url": "/eapi/w/login/cellphone",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "content-type": "application/x-www-form-urlencoded",
+          "x-real-ip": "127.0.0.1",
+          "x-forwarded-for": "127.0.0.1",
+          "cookie": "osver=15.5; deviceId=A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0; os=osx; appver=3.1.10.5100; versioncode=140; mobilename=; buildver=1794368223; resolution=1920x1080; __csrf=csrf-from-cookie; channel=netease; requestId=1794368223065_0721; MUSIC_U=u-token; NMTID=oracle-nmtid",
+          "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+          "content-length": "999",
+          "accept-encoding": "gzip, compress, deflate, br",
+          "host": "127.0.0.1:53906",
+          "connection": "keep-alive"
+        },
+        "body": "params=2DF3329A90E499F6DF4EC98AFF9D59CFE544D9FF5C0A1C67DF7E899637FF3479FCD5397B5D9EA1421F9005F633F1F37E9A67DA3D8D83083AE05BCC1367CBAADD887A534CEBF6CA937BE9A5A12D910A64F783B1BF47778752A155A55E5287916F400E8D46D79A98CCB882636C5AF0C8777C786187F7C6F1584EA855967F0B7A7823D134199B570E60506DBAE4FCAB83BEAAC1EADF6210E3D9235F2AF3AA053291C5EEA90081ECF6E68773EB7004DD4F44E0A2E8AB29348F48F5492C02ACD7C135A4EDE4A3D15FA1F67E145C76AF4AC5DE092E10546713DF7607C9F6D0399779B6DBBE3E265BA163DEE35A8CAF07335C090C884B65E5CC4AE4E174A1125D40B6796BE25F75F398674380A2EA81220146BACEDF5ACBC3BF6B2AC209814DE55CFDA4E22E1FB26EDCDF6AF31EDE377D698AF6F2346C6E2B92344C2B08930D42CD6692B7DC4704817649D1B357CE87BBFAC0A50AA612EBE3AC181BB3C8EFABE588395F65F30DF4947272595B3EAF3FA1699D80A01854B9CEBC4B78C1AC483DCF269ACAAE6AC13E3CAA5BE6303963FAAA41BE78173F768D997C31C0257923E6CF7852102123BC56394A5F58120FC3E88BC58E7FB447DEA10789AF6B5FE92857A67AB899F69861339CA823829192275E8955508A5874494B1D86144BD36B7EED13902FEE7B8389AC1EC43D346AE9F966545D3106"
+      },
+      "plaintext": {
+        "type": "1",
+        "https": "true",
+        "phone": "13800000000",
+        "e_r": false,
+        "header": {
+          "osver": "15.5",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0",
+          "os": "osx",
+          "appver": "3.1.10.5100",
+          "versioncode": "140",
+          "mobilename": "",
+          "buildver": "1794368223",
+          "resolution": "1920x1080",
+          "__csrf": "csrf-from-cookie",
+          "channel": "netease",
+          "requestId": "1794368223065_0721",
+          "MUSIC_U": "u-token",
+          "NMTID": "oracle-nmtid"
+        }
+      },
+      "answer": {
+        "status": 200,
+        "body": {
+          "code": 200,
+          "ok": true
+        },
+        "cookie": ["NMTID=oracle-nmtid; Path=/", "MUSIC_A=oracle-guest; Path=/; HttpOnly"]
+      }
+    },
+    {
+      "name": "eapi-csrf-only",
+      "input": {
+        "uri": "/api/login/qrcode/unikey",
+        "data": {
+          "type": 3,
+          "e_r": false,
+          "header": {
+            "osver": "Microsoft-Windows-10-Professional-build-19045-64bit",
+            "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0",
+            "os": "pc",
+            "appver": "3.1.17.204416",
+            "versioncode": "140",
+            "mobilename": "",
+            "buildver": "1794368223",
+            "resolution": "1920x1080",
+            "__csrf": "only-csrf",
+            "channel": "netease",
+            "requestId": "1794368223065_0750",
+            "MUSIC_A": "guest-token-from-oracle",
+            "NMTID": "oracle-nmtid"
+          }
+        },
+        "crypto": "eapi",
+        "cookie": {
+          "__csrf": "only-csrf"
+        },
+        "ua": "",
+        "e_r": null,
+        "headers": {}
+      },
+      "request": {
+        "method": "POST",
+        "url": "/eapi/login/qrcode/unikey",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "content-type": "application/x-www-form-urlencoded",
+          "x-real-ip": "127.0.0.1",
+          "x-forwarded-for": "127.0.0.1",
+          "cookie": "osver=Microsoft-Windows-10-Professional-build-19045-64bit; deviceId=A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0; os=pc; appver=3.1.17.204416; versioncode=140; mobilename=; buildver=1794368223; resolution=1920x1080; __csrf=only-csrf; channel=netease; requestId=1794368223065_0750; MUSIC_A=guest-token-from-oracle; NMTID=oracle-nmtid",
+          "user-agent": "NeteaseMusic 9.0.90/5038 (iPhone; iOS 16.2; zh_CN)",
+          "content-length": "1031",
+          "accept-encoding": "gzip, compress, deflate, br",
+          "host": "127.0.0.1:53906",
+          "connection": "keep-alive"
+        },
+        "body": "params=1CA81A97B7BAEB099F29A9B99A25CD6E58E7BA5B35F25231033065C776830C0ACD212933C9432002B586ED0F458155F6B6F5729A107EC7833927084215B21EAFAEBF634090A2A6FE8EDA95140CBD71A6787AEEA83081181B40BEB4B36458E09462B4FD6AEEF2AFEC3025C2D228938554B51F65D7C51905C8AA581D6041BFD737EEFCDF0827FB3B891C3B6AABB214969DA7737F62311F06A4CE0573C4860D56F008665ED3A59B6518C688847147851763CB6C02A7DAF44D7B57E26D127D2BAB63362E48B59AEFD47C94993AB99C94258146C7E7FF7C8B7D82F4188E0027DEE3873216D9338CBA2594E382AE0FBC9847C5F996F033C6D98DF27AD3BD4C780EF9725C595864CC435B98E6961F01EE368BE6C94CB68511869E9FFB7C2D47BCD3FB1EEE359ADE54E368FDA32A0AF4AFB7F1373B298408BD8A2309EC87914DD8AA6EABFC7CE2355A162C43BB956AFF57E5A8335F8155C2180C5DF8B6253F2A7260D19AF840768521D3BA66868ADA9E72203C3CF6B43031D37569A16E5D5B57EE5C0777099B86A22F329EB76F350959C5F179FD571FDC6EE3F570587F82BBE440C60B881307B3E4FB997D32A4C50704812DAAC1281CDC51EA7D4A5AF2D79120E8926BBDAAE94BC66235C437B61DDE96CBF18B0109F6BB9D7E9FC8D2DBBB3073E1B432AA39A8D003342D6FAA52AA33C6DB93EC45FEB62735D6E21B44EC49370F01F9B4BD"
+      },
+      "plaintext": {
+        "type": 3,
+        "e_r": false,
+        "header": {
+          "osver": "Microsoft-Windows-10-Professional-build-19045-64bit",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0",
+          "os": "pc",
+          "appver": "3.1.17.204416",
+          "versioncode": "140",
+          "mobilename": "",
+          "buildver": "1794368223",
+          "resolution": "1920x1080",
+          "__csrf": "only-csrf",
+          "channel": "netease",
+          "requestId": "1794368223065_0750",
+          "MUSIC_A": "guest-token-from-oracle",
+          "NMTID": "oracle-nmtid"
+        }
+      },
+      "answer": {
+        "status": 200,
+        "body": {
+          "code": 200,
+          "ok": true
+        },
+        "cookie": ["NMTID=oracle-nmtid; Path=/", "MUSIC_A=oracle-guest; Path=/; HttpOnly"]
+      }
+    },
+    {
+      "name": "linuxapi",
+      "input": {
+        "uri": "/api/v1/album/9",
+        "data": {
+          "id": "9",
+          "e_r": false
+        },
+        "crypto": "linuxapi",
+        "cookie": {},
+        "ua": "",
+        "e_r": null,
+        "headers": {}
+      },
+      "request": {
+        "method": "POST",
+        "url": "/api/linux/forward",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "content-type": "application/x-www-form-urlencoded",
+          "x-real-ip": "127.0.0.1",
+          "x-forwarded-for": "127.0.0.1",
+          "cookie": "__remember_me=true; ntes_kaola_ad=1; _ntes_nuid=e0bd5d1beeb641ddd2f6543ee939e095aefb9ea871464717718a62a1eaf8081f; _ntes_nnid=e0bd5d1beeb641ddd2f6543ee939e095aefb9ea871464717718a62a1eaf8081f%2C1794368223066; WNMCID=vyutsf.1794368223052.01.0; WEVNSM=1.0.0; osver=Microsoft-Windows-10-Professional-build-19045-64bit; deviceId=A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0; os=pc; channel=netease; appver=3.1.17.204416; NMTID=oracle-nmtid; MUSIC_A=guest-token-from-oracle",
+          "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36",
+          "content-length": "200",
+          "accept-encoding": "gzip, compress, deflate, br",
+          "host": "127.0.0.1:53906",
+          "connection": "keep-alive"
+        },
+        "body": "eparams=A0D9583F4C5FF68DE851D2893A49DE984D9AEEC585AD1361915759AA25F3D1D215D7171E6B39AA4645603188C3A06FC437B1CB9B822797D0E7DA6F5F471B80CBE3DBE422E88283CA036354A604ED2D46347E996A083A56D5854E705D89A8FC31"
+      },
+      "plaintext": {
+        "method": "POST",
+        "url": "http://127.0.0.1:53906/api/v1/album/9",
+        "params": {
+          "id": "9",
+          "e_r": false
+        }
+      },
+      "answer": {
+        "status": 200,
+        "body": {
+          "code": 200,
+          "ok": true
+        },
+        "cookie": ["NMTID=oracle-nmtid; Path=/", "MUSIC_A=oracle-guest; Path=/; HttpOnly"]
+      }
+    },
+    {
+      "name": "default-crypto",
+      "input": {
+        "uri": "/api/song/like/get",
+        "data": {
+          "e_r": false,
+          "header": {
+            "osver": "Microsoft-Windows-10-Professional-build-19045-64bit",
+            "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0",
+            "os": "pc",
+            "appver": "3.1.17.204416",
+            "versioncode": "140",
+            "mobilename": "",
+            "buildver": "1794368223",
+            "resolution": "1920x1080",
+            "__csrf": "",
+            "channel": "netease",
+            "requestId": "1794368223067_0600",
+            "MUSIC_A": "guest-token-from-oracle",
+            "NMTID": "oracle-nmtid"
+          }
+        },
+        "crypto": "",
+        "cookie": {},
+        "ua": "",
+        "e_r": null,
+        "headers": {}
+      },
+      "request": {
+        "method": "POST",
+        "url": "/eapi/song/like/get",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "content-type": "application/x-www-form-urlencoded",
+          "x-real-ip": "127.0.0.1",
+          "x-forwarded-for": "127.0.0.1",
+          "cookie": "osver=Microsoft-Windows-10-Professional-build-19045-64bit; deviceId=A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0; os=pc; appver=3.1.17.204416; versioncode=140; mobilename=; buildver=1794368223; resolution=1920x1080; __csrf=; channel=netease; requestId=1794368223067_0600; MUSIC_A=guest-token-from-oracle; NMTID=oracle-nmtid",
+          "user-agent": "NeteaseMusic 9.0.90/5038 (iPhone; iOS 16.2; zh_CN)",
+          "content-length": "999",
+          "accept-encoding": "gzip, compress, deflate, br",
+          "host": "127.0.0.1:53906",
+          "connection": "keep-alive"
+        },
+        "body": "params=50121FC731BE7D2F9D0C7CB4DD74052248B734C591F9703EE2833D7209B55C7E2A0BE5EE12C5ACDB01AECD5781C701540AA2CDBB568129C27990A53BF097CA863DD6C78BB2A5D38006807150E860E27CD01C39C8A4EB1AC93B4FEC372C88E52731A2EB32D1F96988C5B6CF5E5729BE219318A9C67989A91E2DD9AC926646BFAF99B6AE8A06A8A24C085CFA7058EA855736CFD8A419F140353DF2E742EC42193FAAF9D989C31E31F8A0B0AF3E499DE6D8AAF9D989C31E31F8A0B0AF3E499DE6D8AA90ECE11DD10DD337F1FA6E528FCC1092A9ECD8B80C033138BE40BF02C274336B360CFC6D47FD8ADD469E28CE9A10361BF7E9CD19DF6B7B0AD1CE9BADDA0BAD1BE39FFCFB17EF366D0DE4805192B72D1036680599537277EE0DECE88C62E281E108FA82EFF7CCDEE4148EA5C223E21196DFC96B97177027B1ED1FF9A529C11F4442867A83F798E745D1DC3E817EF332C926E18093711D76A68B7B980BC645883C5A5FF02F9654A5B6F85F131859D2AA087BED4821FDC079762C4E6A53638A038920D0B481503F2B0BA389D7E95B16D69F7EF35C436FA0A28F68EC6C2F1C30B6F4DA501BAE76AA578FA8957E1527CF346F5BCB76FD74D31F097E0BFE67F5589443AF3AC125CDBBBC0AFBEDE279BAF005F04912D04E94DAB903B62E4886BB884F4E19876E75B053F406C2B9AFAAAB0A13"
+      },
+      "plaintext": {
+        "e_r": false,
+        "header": {
+          "osver": "Microsoft-Windows-10-Professional-build-19045-64bit",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0",
+          "os": "pc",
+          "appver": "3.1.17.204416",
+          "versioncode": "140",
+          "mobilename": "",
+          "buildver": "1794368223",
+          "resolution": "1920x1080",
+          "__csrf": "",
+          "channel": "netease",
+          "requestId": "1794368223067_0600",
+          "MUSIC_A": "guest-token-from-oracle",
+          "NMTID": "oracle-nmtid"
+        }
+      },
+      "answer": {
+        "status": 200,
+        "body": {
+          "code": 200,
+          "ok": true
+        },
+        "cookie": ["NMTID=oracle-nmtid; Path=/", "MUSIC_A=oracle-guest; Path=/; HttpOnly"]
+      }
+    },
+    {
+      "name": "ua-override",
+      "input": {
+        "uri": "/api/album/new",
+        "data": {
+          "limit": "10",
+          "e_r": false,
+          "header": {
+            "osver": "Microsoft-Windows-10-Professional-build-19045-64bit",
+            "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0",
+            "os": "pc",
+            "appver": "3.1.17.204416",
+            "versioncode": "140",
+            "mobilename": "",
+            "buildver": "1794368223",
+            "resolution": "1920x1080",
+            "__csrf": "",
+            "channel": "netease",
+            "requestId": "1794368223068_0719",
+            "MUSIC_A": "guest-token-from-oracle",
+            "NMTID": "oracle-nmtid"
+          }
+        },
+        "crypto": "eapi",
+        "cookie": {},
+        "ua": "CustomUA/1.0",
+        "e_r": null,
+        "headers": {}
+      },
+      "request": {
+        "method": "POST",
+        "url": "/eapi/album/new",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "content-type": "application/x-www-form-urlencoded",
+          "x-real-ip": "127.0.0.1",
+          "x-forwarded-for": "127.0.0.1",
+          "cookie": "osver=Microsoft-Windows-10-Professional-build-19045-64bit; deviceId=A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0; os=pc; appver=3.1.17.204416; versioncode=140; mobilename=; buildver=1794368223; resolution=1920x1080; __csrf=; channel=netease; requestId=1794368223068_0719; MUSIC_A=guest-token-from-oracle; NMTID=oracle-nmtid",
+          "user-agent": "CustomUA/1.0",
+          "content-length": "999",
+          "accept-encoding": "gzip, compress, deflate, br",
+          "host": "127.0.0.1:53906",
+          "connection": "keep-alive"
+        },
+        "body": "params=8C99299536A21EA08328CA9AB2ADE23BA718BA93F5AC384961E003190B9F88444056D4A66D962B121F24F3BE3040B4B435BE63F93DB123A6E172F6E42701E4B8E1C6D769FDD84A75FE248EA21DB9759A9A74E9F81D945FCB13ED015DF1F270AE610C05E0A156F50099D23228716D1EC2D0FF08EC56292844EC0F71B7BCF3E67CEA1213A19E2A0AA5EEC1CC5F41E344925604F60C19378E090CD4691D9D6FA61ECB3E00A8C9A4F13534E69675239BC5979FBDDAB0E9DB8056527AA1CB21AD6E9F128B8CE56E36319D099CFE87B47A1888359B976D30211A2BB37C9F2030C78827C6A2D94F50CE14ACB85BABA625521E0C28824CDEB854FF4AEBCE14A7ECF66B5E3B7E8C7B15C6B1F0764A1CD298039BF6D4978BB730A538E6C74366F2AD4E154EB37DB65BE410B2D2731268F2EA6F0D3135876BA9F1694C5F5786B073C9532238FD1343CED5910B5104FF0F1E2CF2E7F64273CE75957AE84E2A15D1B1D6ABBCB70EAEB13A3A5919489A1FD98423DA006AD42E61F40B33996CD5BFF9B2308DE79EEBB51AEA3AAB5B9157E655F59D140C7AB6B22052D5C0807D48D4542D0562FDF06E360FD37E40D69E67F24753EB954A5154936AE547600E0FFE0681853637F83F1AAD820F6709F03CDD06EE8FB4A63D6B4153BA584056674817AB9B65A375F5D16DFEA5D998C4D2AE6E401C09AD689EEC"
+      },
+      "plaintext": {
+        "limit": "10",
+        "e_r": false,
+        "header": {
+          "osver": "Microsoft-Windows-10-Professional-build-19045-64bit",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0",
+          "os": "pc",
+          "appver": "3.1.17.204416",
+          "versioncode": "140",
+          "mobilename": "",
+          "buildver": "1794368223",
+          "resolution": "1920x1080",
+          "__csrf": "",
+          "channel": "netease",
+          "requestId": "1794368223068_0719",
+          "MUSIC_A": "guest-token-from-oracle",
+          "NMTID": "oracle-nmtid"
+        }
+      },
+      "answer": {
+        "status": 200,
+        "body": {
+          "code": 200,
+          "ok": true
+        },
+        "cookie": ["NMTID=oracle-nmtid; Path=/", "MUSIC_A=oracle-guest; Path=/; HttpOnly"]
+      }
+    },
+    {
+      "name": "extra-headers",
+      "input": {
+        "uri": "/api/album/sublist",
+        "data": {
+          "e_r": false,
+          "csrf_token": ""
+        },
+        "crypto": "weapi",
+        "cookie": {},
+        "ua": "",
+        "e_r": null,
+        "headers": {
+          "X-Test": "1"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "/weapi/album/sublist",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "content-type": "application/x-www-form-urlencoded",
+          "x-test": "1",
+          "x-real-ip": "127.0.0.1",
+          "x-forwarded-for": "127.0.0.1",
+          "cookie": "__remember_me=true; ntes_kaola_ad=1; _ntes_nuid=323a992facb5f3d55122e4320ae31f76234acc3f5f6443c743b96a2012e2e00e; _ntes_nnid=323a992facb5f3d55122e4320ae31f76234acc3f5f6443c743b96a2012e2e00e%2C1794368223069; WNMCID=vyutsf.1794368223052.01.0; WEVNSM=1.0.0; osver=Microsoft-Windows-10-Professional-build-19045-64bit; deviceId=A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0; os=pc; channel=netease; appver=3.1.17.204416; NMTID=oracle-nmtid; MUSIC_A=guest-token-from-oracle",
+          "referer": "http://127.0.0.1:53906",
+          "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0",
+          "content-length": "344",
+          "accept-encoding": "gzip, compress, deflate, br",
+          "host": "127.0.0.1:53906",
+          "connection": "keep-alive"
+        },
+        "body": "params=FwyTQ%2FrM2U5j41KDB00dZ%2Figkr8iKRziyg9YI2Rd1k9Wnhlk4Lez40Dc%2BRVDA1kh&encSecKey=bef73b983feeebbc826c293e93d46e6f408b911824fe3697f9de30228b327066c707f20d21bb92e7d2284a7dc4a4d02a1687632f3f3826552b88646f5973d546898bd87dfc76659345d2c5382501e26dfa39b7afd6abe2bb5f67141900852caafb2496e8e89f72c97b51cb8cdfd820b0ffce5b191cc80f3892782639e2f92c47"
+      },
+      "plaintext": {
+        "e_r": false,
+        "csrf_token": ""
+      },
+      "answer": {
+        "status": 200,
+        "body": {
+          "code": 200,
+          "ok": true
+        },
+        "cookie": ["NMTID=oracle-nmtid; Path=/", "MUSIC_A=oracle-guest; Path=/; HttpOnly"]
+      }
+    },
+    {
+      "name": "e-r-true",
+      "input": {
+        "uri": "/api/album/newest",
+        "data": {
+          "e_r": true,
+          "header": {
+            "osver": "Microsoft-Windows-10-Professional-build-19045-64bit",
+            "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0",
+            "os": "pc",
+            "appver": "3.1.17.204416",
+            "versioncode": "140",
+            "mobilename": "",
+            "buildver": "1794368223",
+            "resolution": "1920x1080",
+            "__csrf": "",
+            "channel": "netease",
+            "requestId": "1794368223070_0587",
+            "MUSIC_A": "guest-token-from-oracle",
+            "NMTID": "oracle-nmtid"
+          }
+        },
+        "crypto": "eapi",
+        "cookie": {},
+        "ua": "",
+        "e_r": "true",
+        "headers": {}
+      },
+      "request": {
+        "method": "POST",
+        "url": "/eapi/album/newest",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "content-type": "application/x-www-form-urlencoded",
+          "x-real-ip": "127.0.0.1",
+          "x-forwarded-for": "127.0.0.1",
+          "cookie": "osver=Microsoft-Windows-10-Professional-build-19045-64bit; deviceId=A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0; os=pc; appver=3.1.17.204416; versioncode=140; mobilename=; buildver=1794368223; resolution=1920x1080; __csrf=; channel=netease; requestId=1794368223070_0587; MUSIC_A=guest-token-from-oracle; NMTID=oracle-nmtid",
+          "user-agent": "NeteaseMusic 9.0.90/5038 (iPhone; iOS 16.2; zh_CN)",
+          "content-length": "999",
+          "accept-encoding": "gzip, compress, deflate, br",
+          "host": "127.0.0.1:53906",
+          "connection": "keep-alive"
+        },
+        "body": "params=3BCF42D8AF0B065B583775B1926AF176976504990CF6692AF9464AAC7F27147DB4B20F22D94CAEE6C2F07A912911AEAEAD1FBD800A6CD205ADE8D0ED75925A5BBB30337CF94FB914B01DC0279B6C3BD1154F1507700AB0FC0F86FA80EDED61C2FA4083BB868FFA4428C8AB2C9EE98FF089978515C3DD6452350952915B8914D5E53A97D2B826DE5B1E84A9E1E86A7E07E92C3F88B785A92207DED87F4AEB9461583C56C2AC494BFE0573BFA560D6BD6503EEAF1E0485314CC95C626CD22D5FFC8F5E08FBE800920FB17F3209E8C849ABD617E75D885914E7E3ED786377A1C4E630A1BC992A1F3E67E6D429F005F6609C902B070F72E4D15CE6F6B15561D065E130C88F8C274D41AFA668F5B2EEAD79FF6E716AB1F743A28075240B5048A30591DB7D4BE81486C72562C024C6EB3897D0DED5740A345CAE3592482BD36208DA9997F87597C87973CAFFCCB9FD561EECD5CCBEAB26D399A539D1292ABB4FC4B7CABC4F7F74D0549EC97C640216B4B5BF81C4175B9318FB5803DC9AA822C4516EEAE5C4E8BDAA154FE968B94CBE7E05A6BCC49688B3B4D56755F95CE26002E58DEC04EE5696A9027F9F09A7AFD4589A6D15A475C8D90C826B773FBA16662DA34C8A5A1DA6F56AC8DC8B3D00D05845F44524CA5A221C1C743EC65FB256CBF4E53141D57F2A0E0C00CF2071A212C25462B2DD"
+      },
+      "plaintext": {
+        "e_r": true,
+        "header": {
+          "osver": "Microsoft-Windows-10-Professional-build-19045-64bit",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0",
+          "os": "pc",
+          "appver": "3.1.17.204416",
+          "versioncode": "140",
+          "mobilename": "",
+          "buildver": "1794368223",
+          "resolution": "1920x1080",
+          "__csrf": "",
+          "channel": "netease",
+          "requestId": "1794368223070_0587",
+          "MUSIC_A": "guest-token-from-oracle",
+          "NMTID": "oracle-nmtid"
+        }
+      },
+      "answer": {
+        "status": 200,
+        "body": {
+          "type": "Buffer",
+          "data": [
+            123, 34, 99, 111, 100, 101, 34, 58, 50, 48, 48, 44, 34, 111, 107, 34, 58, 116, 114, 117,
+            101, 125
+          ]
+        },
+        "cookie": ["NMTID=oracle-nmtid; Path=/", "MUSIC_A=oracle-guest; Path=/; HttpOnly"]
+      }
+    }
+  ]
+}

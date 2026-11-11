@@ -39,6 +39,13 @@
     "dev:ui": "yarn workspace @mahiru/ui dev",
     "dev:app": "yarn workspace aira-music dev",
     "dev:electron": "yarn wait-on tcp:8827 && yarn wait-on packages/app/dist/app/main.mjs && yarn electronmon ./packages/app --inspect=9229",
+    "dev:tauri": "yarn npm-run-all --parallel dev:ui dev:tauri:host",
+    "dev:tauri:host": "yarn wait-on tcp:8827 && cargo run --manifest-path packages/app-tauri/Cargo.toml",
+    "build:tauri": "yarn tsx ./scripts/build-tauri.ts",
+    "build:tauri:host": "cargo build --release --manifest-path packages/app-tauri/Cargo.toml",
+    "check:tauri": "cargo clippy --manifest-path packages/app-tauri/Cargo.toml --all-targets -- -D warnings",
+    "test:tauri": "cargo test --manifest-path packages/app-tauri/Cargo.toml --lib",
+    "lint:tauri": "cargo fmt --manifest-path packages/app-tauri/Cargo.toml --check",
     "devtools": "yarn react-devtools",
     "clean": "yarn npm-run-all --parallel clean:vite clean:cargo clean:go clean:dist",
     "clean:dist": "yarn rimraf dist && yarn workspace @mahiru/wasm clean:dist && yarn workspace @mahiru/native clean:dist && yarn workspace @mahiru/store clean:dist && yarn workspace @mahiru/agent clean:dist && yarn workspace @mahiru/ui clean:dist && yarn workspace aira-music clean:dist",
@@ -69,10 +76,12 @@
     "test:store": "yarn workspace @mahiru/store test",
     "test:agent": "yarn workspace @mahiru/agent test:rust",
     "push-check": "yarn npm-run-all --parallel check lint test",
-    "postinstall": "husky"
+    "postinstall": "husky",
+    "cov:tauri": "bash packages/app-tauri/scripts/coverage.sh"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@tauri-apps/cli": "^2.12.4",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^24.10.0",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",

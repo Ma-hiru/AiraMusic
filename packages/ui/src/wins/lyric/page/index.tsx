@@ -7,6 +7,7 @@ import {
   useLayoutEffect,
   type MouseEvent as ReactMouseEvent
 } from "react";
+import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
@@ -41,6 +42,16 @@ export default function LyricPage() {
   const lyric = useStableLyricInstanceFromBus(trackMetaBus.data?.lyric);
   // 歌词播放同步
   useLyricSyncFromBus(lyricRef);
+  // 方案 B：锁定后窗口完全穿透，webview 收不到鼠标事件，解锁只能由宿主触发
+  // （托盘菜单 → bus_deliver_lyric_lock）。这里只负责接收并恢复交互。
+  useEffect(
+    () =>
+      RendererIPC.MessageChannel.listen("bus_deliver_lyric_lock", "process", () => {
+        setLock(false);
+        RendererWindow.current.penetrate(false);
+      }),
+    []
+  );
   // 颜色变化
   useEffect(() => {
     if (color !== undefined) window.localStorage.setItem("lyricWindowColor", color);

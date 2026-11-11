@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-aira-log-export"
+description = "Enables the aira_log_export command without any pre-configured scope."
+commands.allow = ["aira_log_export"]
+
+[[permission]]
+identifier = "deny-aira-log-export"
+description = "Denies the aira_log_export command without any pre-configured scope."
+commands.deny = ["aira_log_export"]

@@ -17,6 +17,7 @@ import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useListenable } from "@/common/hooks/use-listenable";
+import { useWindowVisible } from "@/common/hooks/use-window-visible";
 import { useShortcutForwarder } from "@/common/hooks/use-shortcut-forwarder";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import AppToast from "@/common/components/display/toast";
@@ -38,6 +39,13 @@ type TrayAction = {
 const TrayPage: FC = () => {
   // 托盘窗聚焦时，命中的快捷键转发给主窗口执行
   useShortcutForwarder();
+  // 面板绝大部分时间不可见，WKWebView 会节流渲染层（甚至暂停 web 进程），
+  // 期间的 bus 推送可能错过 —— 每次显示出来都通过 update 通道向主窗口要一次最新状态
+  const visible = useWindowVisible();
+  useEffect(() => {
+    if (!visible) return;
+    RendererIPC.MessageChannel.commit("bus_dispatch_update", ["track-meta", "track-progress"]);
+  }, [visible]);
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
   const progressBus = useListenable(RendererIPCMessageBus.progress);
   const themeBus = useThemeInjectFromBus();

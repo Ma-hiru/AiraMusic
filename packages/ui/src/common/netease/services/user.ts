@@ -76,19 +76,22 @@ export default class _NeteaseUserSource {
         await NeteaseCookie.refresh();
         Log.info("refresh cookies");
         refreshCookiesDate = new Date().getDate();
-        void RendererIdle.runAsync(async function* () {
-          const deviceName = await RendererDevice.deviceName;
-          yield;
-          if (deviceName) {
-            const ok = await _NeteaseUserSource.reportDeviceName(deviceName);
-            yield;
-            ok && Log.info(`report device name(${deviceName}) success`);
-            !ok && Log.error("report device name error");
-          } else {
-            Log.error("get device name null");
-          }
-        });
       }
+      // 设备名上报与「跨天刷新 cookie」解耦：
+      // 原来写在跨天分支里，导致首次登录（refreshCookiesDate 刚被初始化成今天）
+      // 永远不会上报，登录设备管理里一直看不到本机名字。
+      void RendererIdle.runAsync(async function* () {
+        const deviceName = await RendererDevice.deviceName;
+        yield;
+        if (deviceName) {
+          const ok = await _NeteaseUserSource.reportDeviceName(deviceName);
+          yield;
+          ok && Log.info(`report device name(${deviceName}) success`);
+          !ok && Log.error("report device name error");
+        } else {
+          Log.error("get device name null");
+        }
+      });
 
       const userProfile = await _NeteaseUserSource.getUserProfile(uid);
       if (!userProfile) return null;

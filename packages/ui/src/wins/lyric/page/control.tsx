@@ -223,12 +223,12 @@ const Control: FC<ControlProps> = ({
           </NoDrag>
           <NoDrag className="flex ml-2 gap-1 items-center">
             {lock ? (
-              <LucideLock
-                className="size-4 cursor-pointer hover:opacity-50 duration-300 ease-in-out transition-all active:scale-90"
-                onClick={() => setLock(false)}
-                onMouseLeave={() => RendererWindow.current.penetrate(true)}
-                onMouseOver={() => RendererWindow.current.penetrate(false)}
-              />
+              // 方案 B：锁定态窗口完全穿透，鼠标事件不会进入 webview，
+              // 因此这里不能依赖 hover / click 解锁，只做状态提示。
+              // 解锁入口在托盘菜单（宿主侧下发 bus_deliver_lyric_lock）。
+              <span title="已锁定，可从托盘菜单解锁">
+                <LucideLock className="size-4 cursor-default opacity-70" />
+              </span>
             ) : (
               <>
                 <LockKeyholeOpen

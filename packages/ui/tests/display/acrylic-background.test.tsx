@@ -37,6 +37,7 @@ const context = {
 };
 let images: { reject: () => void; resolve: () => void; image: HTMLImageElement }[];
 let frames: Map<number, FrameRequestCallback>;
+let nativeFilterSupported: boolean;
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -47,13 +48,20 @@ beforeEach(() => {
   resize.height = 650;
   images = [];
   frames = new Map();
+  nativeFilterSupported = true;
   let nextId = 0;
   vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
     frames.set(++nextId, callback);
     return nextId;
   });
   vi.stubGlobal("cancelAnimationFrame", (id: number) => frames.delete(id));
-  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(context as any);
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(function (
+    this: HTMLCanvasElement
+  ) {
+    const drawing = { ...context, canvas: this };
+    if (!nativeFilterSupported) Reflect.deleteProperty(drawing, "filter");
+    return drawing as unknown as CanvasRenderingContext2D;
+  });
   vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockImplementation(() => resize.width);
   vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockImplementation(() => resize.height);
   vi.stubGlobal(
@@ -144,6 +152,29 @@ it("crossfades prepared covers and keeps the incoming canvases when committing t
   expect(context.drawImage).toHaveBeenCalledTimes(drawCount);
   expect(frames.size).toBe(0);
   expect(vi.getTimerCount()).toBe(0);
+});
+
+it("uses display-space CSS filters when the drawing context has no native filter support", async () => {
+  nativeFilterSupported = false;
+  const { container } = render(
+    <AcrylicBackground
+      blur={60}
+      saturate={1.4}
+      brightness={0.7}
+      src="https://covers.test/one.png"
+      fluid
+    />
+  );
+  await act(async () => images[0]!.resolve());
+  const canvases = container.querySelectorAll("canvas");
+  expect(canvases).toHaveLength(4);
+  expect(canvases[0]!.style.filter).toBe("blur(60px) brightness(0.7) saturate(1.4)");
+  for (const canvas of canvases) {
+    expect(Math.max(canvas.width, canvas.height)).toBeLessThanOrEqual(512);
+    expect(canvas.style.filter).toMatch(
+      /^blur\([\d.]+px\) brightness\([\d.]+\) saturate\([\d.]+\)$/
+    );
+  }
 });
 
 it("ignores stale image decodes and cancels transitions when switching back or clearing the source", async () => {

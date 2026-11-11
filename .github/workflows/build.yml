@@ -1,0 +1,116 @@
+# 跨平台安装包：macOS(dmg, arm64 + x64) / Windows(exe + msi, x64) / Linux(deb + rpm + AppImage + tar.gz, x64)
+#
+# Tauri 和 electron-builder 一样，安装包只能在对应系统上打（dmg 需要 macOS，
+# exe/msi 需要 Windows，deb/rpm/AppImage 需要 Linux），所以这里用矩阵构建。
+#
+# 触发：推 tag（v*）自动出包并附到 Release；也可以手动 Run workflow。
+#
+# 注意：本文件没有在本机跑过（macOS 开发机没有 Windows/Linux 环境），
+# 首次使用请先手动触发一次确认依赖都装对了。
+
+name: build
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bundle:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: macos-arm64
+            os: macos-14
+            target: aarch64-apple-darwin
+          - label: macos-x64
+            os: macos-13
+            target: x86_64-apple-darwin
+          - label: windows-x64
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - label: linux-x64
+            os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 启用 corepack
+        run: corepack enable
+
+      # Go：store 子进程（aira-music-cache）
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: packages/store/go.mod
+          cache-dependency-path: packages/store/go.sum
+
+      # Rust：宿主 + agent
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: packages/app-tauri -> target
+
+      # Linux 打包需要 webkit2gtk 等系统库；deb/rpm 还要对应打包工具
+      - name: 安装 Linux 系统依赖
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev patchelf \
+            build-essential curl wget file libssl-dev libayatana-appindicator3-dev \
+            rpm
+
+      # 打 AppImage 需要 FUSE，GitHub runner 上装一下
+      - name: 安装 AppImage 依赖
+        if: matrix.os == 'ubuntu-22.04'
+        run: sudo apt-get install -y libfuse2
+
+      - name: 安装 JS 依赖
+        run: yarn install --immutable
+
+      # 一条命令搞定：wasm → ui → store → agent → tauri build → 收集到 dist/
+      - name: 打包
+        run: yarn build:tauri --target ${{ matrix.target }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.label }}
+          path: |
+            dist/*.dmg
+            dist/*.exe
+            dist/*.msi
+            dist/*.deb
+            dist/*.rpm
+            dist/*.AppImage
+            dist/*.tar.gz
+          if-no-files-found: error
+
+  release:
+    needs: bundle
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*

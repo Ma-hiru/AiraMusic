@@ -1,21 +1,29 @@
-import { RendererCache } from "@/common/lib/cache";
+import { Log } from "@/common/lib/log";
 import { useListenable } from "@/common/hooks/use-listenable";
 import RendererPlayer from "@/common/player/core";
+
+import { RendererPlayerStorage } from "./player-storage";
+
+const savedPlayer = await RendererPlayerStorage.load<
+  ReturnType<typeof RendererPlayer.save>
+>().catch((error: unknown) => {
+  Log.error("读取播放状态失败", error);
+  return undefined;
+});
 
 export default class RendererPlayerHandle {
   //region inner
   private static _player: Nullable<RendererPlayer>;
 
-  private static savePlayer() {
+  private static async savePlayer() {
     if (!this._player) return;
     this._player.audio.pause();
-    RendererCache.browser.setOne("app_player", RendererPlayer.save(this._player));
+    await RendererPlayerStorage.save(RendererPlayer.save(this._player));
   }
 
   private static loadPlayer() {
     if (this._player) return this._player;
-    const data = RendererCache.browser.getOne<ReturnType<typeof RendererPlayer.save>>("app_player");
-    if (data) return RendererPlayer.fromSave(data);
+    if (savedPlayer) return RendererPlayer.fromSave(savedPlayer);
     return null;
   }
 
@@ -35,8 +43,8 @@ export default class RendererPlayerHandle {
     return usePlayer;
   }
 
-  static [Symbol.dispose]() {
-    this.savePlayer();
+  static async [Symbol.asyncDispose]() {
+    await this.savePlayer();
   }
 
   static {

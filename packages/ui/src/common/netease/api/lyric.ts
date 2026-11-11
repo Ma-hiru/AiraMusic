@@ -1,4 +1,5 @@
 import { Log } from "@/common/lib/log";
+import { RendererNet } from "@/common/lib/net";
 import { apiRequest } from "@/common/netease/api/request";
 
 type TTMLyricMeta = {
@@ -29,11 +30,16 @@ export default class _NeteaseLyricAPI {
   }
 
   static getYRC(id: number, signal?: AbortSignal) {
-    return <Promise<NeteaseAPI.NeteaseLyricResponseNew>>fetch(
+    // 这个接口在 music.163.com 上，属于跨域直连：Electron 靠主窗口的
+    // `webSecurity: false` 才能读到，Tauri/WKWebView 没有这个开关，
+    // 直连会被 CORS 拦掉（"Load failed"）→ 歌词退化成「歌词加载失败」。
+    // 统一走宿主代发（invoke_net_fetch），并把登录态 cookie 一起带上。
+    return <Promise<NeteaseAPI.NeteaseLyricResponseNew>>RendererNet.requestFromNode(
       `https://music.163.com/api/song/lyric/v1?tv=0&lv=0&rv=0&kv=0&yv=0&ytv=0&yrv=0&cp=false&id=${id}`,
       {
         method: "GET",
         credentials: "include",
+        headers: document.cookie ? { cookie: document.cookie } : undefined,
         signal
       }
     ).then((res) => res.json());

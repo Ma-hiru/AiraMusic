@@ -13,6 +13,39 @@ interface AcrylicTextureProps {
 // 背景已经重度模糊，无需按窗口尺寸或 DPR 分配纹理。
 const MAX_TEXTURE_SIZE = 512;
 
+/**
+ * WKWebView（Safari/WebKit）没有 `CanvasRenderingContext2D.filter`，
+ * 直接写 `ctx.filter = "blur(...)"` 会被静默忽略 —— 纹理会保持锐利，
+ * 再经父层的 `mix-blend-mode: screen` 叠加，就是「整屏橙色泛光 + 还能看清封面」的观感。
+ *
+ * 替代方案：把同样的滤镜链搬到 canvas 元素的 CSS `filter` 上。
+ * - CSS blur 是真正的（GPU）高斯，观感与 Chromium 的 ctx.filter 基本一致；
+ * - 不读取像素，因此跨域封面不会触发 canvas taint 限制（getImageData 会抛错）。
+ *
+ * 注意 `blurDisplayPx` 必须是**显示空间**的像素值：ctx.filter 的半径会被纹理缩放
+ * 放大，而 CSS blur 直接作用在元素最终尺寸上，两者需要换算，否则会明显偏弱。
+ */
+function paintAcrylic(
+  context: CanvasRenderingContext2D,
+  source: HTMLCanvasElement,
+  blurCanvasPx: number,
+  blurDisplayPx: number,
+  brightness: number,
+  saturate: number
+) {
+  const canvas = context.canvas;
+
+  if (Reflect.has(context, "filter")) {
+    canvas.style.filter = "";
+    context.filter = `blur(${blurCanvasPx}px) brightness(${brightness}) saturate(${saturate})`;
+    context.drawImage(source, 0, 0);
+    return;
+  }
+
+  context.drawImage(source, 0, 0);
+  canvas.style.filter = `blur(${blurDisplayPx}px) brightness(${brightness}) saturate(${saturate})`;
+}
+
 const AcrylicTexture: FC<AcrylicTextureProps> = ({
   blur,
   image,
@@ -64,8 +97,16 @@ const AcrylicTexture: FC<AcrylicTextureProps> = ({
       imageWidth,
       imageHeight
     );
-    context.filter = `blur(${Math.max(0, blur) * scale}px) brightness(${brightness}) saturate(${saturate})`;
-    context.drawImage(source, 0, 0);
+    paintAcrylic(
+      context,
+      source,
+      // Chromium：ctx.filter 作用于纹理坐标，需要乘缩放
+      Math.max(0, blur) * scale,
+      // WebKit：CSS blur 作用于元素最终尺寸，直接用显示空间半径
+      Math.max(0, blur),
+      brightness,
+      saturate
+    );
   }, [blur, brightness, height, image, padding, round, saturate, width]);
 
   return (

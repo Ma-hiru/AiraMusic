@@ -1,0 +1,5367 @@
+{
+  "cases": [
+    {
+      "identifier": "album",
+      "route": "/album",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/v1/album/1974443814",
+      "data": {},
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "album",
+      "route": "/album",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/v1/album/1974443814",
+      "data": {},
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "album_detail_dynamic",
+      "route": "/album/detail/dynamic",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/album/detail/dynamic",
+      "data": {
+        "id": "1974443814"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "album_detail_dynamic",
+      "route": "/album/detail/dynamic",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/album/detail/dynamic",
+      "data": {
+        "id": "1974443814"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "album_new",
+      "route": "/album/new",
+      "label": "guest",
+      "query": {
+        "limit": "10",
+        "offset": "0",
+        "area": "7",
+        "cookie": {}
+      },
+      "sourceFields": ["limit", "offset", "area"],
+      "uri": "/api/album/new",
+      "data": {
+        "limit": "10",
+        "offset": "0",
+        "total": true,
+        "area": "7"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "album_new",
+      "route": "/album/new",
+      "label": "login",
+      "query": {
+        "limit": "10",
+        "offset": "0",
+        "area": "7",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["limit", "offset", "area"],
+      "uri": "/api/album/new",
+      "data": {
+        "limit": "10",
+        "offset": "0",
+        "total": true,
+        "area": "7"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "album_sub",
+      "route": "/album/sub",
+      "label": "guest",
+      "query": {
+        "t": "1",
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["t", "id"],
+      "uri": "/api/album/sub",
+      "data": {
+        "id": "1974443814"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "album_sub",
+      "route": "/album/sub",
+      "label": "login",
+      "query": {
+        "t": "1",
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["t", "id"],
+      "uri": "/api/album/sub",
+      "data": {
+        "id": "1974443814"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "album_sublist",
+      "route": "/album/sublist",
+      "label": "guest",
+      "query": {
+        "limit": "10",
+        "offset": "0",
+        "cookie": {}
+      },
+      "sourceFields": ["limit", "offset"],
+      "uri": "/api/album/sublist",
+      "data": {
+        "limit": "10",
+        "offset": "0",
+        "total": true
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "album_sublist",
+      "route": "/album/sublist",
+      "label": "login",
+      "query": {
+        "limit": "10",
+        "offset": "0",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["limit", "offset"],
+      "uri": "/api/album/sublist",
+      "data": {
+        "limit": "10",
+        "offset": "0",
+        "total": true
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "artist_album",
+      "route": "/artist/album",
+      "label": "guest",
+      "query": {
+        "limit": "10",
+        "offset": "0",
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["limit", "offset", "id"],
+      "uri": "/api/artist/albums/1974443814",
+      "data": {
+        "limit": "10",
+        "offset": "0",
+        "total": true
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "artist_album",
+      "route": "/artist/album",
+      "label": "login",
+      "query": {
+        "limit": "10",
+        "offset": "0",
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["limit", "offset", "id"],
+      "uri": "/api/artist/albums/1974443814",
+      "data": {
+        "limit": "10",
+        "offset": "0",
+        "total": true
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "artist_desc",
+      "route": "/artist/desc",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/artist/introduction",
+      "data": {
+        "id": "1974443814"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "artist_desc",
+      "route": "/artist/desc",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/artist/introduction",
+      "data": {
+        "id": "1974443814"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "artist_detail",
+      "route": "/artist/detail",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/artist/head/info/get",
+      "data": {
+        "id": "1974443814"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "artist_detail",
+      "route": "/artist/detail",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/artist/head/info/get",
+      "data": {
+        "id": "1974443814"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "artist_follow_count",
+      "route": "/artist/follow/count",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/artist/follow/count/get",
+      "data": {
+        "id": "1974443814"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "artist_follow_count",
+      "route": "/artist/follow/count",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/artist/follow/count/get",
+      "data": {
+        "id": "1974443814"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "artist_sub",
+      "route": "/artist/sub",
+      "label": "guest",
+      "query": {
+        "t": "1",
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["t", "id"],
+      "uri": "/api/artist/sub",
+      "data": {
+        "artistId": "1974443814",
+        "artistIds": "[1974443814]"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "artist_sub",
+      "route": "/artist/sub",
+      "label": "login",
+      "query": {
+        "t": "1",
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["t", "id"],
+      "uri": "/api/artist/sub",
+      "data": {
+        "artistId": "1974443814",
+        "artistIds": "[1974443814]"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "artist_sublist",
+      "route": "/artist/sublist",
+      "label": "guest",
+      "query": {
+        "limit": "10",
+        "offset": "0",
+        "cookie": {}
+      },
+      "sourceFields": ["limit", "offset"],
+      "uri": "/api/artist/sublist",
+      "data": {
+        "limit": "10",
+        "offset": "0",
+        "total": true
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "artist_sublist",
+      "route": "/artist/sublist",
+      "label": "login",
+      "query": {
+        "limit": "10",
+        "offset": "0",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["limit", "offset"],
+      "uri": "/api/artist/sublist",
+      "data": {
+        "limit": "10",
+        "offset": "0",
+        "total": true
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "artist_top_song",
+      "route": "/artist/top/song",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/artist/top/song",
+      "data": {
+        "id": "1974443814"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "artist_top_song",
+      "route": "/artist/top/song",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/artist/top/song",
+      "data": {
+        "id": "1974443814"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "banner",
+      "route": "/banner",
+      "label": "guest",
+      "query": {
+        "type": "1",
+        "cookie": {}
+      },
+      "sourceFields": ["type"],
+      "uri": "/api/v2/banner/get",
+      "data": {
+        "clientType": "android"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "banner",
+      "route": "/banner",
+      "label": "login",
+      "query": {
+        "type": "1",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["type"],
+      "uri": "/api/v2/banner/get",
+      "data": {
+        "clientType": "android"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "captcha_sent",
+      "route": "/captcha/sent",
+      "label": "guest",
+      "query": {
+        "ctcode": "1",
+        "phone": "13800000000",
+        "cookie": {}
+      },
+      "sourceFields": ["ctcode", "phone"],
+      "uri": "/api/sms/captcha/sent",
+      "data": {
+        "ctcode": "1",
+        "secrete": "music_middleuser_pclogin",
+        "cellphone": "13800000000"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "captcha_sent",
+      "route": "/captcha/sent",
+      "label": "login",
+      "query": {
+        "ctcode": "1",
+        "phone": "13800000000",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["ctcode", "phone"],
+      "uri": "/api/sms/captcha/sent",
+      "data": {
+        "ctcode": "1",
+        "secrete": "music_middleuser_pclogin",
+        "cellphone": "13800000000"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "check_music",
+      "route": "/check/music",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "br": "320000",
+        "cookie": {}
+      },
+      "sourceFields": ["id", "br"],
+      "uri": "/api/song/enhance/player/url",
+      "data": {
+        "ids": "[1974443814]",
+        "br": 320000
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": "Cannot read properties of undefined (reading '0')"
+    },
+    {
+      "identifier": "check_music",
+      "route": "/check/music",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "br": "320000",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id", "br"],
+      "uri": "/api/song/enhance/player/url",
+      "data": {
+        "ids": "[1974443814]",
+        "br": 320000
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": "Cannot read properties of undefined (reading '0')"
+    },
+    {
+      "identifier": "cloudsearch",
+      "route": "/cloudsearch",
+      "label": "guest",
+      "query": {
+        "keywords": "周杰伦",
+        "type": "1",
+        "limit": "10",
+        "offset": "0",
+        "cookie": {}
+      },
+      "sourceFields": ["keywords", "type", "limit", "offset"],
+      "uri": "/api/cloudsearch/pc",
+      "data": {
+        "s": "周杰伦",
+        "type": "1",
+        "limit": "10",
+        "offset": "0",
+        "total": true
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "cloudsearch",
+      "route": "/cloudsearch",
+      "label": "login",
+      "query": {
+        "keywords": "周杰伦",
+        "type": "1",
+        "limit": "10",
+        "offset": "0",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["keywords", "type", "limit", "offset"],
+      "uri": "/api/cloudsearch/pc",
+      "data": {
+        "s": "周杰伦",
+        "type": "1",
+        "limit": "10",
+        "offset": "0",
+        "total": true
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "comment",
+      "route": "/comment",
+      "label": "guest",
+      "query": {
+        "t": "1",
+        "type": "1",
+        "id": "1974443814",
+        "threadId": "R_SO_4_1974443814",
+        "content": "1",
+        "commentId": "123456",
+        "cookie": {}
+      },
+      "sourceFields": ["t", "type", "id", "threadId", "content", "commentId"],
+      "uri": "/api/resource/comments/add",
+      "data": {
+        "threadId": "R_MV_5_1974443814",
+        "content": "1"
+      },
+      "options": {
+        "crypto": "eapi",
+        "checkToken": "v2",
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "comment",
+      "route": "/comment",
+      "label": "login",
+      "query": {
+        "t": "1",
+        "type": "1",
+        "id": "1974443814",
+        "threadId": "R_SO_4_1974443814",
+        "content": "1",
+        "commentId": "123456",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["t", "type", "id", "threadId", "content", "commentId"],
+      "uri": "/api/resource/comments/add",
+      "data": {
+        "threadId": "R_MV_5_1974443814",
+        "content": "1"
+      },
+      "options": {
+        "crypto": "eapi",
+        "checkToken": "v2",
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "comment_floor",
+      "route": "/comment/floor",
+      "label": "guest",
+      "query": {
+        "type": "1",
+        "parentCommentId": "1974443814,1974443815",
+        "id": "1974443814",
+        "time": "1700000000000",
+        "limit": "10",
+        "cookie": {}
+      },
+      "sourceFields": ["type", "parentCommentId", "id", "time", "limit"],
+      "uri": "/api/resource/comment/floor/get",
+      "data": {
+        "parentCommentId": "1974443814,1974443815",
+        "threadId": "R_MV_5_1974443814",
+        "time": "1700000000000",
+        "limit": "10"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "comment_floor",
+      "route": "/comment/floor",
+      "label": "login",
+      "query": {
+        "type": "1",
+        "parentCommentId": "1974443814,1974443815",
+        "id": "1974443814",
+        "time": "1700000000000",
+        "limit": "10",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["type", "parentCommentId", "id", "time", "limit"],
+      "uri": "/api/resource/comment/floor/get",
+      "data": {
+        "parentCommentId": "1974443814,1974443815",
+        "threadId": "R_MV_5_1974443814",
+        "time": "1700000000000",
+        "limit": "10"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "comment_info_list",
+      "route": "/comment/info/list",
+      "label": "guest",
+      "query": {
+        "ids": "1974443814,1974443815",
+        "id": "1974443814",
+        "type": "1",
+        "cookie": {}
+      },
+      "sourceFields": ["ids", "id", "type"],
+      "uri": "/api/resource/commentInfo/list",
+      "data": {
+        "resourceType": "5",
+        "resourceIds": "[\"1974443814\",\"1974443815\"]"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "comment_info_list",
+      "route": "/comment/info/list",
+      "label": "login",
+      "query": {
+        "ids": "1974443814,1974443815",
+        "id": "1974443814",
+        "type": "1",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["ids", "id", "type"],
+      "uri": "/api/resource/commentInfo/list",
+      "data": {
+        "resourceType": "5",
+        "resourceIds": "[\"1974443814\",\"1974443815\"]"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "comment_like",
+      "route": "/comment/like",
+      "label": "guest",
+      "query": {
+        "t": "1",
+        "type": "1",
+        "id": "1974443814",
+        "cid": "123456",
+        "threadId": "R_SO_4_1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["t", "type", "id", "cid", "threadId"],
+      "uri": "/api/v1/comment/like",
+      "data": {
+        "threadId": "R_MV_5_1974443814",
+        "commentId": "123456"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "comment_like",
+      "route": "/comment/like",
+      "label": "login",
+      "query": {
+        "t": "1",
+        "type": "1",
+        "id": "1974443814",
+        "cid": "123456",
+        "threadId": "R_SO_4_1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["t", "type", "id", "cid", "threadId"],
+      "uri": "/api/v1/comment/like",
+      "data": {
+        "threadId": "R_MV_5_1974443814",
+        "commentId": "123456"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "comment_new",
+      "route": "/comment/new",
+      "label": "guest",
+      "query": {
+        "type": "1",
+        "id": "1974443814",
+        "pageSize": "10",
+        "pageNo": "1",
+        "sortType": "1",
+        "cursor": "1",
+        "showInner": "1",
+        "cookie": {}
+      },
+      "sourceFields": ["type", "id", "pageSize", "pageNo", "sortType", "cursor", "showInner"],
+      "uri": "/api/v2/resource/comments",
+      "data": {
+        "threadId": "R_MV_5_1974443814",
+        "pageNo": "1",
+        "showInner": "1",
+        "pageSize": "10",
+        "cursor": 0,
+        "sortType": 99
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "comment_new",
+      "route": "/comment/new",
+      "label": "login",
+      "query": {
+        "type": "1",
+        "id": "1974443814",
+        "pageSize": "10",
+        "pageNo": "1",
+        "sortType": "1",
+        "cursor": "1",
+        "showInner": "1",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["type", "id", "pageSize", "pageNo", "sortType", "cursor", "showInner"],
+      "uri": "/api/v2/resource/comments",
+      "data": {
+        "threadId": "R_MV_5_1974443814",
+        "pageNo": "1",
+        "showInner": "1",
+        "pageSize": "10",
+        "cursor": 0,
+        "sortType": 99
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "daily_signin",
+      "route": "/daily_signin",
+      "label": "guest",
+      "query": {
+        "type": "1",
+        "cookie": {}
+      },
+      "sourceFields": ["type"],
+      "uri": "/api/point/dailyTask",
+      "data": {
+        "type": "1"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "daily_signin",
+      "route": "/daily_signin",
+      "label": "login",
+      "query": {
+        "type": "1",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["type"],
+      "uri": "/api/point/dailyTask",
+      "data": {
+        "type": "1"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "deviceinfo_center_upload",
+      "route": "/deviceinfo/center/upload",
+      "label": "guest",
+      "query": {
+        "deviceName": "1",
+        "name": "test",
+        "cookie": {}
+      },
+      "sourceFields": ["deviceName", "name"],
+      "uri": "/api/deviceinfo/center/upload",
+      "data": {
+        "deviceName": "1"
+      },
+      "options": {
+        "crypto": "eapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "deviceinfo_center_upload",
+      "route": "/deviceinfo/center/upload",
+      "label": "login",
+      "query": {
+        "deviceName": "1",
+        "name": "test",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["deviceName", "name"],
+      "uri": "/api/deviceinfo/center/upload",
+      "data": {
+        "deviceName": "1"
+      },
+      "options": {
+        "crypto": "eapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "fm_trash",
+      "route": "/fm/trash",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "time": "1700000000000",
+        "cookie": {}
+      },
+      "sourceFields": ["id", "time"],
+      "uri": "/api/radio/trash/add",
+      "data": {
+        "songId": "1974443814",
+        "alg": "RT",
+        "time": "1700000000000"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "fm_trash",
+      "route": "/fm/trash",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "time": "1700000000000",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id", "time"],
+      "uri": "/api/radio/trash/add",
+      "data": {
+        "songId": "1974443814",
+        "alg": "RT",
+        "time": "1700000000000"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "hug_comment",
+      "route": "/hug/comment",
+      "label": "guest",
+      "query": {
+        "type": "1",
+        "sid": "1974443814,1974443815",
+        "uid": "123456",
+        "cid": "123456",
+        "cookie": {}
+      },
+      "sourceFields": ["type", "sid", "uid", "cid"],
+      "uri": "/api/v2/resource/comments/hug/listener",
+      "data": {
+        "targetUserId": "123456",
+        "commentId": "123456",
+        "threadId": "R_MV_5_1974443814,1974443815"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "hug_comment",
+      "route": "/hug/comment",
+      "label": "login",
+      "query": {
+        "type": "1",
+        "sid": "1974443814,1974443815",
+        "uid": "123456",
+        "cid": "123456",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["type", "sid", "uid", "cid"],
+      "uri": "/api/v2/resource/comments/hug/listener",
+      "data": {
+        "targetUserId": "123456",
+        "commentId": "123456",
+        "threadId": "R_MV_5_1974443814,1974443815"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "like",
+      "route": "/like",
+      "label": "guest",
+      "query": {
+        "like": "1",
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["like", "id"],
+      "uri": "/api/radio/like",
+      "data": {
+        "alg": "itembased",
+        "trackId": "1974443814",
+        "like": true,
+        "time": "3"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "like",
+      "route": "/like",
+      "label": "login",
+      "query": {
+        "like": "1",
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["like", "id"],
+      "uri": "/api/radio/like",
+      "data": {
+        "alg": "itembased",
+        "trackId": "1974443814",
+        "like": true,
+        "time": "3"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "likelist",
+      "route": "/likelist",
+      "label": "guest",
+      "query": {
+        "uid": "123456",
+        "cookie": {}
+      },
+      "sourceFields": ["uid"],
+      "uri": "/api/song/like/get",
+      "data": {
+        "uid": "123456"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "likelist",
+      "route": "/likelist",
+      "label": "login",
+      "query": {
+        "uid": "123456",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["uid"],
+      "uri": "/api/song/like/get",
+      "data": {
+        "uid": "123456"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "listen_data_realtime_report",
+      "route": "/listen/data/realtime/report",
+      "label": "guest",
+      "query": {
+        "type": "1",
+        "cookie": {}
+      },
+      "sourceFields": ["type"],
+      "uri": "/api/content/activity/listen/data/realtime/report",
+      "data": {
+        "type": "1"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "listen_data_realtime_report",
+      "route": "/listen/data/realtime/report",
+      "label": "login",
+      "query": {
+        "type": "1",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["type"],
+      "uri": "/api/content/activity/listen/data/realtime/report",
+      "data": {
+        "type": "1"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "listen_data_report",
+      "route": "/listen/data/report",
+      "label": "guest",
+      "query": {
+        "type": "1",
+        "endTime": "1700000100000",
+        "cookie": {}
+      },
+      "sourceFields": ["type", "endTime"],
+      "uri": "/api/content/activity/listen/data/report",
+      "data": {
+        "type": "1",
+        "endTime": "1700000100000"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "listen_data_report",
+      "route": "/listen/data/report",
+      "label": "login",
+      "query": {
+        "type": "1",
+        "endTime": "1700000100000",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["type", "endTime"],
+      "uri": "/api/content/activity/listen/data/report",
+      "data": {
+        "type": "1",
+        "endTime": "1700000100000"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "listen_data_song_play_rank",
+      "route": "/listen/data/song/play/rank",
+      "label": "guest",
+      "query": {
+        "type": "1",
+        "endTime": "1700000100000",
+        "cookie": {}
+      },
+      "sourceFields": ["type", "endTime"],
+      "uri": "/api/content/activity/listen/data/song/play/rank",
+      "data": {
+        "type": "1",
+        "endTime": "1700000100000"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "listen_data_song_play_rank",
+      "route": "/listen/data/song/play/rank",
+      "label": "login",
+      "query": {
+        "type": "1",
+        "endTime": "1700000100000",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["type", "endTime"],
+      "uri": "/api/content/activity/listen/data/song/play/rank",
+      "data": {
+        "type": "1",
+        "endTime": "1700000100000"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "listen_data_today_song",
+      "route": "/listen/data/today/song",
+      "label": "guest",
+      "query": {
+        "cookie": {}
+      },
+      "sourceFields": [],
+      "uri": "/api/content/activity/listen/data/today/song/play/rank",
+      "data": {},
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "listen_data_today_song",
+      "route": "/listen/data/today/song",
+      "label": "login",
+      "query": {
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": [],
+      "uri": "/api/content/activity/listen/data/today/song/play/rank",
+      "data": {},
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "listen_data_total",
+      "route": "/listen/data/total",
+      "label": "guest",
+      "query": {
+        "cookie": {}
+      },
+      "sourceFields": [],
+      "uri": "/api/content/activity/listen/data/total",
+      "data": {},
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "listen_data_total",
+      "route": "/listen/data/total",
+      "label": "login",
+      "query": {
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": [],
+      "uri": "/api/content/activity/listen/data/total",
+      "data": {},
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "login",
+      "route": "/login",
+      "label": "guest",
+      "query": {
+        "email": "test@example.com",
+        "md5_password": "5f4dcc3b5aa765d61d8327deb882cf99",
+        "password": "pass1234",
+        "cookie": {}
+      },
+      "sourceFields": ["email", "md5_password", "password"],
+      "uri": "/api/w/login",
+      "data": {
+        "type": "0",
+        "https": "true",
+        "username": "test@example.com",
+        "password": "5f4dcc3b5aa765d61d8327deb882cf99",
+        "rememberLogin": "true"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "login",
+      "route": "/login",
+      "label": "login",
+      "query": {
+        "email": "test@example.com",
+        "md5_password": "5f4dcc3b5aa765d61d8327deb882cf99",
+        "password": "pass1234",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["email", "md5_password", "password"],
+      "uri": "/api/w/login",
+      "data": {
+        "type": "0",
+        "https": "true",
+        "username": "test@example.com",
+        "password": "5f4dcc3b5aa765d61d8327deb882cf99",
+        "rememberLogin": "true"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "login_cellphone",
+      "route": "/login/cellphone",
+      "label": "guest",
+      "query": {
+        "phone": "13800000000",
+        "countrycode": "86",
+        "captcha": "1234",
+        "md5_password": "5f4dcc3b5aa765d61d8327deb882cf99",
+        "password": "pass1234",
+        "sca": "1",
+        "cookie": {}
+      },
+      "sourceFields": ["phone", "countrycode", "captcha", "md5_password", "password", "sca"],
+      "uri": "/api/w/login/cellphone",
+      "data": {
+        "type": "1",
+        "https": "true",
+        "phone": "13800000000",
+        "countrycode": "86",
+        "captcha": "1234",
+        "remember": "true",
+        "secureCaptcha": "1"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "login_cellphone",
+      "route": "/login/cellphone",
+      "label": "login",
+      "query": {
+        "phone": "13800000000",
+        "countrycode": "86",
+        "captcha": "1234",
+        "md5_password": "5f4dcc3b5aa765d61d8327deb882cf99",
+        "password": "pass1234",
+        "sca": "1",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["phone", "countrycode", "captcha", "md5_password", "password", "sca"],
+      "uri": "/api/w/login/cellphone",
+      "data": {
+        "type": "1",
+        "https": "true",
+        "phone": "13800000000",
+        "countrycode": "86",
+        "captcha": "1234",
+        "remember": "true",
+        "secureCaptcha": "1"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "login_qr_check",
+      "route": "/login/qr/check",
+      "label": "guest",
+      "query": {
+        "key": "qr-key",
+        "cookie": {}
+      },
+      "sourceFields": ["key"],
+      "uri": "/api/login/qrcode/client/login",
+      "data": {
+        "key": "qr-key",
+        "type": 3
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "login_qr_check",
+      "route": "/login/qr/check",
+      "label": "login",
+      "query": {
+        "key": "qr-key",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["key"],
+      "uri": "/api/login/qrcode/client/login",
+      "data": {
+        "key": "qr-key",
+        "type": 3
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "login_qr_create",
+      "route": "/login/qr/create",
+      "label": "guest",
+      "query": {
+        "platform": "1",
+        "key": "qr-key",
+        "qrimg": "1",
+        "cookie": {}
+      },
+      "sourceFields": ["platform", "key", "qrimg"],
+      "uri": null,
+      "data": null,
+      "options": null,
+      "error": null
+    },
+    {
+      "identifier": "login_qr_create",
+      "route": "/login/qr/create",
+      "label": "login",
+      "query": {
+        "platform": "1",
+        "key": "qr-key",
+        "qrimg": "1",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["platform", "key", "qrimg"],
+      "uri": null,
+      "data": null,
+      "options": null,
+      "error": null
+    },
+    {
+      "identifier": "login_qr_key",
+      "route": "/login/qr/key",
+      "label": "guest",
+      "query": {
+        "cookie": {}
+      },
+      "sourceFields": [],
+      "uri": "/api/login/qrcode/unikey",
+      "data": {
+        "type": 3
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "login_qr_key",
+      "route": "/login/qr/key",
+      "label": "login",
+      "query": {
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": [],
+      "uri": "/api/login/qrcode/unikey",
+      "data": {
+        "type": 3
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "login_refresh",
+      "route": "/login/refresh",
+      "label": "guest",
+      "query": {
+        "cookie": {}
+      },
+      "sourceFields": [],
+      "uri": "/api/login/token/refresh",
+      "data": {},
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "login_refresh",
+      "route": "/login/refresh",
+      "label": "login",
+      "query": {
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": [],
+      "uri": "/api/login/token/refresh",
+      "data": {},
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "login_status",
+      "route": "/login/status",
+      "label": "guest",
+      "query": {
+        "cookie": {}
+      },
+      "sourceFields": [],
+      "uri": "/api/w/nuser/account/get",
+      "data": {},
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "login_status",
+      "route": "/login/status",
+      "label": "login",
+      "query": {
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": [],
+      "uri": "/api/w/nuser/account/get",
+      "data": {},
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "logout",
+      "route": "/logout",
+      "label": "guest",
+      "query": {
+        "cookie": {}
+      },
+      "sourceFields": [],
+      "uri": "/api/logout",
+      "data": {},
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "logout",
+      "route": "/logout",
+      "label": "login",
+      "query": {
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": [],
+      "uri": "/api/logout",
+      "data": {},
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "lyric_new",
+      "route": "/lyric/new",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/song/lyric/v1",
+      "data": {
+        "id": "1974443814",
+        "cp": false,
+        "tv": 0,
+        "lv": 0,
+        "rv": 0,
+        "kv": 0,
+        "yv": 0,
+        "ytv": 0,
+        "yrv": 0
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "lyric_new",
+      "route": "/lyric/new",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/song/lyric/v1",
+      "data": {
+        "id": "1974443814",
+        "cp": false,
+        "tv": 0,
+        "lv": 0,
+        "rv": 0,
+        "kv": 0,
+        "yv": 0,
+        "ytv": 0,
+        "yrv": 0
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "mv_detail",
+      "route": "/mv/detail",
+      "label": "guest",
+      "query": {
+        "mvid": "1974443814,1974443815",
+        "cookie": {}
+      },
+      "sourceFields": ["mvid"],
+      "uri": "/api/v1/mv/detail",
+      "data": {
+        "id": "1974443814,1974443815"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "mv_detail",
+      "route": "/mv/detail",
+      "label": "login",
+      "query": {
+        "mvid": "1974443814,1974443815",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["mvid"],
+      "uri": "/api/v1/mv/detail",
+      "data": {
+        "id": "1974443814,1974443815"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "mv_sub",
+      "route": "/mv/sub",
+      "label": "guest",
+      "query": {
+        "t": "1",
+        "mvid": "1974443814,1974443815",
+        "cookie": {}
+      },
+      "sourceFields": ["t", "mvid"],
+      "uri": "/api/mv/sub",
+      "data": {
+        "mvId": "1974443814,1974443815",
+        "mvIds": "[\"1974443814,1974443815\"]"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "mv_sub",
+      "route": "/mv/sub",
+      "label": "login",
+      "query": {
+        "t": "1",
+        "mvid": "1974443814,1974443815",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["t", "mvid"],
+      "uri": "/api/mv/sub",
+      "data": {
+        "mvId": "1974443814,1974443815",
+        "mvIds": "[\"1974443814,1974443815\"]"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "mv_sublist",
+      "route": "/mv/sublist",
+      "label": "guest",
+      "query": {
+        "limit": "10",
+        "offset": "0",
+        "cookie": {}
+      },
+      "sourceFields": ["limit", "offset"],
+      "uri": "/api/cloudvideo/allvideo/sublist",
+      "data": {
+        "limit": "10",
+        "offset": "0",
+        "total": true
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "mv_sublist",
+      "route": "/mv/sublist",
+      "label": "login",
+      "query": {
+        "limit": "10",
+        "offset": "0",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["limit", "offset"],
+      "uri": "/api/cloudvideo/allvideo/sublist",
+      "data": {
+        "limit": "10",
+        "offset": "0",
+        "total": true
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "mv_url",
+      "route": "/mv/url",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "r": "1",
+        "cookie": {}
+      },
+      "sourceFields": ["id", "r"],
+      "uri": "/api/song/enhance/play/mv/url",
+      "data": {
+        "id": "1974443814",
+        "r": "1"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "mv_url",
+      "route": "/mv/url",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "r": "1",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id", "r"],
+      "uri": "/api/song/enhance/play/mv/url",
+      "data": {
+        "id": "1974443814",
+        "r": "1"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "personal_fm",
+      "route": "/personal_fm",
+      "label": "guest",
+      "query": {
+        "cookie": {}
+      },
+      "sourceFields": [],
+      "uri": "/api/v1/radio/get",
+      "data": {},
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "personal_fm",
+      "route": "/personal_fm",
+      "label": "login",
+      "query": {
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": [],
+      "uri": "/api/v1/radio/get",
+      "data": {},
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "personalized",
+      "route": "/personalized",
+      "label": "guest",
+      "query": {
+        "limit": "10",
+        "offset": "0",
+        "cookie": {}
+      },
+      "sourceFields": ["limit", "offset"],
+      "uri": "/api/personalized/playlist",
+      "data": {
+        "limit": "10",
+        "total": true,
+        "n": 1000
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "personalized",
+      "route": "/personalized",
+      "label": "login",
+      "query": {
+        "limit": "10",
+        "offset": "0",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["limit", "offset"],
+      "uri": "/api/personalized/playlist",
+      "data": {
+        "limit": "10",
+        "total": true,
+        "n": 1000
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_catlist",
+      "route": "/playlist/catlist",
+      "label": "guest",
+      "query": {
+        "cookie": {}
+      },
+      "sourceFields": [],
+      "uri": "/api/playlist/catalogue",
+      "data": {},
+      "options": {
+        "crypto": "eapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_catlist",
+      "route": "/playlist/catlist",
+      "label": "login",
+      "query": {
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": [],
+      "uri": "/api/playlist/catalogue",
+      "data": {},
+      "options": {
+        "crypto": "eapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_cover_update",
+      "route": "/playlist/cover/update",
+      "label": "guest",
+      "query": {
+        "imgFile": "1",
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["imgFile", "id"],
+      "uri": "/api/nos/token/alloc",
+      "data": {
+        "bucket": "yyimgs",
+        "ext": "jpg",
+        "local": false,
+        "nos_product": 0,
+        "return_body": "{\"code\":200,\"size\":\"$(ObjectSize)\"}",
+        "type": "other"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": "Cannot read properties of undefined (reading 'objectKey')"
+    },
+    {
+      "identifier": "playlist_cover_update",
+      "route": "/playlist/cover/update",
+      "label": "login",
+      "query": {
+        "imgFile": "1",
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["imgFile", "id"],
+      "uri": "/api/nos/token/alloc",
+      "data": {
+        "bucket": "yyimgs",
+        "ext": "jpg",
+        "local": false,
+        "nos_product": 0,
+        "return_body": "{\"code\":200,\"size\":\"$(ObjectSize)\"}",
+        "type": "other"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": "Cannot read properties of undefined (reading 'objectKey')"
+    },
+    {
+      "identifier": "playlist_create",
+      "route": "/playlist/create",
+      "label": "guest",
+      "query": {
+        "name": "test",
+        "privacy": "1",
+        "type": "1",
+        "cookie": {}
+      },
+      "sourceFields": ["name", "privacy", "type"],
+      "uri": "/api/playlist/create",
+      "data": {
+        "name": "test",
+        "privacy": "1",
+        "type": "1"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_create",
+      "route": "/playlist/create",
+      "label": "login",
+      "query": {
+        "name": "test",
+        "privacy": "1",
+        "type": "1",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["name", "privacy", "type"],
+      "uri": "/api/playlist/create",
+      "data": {
+        "name": "test",
+        "privacy": "1",
+        "type": "1"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_delete",
+      "route": "/playlist/delete",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/playlist/remove",
+      "data": {
+        "ids": "[1974443814]"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_delete",
+      "route": "/playlist/delete",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/playlist/remove",
+      "data": {
+        "ids": "[1974443814]"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_detail",
+      "route": "/playlist/detail",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "s": "周杰伦",
+        "cookie": {}
+      },
+      "sourceFields": ["id", "s"],
+      "uri": "/api/v6/playlist/detail",
+      "data": {
+        "id": "1974443814",
+        "n": 100000,
+        "s": "周杰伦"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_detail",
+      "route": "/playlist/detail",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "s": "周杰伦",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id", "s"],
+      "uri": "/api/v6/playlist/detail",
+      "data": {
+        "id": "1974443814",
+        "n": 100000,
+        "s": "周杰伦"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_detail_rcmd_get",
+      "route": "/playlist/detail/rcmd/get",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/playlist/detail/rcmd/get",
+      "data": {
+        "scene": "playlist_head",
+        "playlistId": "1974443814",
+        "newStyle": "true"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_detail_rcmd_get",
+      "route": "/playlist/detail/rcmd/get",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/playlist/detail/rcmd/get",
+      "data": {
+        "scene": "playlist_head",
+        "playlistId": "1974443814",
+        "newStyle": "true"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_highquality_tags",
+      "route": "/playlist/highquality/tags",
+      "label": "guest",
+      "query": {
+        "cookie": {}
+      },
+      "sourceFields": [],
+      "uri": "/api/playlist/highquality/tags",
+      "data": {},
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_highquality_tags",
+      "route": "/playlist/highquality/tags",
+      "label": "login",
+      "query": {
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": [],
+      "uri": "/api/playlist/highquality/tags",
+      "data": {},
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_hot",
+      "route": "/playlist/hot",
+      "label": "guest",
+      "query": {
+        "cookie": {}
+      },
+      "sourceFields": [],
+      "uri": "/api/playlist/hottags",
+      "data": {},
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_hot",
+      "route": "/playlist/hot",
+      "label": "login",
+      "query": {
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": [],
+      "uri": "/api/playlist/hottags",
+      "data": {},
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_privacy",
+      "route": "/playlist/privacy",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/playlist/update/privacy",
+      "data": {
+        "id": "1974443814",
+        "privacy": 0
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_privacy",
+      "route": "/playlist/privacy",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/playlist/update/privacy",
+      "data": {
+        "id": "1974443814",
+        "privacy": 0
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_subscribe",
+      "route": "/playlist/subscribe",
+      "label": "guest",
+      "query": {
+        "t": "1",
+        "id": "1974443814",
+        "checkToken": "v2",
+        "cookie": {}
+      },
+      "sourceFields": ["t", "id", "checkToken"],
+      "uri": "/api/playlist/subscribe",
+      "data": {
+        "id": "1974443814"
+      },
+      "options": {
+        "crypto": "eapi",
+        "checkToken": "v2",
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_subscribe",
+      "route": "/playlist/subscribe",
+      "label": "login",
+      "query": {
+        "t": "1",
+        "id": "1974443814",
+        "checkToken": "v2",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["t", "id", "checkToken"],
+      "uri": "/api/playlist/subscribe",
+      "data": {
+        "id": "1974443814"
+      },
+      "options": {
+        "crypto": "eapi",
+        "checkToken": "v2",
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_subscribers",
+      "route": "/playlist/subscribers",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "limit": "10",
+        "offset": "0",
+        "cookie": {}
+      },
+      "sourceFields": ["id", "limit", "offset"],
+      "uri": "/api/playlist/subscribers",
+      "data": {
+        "id": "1974443814",
+        "limit": "10",
+        "offset": "0"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_subscribers",
+      "route": "/playlist/subscribers",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "limit": "10",
+        "offset": "0",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id", "limit", "offset"],
+      "uri": "/api/playlist/subscribers",
+      "data": {
+        "id": "1974443814",
+        "limit": "10",
+        "offset": "0"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_tracks",
+      "route": "/playlist/tracks",
+      "label": "guest",
+      "query": {
+        "tracks": "1",
+        "op": "1",
+        "pid": "1974443814,1974443815",
+        "cookie": {}
+      },
+      "sourceFields": ["tracks", "op", "pid"],
+      "uri": "/api/playlist/manipulate/tracks",
+      "data": {
+        "op": "1",
+        "pid": "1974443814,1974443815",
+        "trackIds": "[\"1\"]",
+        "imme": "true"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_tracks",
+      "route": "/playlist/tracks",
+      "label": "login",
+      "query": {
+        "tracks": "1",
+        "op": "1",
+        "pid": "1974443814,1974443815",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["tracks", "op", "pid"],
+      "uri": "/api/playlist/manipulate/tracks",
+      "data": {
+        "op": "1",
+        "pid": "1974443814,1974443815",
+        "trackIds": "[\"1\"]",
+        "imme": "true"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_update",
+      "route": "/playlist/update",
+      "label": "guest",
+      "query": {
+        "desc": "1",
+        "tags": "1",
+        "id": "1974443814",
+        "name": "test",
+        "cookie": {}
+      },
+      "sourceFields": ["desc", "tags", "id", "name"],
+      "uri": "/api/batch",
+      "data": {
+        "/api/playlist/desc/update": "{\"id\":1974443814,\"desc\":\"1\"}",
+        "/api/playlist/tags/update": "{\"id\":1974443814,\"tags\":\"1\"}",
+        "/api/playlist/update/name": "{\"id\":1974443814,\"name\":\"test\"}"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_update",
+      "route": "/playlist/update",
+      "label": "login",
+      "query": {
+        "desc": "1",
+        "tags": "1",
+        "id": "1974443814",
+        "name": "test",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["desc", "tags", "id", "name"],
+      "uri": "/api/batch",
+      "data": {
+        "/api/playlist/desc/update": "{\"id\":1974443814,\"desc\":\"1\"}",
+        "/api/playlist/tags/update": "{\"id\":1974443814,\"tags\":\"1\"}",
+        "/api/playlist/update/name": "{\"id\":1974443814,\"name\":\"test\"}"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_update_playcount",
+      "route": "/playlist/update/playcount",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/playlist/update/playcount",
+      "data": {
+        "id": "1974443814"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playlist_update_playcount",
+      "route": "/playlist/update/playcount",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/playlist/update/playcount",
+      "data": {
+        "id": "1974443814"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playmode_intelligence_list",
+      "route": "/playmode/intelligence/list",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "pid": "1974443814,1974443815",
+        "sid": "1974443814,1974443815",
+        "count": "1",
+        "cookie": {}
+      },
+      "sourceFields": ["id", "pid", "sid", "count"],
+      "uri": "/api/playmode/intelligence/list",
+      "data": {
+        "songId": "1974443814",
+        "type": "fromPlayOne",
+        "playlistId": "1974443814,1974443815",
+        "startMusicId": "1974443814,1974443815",
+        "count": "1"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "playmode_intelligence_list",
+      "route": "/playmode/intelligence/list",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "pid": "1974443814,1974443815",
+        "sid": "1974443814,1974443815",
+        "count": "1",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id", "pid", "sid", "count"],
+      "uri": "/api/playmode/intelligence/list",
+      "data": {
+        "songId": "1974443814",
+        "type": "fromPlayOne",
+        "playlistId": "1974443814,1974443815",
+        "startMusicId": "1974443814,1974443815",
+        "count": "1"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "recommend_resource",
+      "route": "/recommend/resource",
+      "label": "guest",
+      "query": {
+        "cookie": {}
+      },
+      "sourceFields": [],
+      "uri": "/api/v1/discovery/recommend/resource",
+      "data": {},
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "recommend_resource",
+      "route": "/recommend/resource",
+      "label": "login",
+      "query": {
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": [],
+      "uri": "/api/v1/discovery/recommend/resource",
+      "data": {},
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "recommend_songs",
+      "route": "/recommend/songs",
+      "label": "guest",
+      "query": {
+        "afresh": "1",
+        "cookie": {}
+      },
+      "sourceFields": ["afresh"],
+      "uri": "/api/v3/discovery/recommend/songs",
+      "data": {
+        "afresh": "1"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "recommend_songs",
+      "route": "/recommend/songs",
+      "label": "login",
+      "query": {
+        "afresh": "1",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["afresh"],
+      "uri": "/api/v3/discovery/recommend/songs",
+      "data": {
+        "afresh": "1"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "recommend_songs_dislike",
+      "route": "/recommend/songs/dislike",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/v2/discovery/recommend/dislike",
+      "data": {
+        "resId": "1974443814",
+        "resType": 4,
+        "sceneType": 1
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "recommend_songs_dislike",
+      "route": "/recommend/songs/dislike",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/v2/discovery/recommend/dislike",
+      "data": {
+        "resId": "1974443814",
+        "resType": 4,
+        "sceneType": 1
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "record_recent_song",
+      "route": "/record/recent/song",
+      "label": "guest",
+      "query": {
+        "limit": "10",
+        "cookie": {}
+      },
+      "sourceFields": ["limit"],
+      "uri": "/api/play-record/song/list",
+      "data": {
+        "limit": "10"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "record_recent_song",
+      "route": "/record/recent/song",
+      "label": "login",
+      "query": {
+        "limit": "10",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["limit"],
+      "uri": "/api/play-record/song/list",
+      "data": {
+        "limit": "10"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "relay_play_state_submit",
+      "route": "/relay/play/state/submit",
+      "label": "guest",
+      "query": {
+        "cookie": {}
+      },
+      "sourceFields": [],
+      "uri": null,
+      "data": null,
+      "options": null,
+      "error": "[object Object]"
+    },
+    {
+      "identifier": "relay_play_state_submit",
+      "route": "/relay/play/state/submit",
+      "label": "login",
+      "query": {
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": [],
+      "uri": null,
+      "data": null,
+      "options": null,
+      "error": "[object Object]"
+    },
+    {
+      "identifier": "scrobble_v1",
+      "route": "/scrobble/v1",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "time": "1700000000000",
+        "total": "1",
+        "sourceid": "1974443814,1974443815",
+        "sourceId": "1974443814,1974443815",
+        "source": "netease",
+        "name": "test",
+        "artist": "6452",
+        "bitrate": "1",
+        "level": "exhigh",
+        "vip": "1",
+        "cookie": {}
+      },
+      "sourceFields": [
+        "id",
+        "time",
+        "total",
+        "sourceid",
+        "sourceId",
+        "source",
+        "name",
+        "artist",
+        "bitrate",
+        "level",
+        "vip"
+      ],
+      "uri": null,
+      "data": null,
+      "options": null,
+      "error": null
+    },
+    {
+      "identifier": "scrobble_v1",
+      "route": "/scrobble/v1",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "time": "1700000000000",
+        "total": "1",
+        "sourceid": "1974443814,1974443815",
+        "sourceId": "1974443814,1974443815",
+        "source": "netease",
+        "name": "test",
+        "artist": "6452",
+        "bitrate": "1",
+        "level": "exhigh",
+        "vip": "1",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": [
+        "id",
+        "time",
+        "total",
+        "sourceid",
+        "sourceId",
+        "source",
+        "name",
+        "artist",
+        "bitrate",
+        "level",
+        "vip"
+      ],
+      "uri": null,
+      "data": null,
+      "options": null,
+      "error": null
+    },
+    {
+      "identifier": "search",
+      "route": "/search",
+      "label": "guest",
+      "query": {
+        "type": "1",
+        "keywords": "周杰伦",
+        "limit": "10",
+        "offset": "0",
+        "cookie": {}
+      },
+      "sourceFields": ["type", "keywords", "limit", "offset"],
+      "uri": "/api/search/get",
+      "data": {
+        "s": "周杰伦",
+        "type": "1",
+        "limit": "10",
+        "offset": "0"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "search",
+      "route": "/search",
+      "label": "login",
+      "query": {
+        "type": "1",
+        "keywords": "周杰伦",
+        "limit": "10",
+        "offset": "0",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["type", "keywords", "limit", "offset"],
+      "uri": "/api/search/get",
+      "data": {
+        "s": "周杰伦",
+        "type": "1",
+        "limit": "10",
+        "offset": "0"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "search_default",
+      "route": "/search/default",
+      "label": "guest",
+      "query": {
+        "cookie": {}
+      },
+      "sourceFields": [],
+      "uri": "/api/search/defaultkeyword/get",
+      "data": {},
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "search_default",
+      "route": "/search/default",
+      "label": "login",
+      "query": {
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": [],
+      "uri": "/api/search/defaultkeyword/get",
+      "data": {},
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "search_hot",
+      "route": "/search/hot",
+      "label": "guest",
+      "query": {
+        "cookie": {}
+      },
+      "sourceFields": [],
+      "uri": "/api/search/hot",
+      "data": {
+        "type": 1111
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "search_hot",
+      "route": "/search/hot",
+      "label": "login",
+      "query": {
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": [],
+      "uri": "/api/search/hot",
+      "data": {
+        "type": 1111
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "search_hot_detail",
+      "route": "/search/hot/detail",
+      "label": "guest",
+      "query": {
+        "cookie": {}
+      },
+      "sourceFields": [],
+      "uri": "/api/hotsearchlist/get",
+      "data": {},
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "search_hot_detail",
+      "route": "/search/hot/detail",
+      "label": "login",
+      "query": {
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": [],
+      "uri": "/api/hotsearchlist/get",
+      "data": {},
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "search_multimatch",
+      "route": "/search/multimatch",
+      "label": "guest",
+      "query": {
+        "type": "1",
+        "keywords": "周杰伦",
+        "cookie": {}
+      },
+      "sourceFields": ["type", "keywords"],
+      "uri": "/api/search/suggest/multimatch",
+      "data": {
+        "type": "1",
+        "s": "周杰伦"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "search_multimatch",
+      "route": "/search/multimatch",
+      "label": "login",
+      "query": {
+        "type": "1",
+        "keywords": "周杰伦",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["type", "keywords"],
+      "uri": "/api/search/suggest/multimatch",
+      "data": {
+        "type": "1",
+        "s": "周杰伦"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "search_suggest",
+      "route": "/search/suggest",
+      "label": "guest",
+      "query": {
+        "keywords": "周杰伦",
+        "type": "1",
+        "cookie": {}
+      },
+      "sourceFields": ["keywords", "type"],
+      "uri": "/api/search/suggest/web",
+      "data": {
+        "s": "周杰伦"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "search_suggest",
+      "route": "/search/suggest",
+      "label": "login",
+      "query": {
+        "keywords": "周杰伦",
+        "type": "1",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["keywords", "type"],
+      "uri": "/api/search/suggest/web",
+      "data": {
+        "s": "周杰伦"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "simi_artist",
+      "route": "/simi/artist",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/discovery/simiArtist",
+      "data": {
+        "artistid": "1974443814"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "simi_artist",
+      "route": "/simi/artist",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/discovery/simiArtist",
+      "data": {
+        "artistid": "1974443814"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "simi_mv",
+      "route": "/simi/mv",
+      "label": "guest",
+      "query": {
+        "mvid": "1974443814,1974443815",
+        "cookie": {}
+      },
+      "sourceFields": ["mvid"],
+      "uri": "/api/discovery/simiMV",
+      "data": {
+        "mvid": "1974443814,1974443815"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "simi_mv",
+      "route": "/simi/mv",
+      "label": "login",
+      "query": {
+        "mvid": "1974443814,1974443815",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["mvid"],
+      "uri": "/api/discovery/simiMV",
+      "data": {
+        "mvid": "1974443814,1974443815"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "simi_playlist",
+      "route": "/simi/playlist",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "limit": "10",
+        "offset": "0",
+        "cookie": {}
+      },
+      "sourceFields": ["id", "limit", "offset"],
+      "uri": "/api/discovery/simiPlaylist",
+      "data": {
+        "songid": "1974443814",
+        "limit": "10",
+        "offset": "0"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "simi_playlist",
+      "route": "/simi/playlist",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "limit": "10",
+        "offset": "0",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id", "limit", "offset"],
+      "uri": "/api/discovery/simiPlaylist",
+      "data": {
+        "songid": "1974443814",
+        "limit": "10",
+        "offset": "0"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "simi_song",
+      "route": "/simi/song",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "limit": "10",
+        "offset": "0",
+        "cookie": {}
+      },
+      "sourceFields": ["id", "limit", "offset"],
+      "uri": "/api/v1/discovery/simiSong",
+      "data": {
+        "songid": "1974443814",
+        "limit": "10",
+        "offset": "0"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "simi_song",
+      "route": "/simi/song",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "limit": "10",
+        "offset": "0",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id", "limit", "offset"],
+      "uri": "/api/v1/discovery/simiSong",
+      "data": {
+        "songid": "1974443814",
+        "limit": "10",
+        "offset": "0"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "song_chorus",
+      "route": "/song/chorus",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/song/chorus",
+      "data": {
+        "ids": "[\"1974443814\"]"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "song_chorus",
+      "route": "/song/chorus",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/song/chorus",
+      "data": {
+        "ids": "[\"1974443814\"]"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "song_detail",
+      "route": "/song/detail",
+      "label": "guest",
+      "query": {
+        "ids": "1974443814,1974443815",
+        "cookie": {}
+      },
+      "sourceFields": ["ids"],
+      "uri": "/api/v3/song/detail",
+      "data": {
+        "c": "[{\"id\":1974443814},{\"id\":1974443815}]"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "song_detail",
+      "route": "/song/detail",
+      "label": "login",
+      "query": {
+        "ids": "1974443814,1974443815",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["ids"],
+      "uri": "/api/v3/song/detail",
+      "data": {
+        "c": "[{\"id\":1974443814},{\"id\":1974443815}]"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "song_dynamic_cover",
+      "route": "/song/dynamic/cover",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/songplay/dynamic-cover",
+      "data": {
+        "songId": "1974443814"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "song_dynamic_cover",
+      "route": "/song/dynamic/cover",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/songplay/dynamic-cover",
+      "data": {
+        "songId": "1974443814"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "song_order_update",
+      "route": "/song/order/update",
+      "label": "guest",
+      "query": {
+        "pid": "1974443814,1974443815",
+        "ids": "1974443814,1974443815",
+        "cookie": {}
+      },
+      "sourceFields": ["pid", "ids"],
+      "uri": "/api/playlist/manipulate/tracks",
+      "data": {
+        "pid": "1974443814,1974443815",
+        "trackIds": "1974443814,1974443815",
+        "op": "update"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "song_order_update",
+      "route": "/song/order/update",
+      "label": "login",
+      "query": {
+        "pid": "1974443814,1974443815",
+        "ids": "1974443814,1974443815",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["pid", "ids"],
+      "uri": "/api/playlist/manipulate/tracks",
+      "data": {
+        "pid": "1974443814,1974443815",
+        "trackIds": "1974443814,1974443815",
+        "op": "update"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "song_red_count",
+      "route": "/song/red/count",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/song/red/count",
+      "data": {
+        "songId": "1974443814"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "song_red_count",
+      "route": "/song/red/count",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/song/red/count",
+      "data": {
+        "songId": "1974443814"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "song_url",
+      "route": "/song/url",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "br": "320000",
+        "cookie": {}
+      },
+      "sourceFields": ["id", "br"],
+      "uri": "/api/song/enhance/player/url",
+      "data": {
+        "ids": "[\"1974443814\"]",
+        "br": 320000
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": "Cannot read properties of undefined (reading 'sort')"
+    },
+    {
+      "identifier": "song_url",
+      "route": "/song/url",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "br": "320000",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id", "br"],
+      "uri": "/api/song/enhance/player/url",
+      "data": {
+        "ids": "[\"1974443814\"]",
+        "br": 320000
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": "Cannot read properties of undefined (reading 'sort')"
+    },
+    {
+      "identifier": "song_url_v1",
+      "route": "/song/url/v1",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "level": "exhigh",
+        "unblock": "1",
+        "source": "netease",
+        "immerseType": "1",
+        "cookie": {}
+      },
+      "sourceFields": ["id", "level", "unblock", "source", "immerseType"],
+      "uri": "/api/song/enhance/player/url/v1",
+      "data": {
+        "ids": "[1974443814]",
+        "level": "exhigh",
+        "encodeType": "flac"
+      },
+      "options": {
+        "crypto": "xeapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "song_url_v1",
+      "route": "/song/url/v1",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "level": "exhigh",
+        "unblock": "1",
+        "source": "netease",
+        "immerseType": "1",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id", "level", "unblock", "source", "immerseType"],
+      "uri": "/api/song/enhance/player/url/v1",
+      "data": {
+        "ids": "[1974443814]",
+        "level": "exhigh",
+        "encodeType": "flac"
+      },
+      "options": {
+        "crypto": "xeapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "song_wiki_summary",
+      "route": "/song/wiki/summary",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/song/play/about/block/page",
+      "data": {
+        "songId": "1974443814"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "song_wiki_summary",
+      "route": "/song/wiki/summary",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/song/play/about/block/page",
+      "data": {
+        "songId": "1974443814"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "top_playlist",
+      "route": "/top/playlist",
+      "label": "guest",
+      "query": {
+        "cat": "全部",
+        "order": "1",
+        "limit": "10",
+        "offset": "0",
+        "cookie": {}
+      },
+      "sourceFields": ["cat", "order", "limit", "offset"],
+      "uri": "/api/playlist/list",
+      "data": {
+        "cat": "全部",
+        "order": "1",
+        "limit": "10",
+        "offset": "0",
+        "total": true
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "top_playlist",
+      "route": "/top/playlist",
+      "label": "login",
+      "query": {
+        "cat": "全部",
+        "order": "1",
+        "limit": "10",
+        "offset": "0",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["cat", "order", "limit", "offset"],
+      "uri": "/api/playlist/list",
+      "data": {
+        "cat": "全部",
+        "order": "1",
+        "limit": "10",
+        "offset": "0",
+        "total": true
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "top_playlist_highquality",
+      "route": "/top/playlist/highquality",
+      "label": "guest",
+      "query": {
+        "cat": "全部",
+        "limit": "10",
+        "before": "1700000000000",
+        "cookie": {}
+      },
+      "sourceFields": ["cat", "limit", "before"],
+      "uri": "/api/playlist/highquality/list",
+      "data": {
+        "cat": "全部",
+        "limit": "10",
+        "lasttime": "1700000000000",
+        "total": true
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "top_playlist_highquality",
+      "route": "/top/playlist/highquality",
+      "label": "login",
+      "query": {
+        "cat": "全部",
+        "limit": "10",
+        "before": "1700000000000",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["cat", "limit", "before"],
+      "uri": "/api/playlist/highquality/list",
+      "data": {
+        "cat": "全部",
+        "limit": "10",
+        "lasttime": "1700000000000",
+        "total": true
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "top_song",
+      "route": "/top/song",
+      "label": "guest",
+      "query": {
+        "type": "1",
+        "limit": "10",
+        "offset": "0",
+        "cookie": {}
+      },
+      "sourceFields": ["type", "limit", "offset"],
+      "uri": "/api/v1/discovery/new/songs",
+      "data": {
+        "areaId": "1",
+        "total": true
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "top_song",
+      "route": "/top/song",
+      "label": "login",
+      "query": {
+        "type": "1",
+        "limit": "10",
+        "offset": "0",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["type", "limit", "offset"],
+      "uri": "/api/v1/discovery/new/songs",
+      "data": {
+        "areaId": "1",
+        "total": true
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "toplist",
+      "route": "/toplist",
+      "label": "guest",
+      "query": {
+        "cookie": {}
+      },
+      "sourceFields": [],
+      "uri": "/api/toplist",
+      "data": {},
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "toplist",
+      "route": "/toplist",
+      "label": "login",
+      "query": {
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": [],
+      "uri": "/api/toplist",
+      "data": {},
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "toplist_artist",
+      "route": "/toplist/artist",
+      "label": "guest",
+      "query": {
+        "type": "1",
+        "cookie": {}
+      },
+      "sourceFields": ["type"],
+      "uri": "/api/toplist/artist",
+      "data": {
+        "type": "1",
+        "limit": 100,
+        "offset": 0,
+        "total": true
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "toplist_artist",
+      "route": "/toplist/artist",
+      "label": "login",
+      "query": {
+        "type": "1",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["type"],
+      "uri": "/api/toplist/artist",
+      "data": {
+        "type": "1",
+        "limit": 100,
+        "offset": 0,
+        "total": true
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "ugc_album_get",
+      "route": "/ugc/album/get",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/rep/ugc/album/get",
+      "data": {
+        "albumId": "1974443814"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "ugc_album_get",
+      "route": "/ugc/album/get",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/rep/ugc/album/get",
+      "data": {
+        "albumId": "1974443814"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "ugc_artist_get",
+      "route": "/ugc/artist/get",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/rep/ugc/artist/get",
+      "data": {
+        "artistId": "1974443814"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "ugc_artist_get",
+      "route": "/ugc/artist/get",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/rep/ugc/artist/get",
+      "data": {
+        "artistId": "1974443814"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "ugc_song_get",
+      "route": "/ugc/song/get",
+      "label": "guest",
+      "query": {
+        "id": "1974443814",
+        "cookie": {}
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/rep/ugc/song/get",
+      "data": {
+        "songId": "1974443814"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "ugc_song_get",
+      "route": "/ugc/song/get",
+      "label": "login",
+      "query": {
+        "id": "1974443814",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["id"],
+      "uri": "/api/rep/ugc/song/get",
+      "data": {
+        "songId": "1974443814"
+      },
+      "options": {
+        "crypto": "",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "user_account",
+      "route": "/user/account",
+      "label": "guest",
+      "query": {
+        "cookie": {}
+      },
+      "sourceFields": [],
+      "uri": "/api/nuser/account/get",
+      "data": {},
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "user_account",
+      "route": "/user/account",
+      "label": "login",
+      "query": {
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": [],
+      "uri": "/api/nuser/account/get",
+      "data": {},
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "user_detail",
+      "route": "/user/detail",
+      "label": "guest",
+      "query": {
+        "uid": "123456",
+        "cookie": {}
+      },
+      "sourceFields": ["uid"],
+      "uri": "/api/v1/user/detail/123456",
+      "data": {},
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "user_detail",
+      "route": "/user/detail",
+      "label": "login",
+      "query": {
+        "uid": "123456",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["uid"],
+      "uri": "/api/v1/user/detail/123456",
+      "data": {},
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "user_playlist",
+      "route": "/user/playlist",
+      "label": "guest",
+      "query": {
+        "uid": "123456",
+        "limit": "10",
+        "offset": "0",
+        "cookie": {}
+      },
+      "sourceFields": ["uid", "limit", "offset"],
+      "uri": "/api/user/playlist",
+      "data": {
+        "uid": "123456",
+        "limit": "10",
+        "offset": "0",
+        "includeVideo": true
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "user_playlist",
+      "route": "/user/playlist",
+      "label": "login",
+      "query": {
+        "uid": "123456",
+        "limit": "10",
+        "offset": "0",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["uid", "limit", "offset"],
+      "uri": "/api/user/playlist",
+      "data": {
+        "uid": "123456",
+        "limit": "10",
+        "offset": "0",
+        "includeVideo": true
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "user_record",
+      "route": "/user/record",
+      "label": "guest",
+      "query": {
+        "uid": "123456",
+        "type": "1",
+        "cookie": {}
+      },
+      "sourceFields": ["uid", "type"],
+      "uri": "/api/v1/play/record",
+      "data": {
+        "uid": "123456",
+        "type": "1"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "user_record",
+      "route": "/user/record",
+      "label": "login",
+      "query": {
+        "uid": "123456",
+        "type": "1",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["uid", "type"],
+      "uri": "/api/v1/play/record",
+      "data": {
+        "uid": "123456",
+        "type": "1"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "vip_info",
+      "route": "/vip/info",
+      "label": "guest",
+      "query": {
+        "uid": "123456",
+        "cookie": {}
+      },
+      "sourceFields": ["uid"],
+      "uri": "/api/music-vip-membership/front/vip/info",
+      "data": {
+        "userId": "123456"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    },
+    {
+      "identifier": "vip_info",
+      "route": "/vip/info",
+      "label": "login",
+      "query": {
+        "uid": "123456",
+        "cookie": {
+          "MUSIC_U": "u-token",
+          "__csrf": "csrf-token",
+          "os": "pc",
+          "deviceId": "A1B2C3D4E5F60718293A4B5C6D7E8F90123456789ABCDEF0123456789ABCDEF0"
+        }
+      },
+      "sourceFields": ["uid"],
+      "uri": "/api/music-vip-membership/front/vip/info",
+      "data": {
+        "userId": "123456"
+      },
+      "options": {
+        "crypto": "weapi",
+        "checkToken": false,
+        "ua": "",
+        "domain": "",
+        "e_r": null,
+        "hasCookie": true
+      },
+      "error": null
+    }
+  ]
+}
