@@ -475,8 +475,8 @@ impl Lyric {
             line.update_line_info();
         }
         for (s, e) in self.is_back_chorus_with_multi_line() {
-            for i in s..=e {
-                self.data[i].isBackChorus = Some(true);
+            for line in &mut self.data[s..=e] {
+                line.isBackChorus = Some(true);
             }
         }
         if self.should_parse_inline_notes() {
@@ -611,8 +611,8 @@ impl LyricLine {
         // 注音内容保留在原始 word 中，只写 `inlineNote` 标记。
         // UI 层负责去掉显示用括号，避免模型被裁剪后再次解析失效。
         for range in note_index {
-            for i in range.start..=range.end {
-                self.words[i].inlineNote = Some(true);
+            for word in &mut self.words[range.start..=range.end] {
+                word.inlineNote = Some(true);
             }
         }
     }

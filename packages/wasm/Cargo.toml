@@ -17,7 +17,6 @@ js-sys = "0.3.8"
 regex = "1"
 rustfft = "6"
 csscolorparser = "0.7"
-console_error_panic_hook = "0.1"
 web-sys = { version = "0.3", features = [
     "console",
     "HtmlCanvasElement",
@@ -28,6 +27,11 @@ web-sys = { version = "0.3", features = [
     "WebGlUniformLocation"
 ] }
 anyhow = "1.0.100"
+
+# 只在 wasm 目标下使用（lib.rs 的 `init` 里 `set_once`）
+# 标成 target 依赖以免宿主端 clippy 误报 unused dependency
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+console_error_panic_hook = "0.1"
 
 [profile.release]
 opt-level = 3

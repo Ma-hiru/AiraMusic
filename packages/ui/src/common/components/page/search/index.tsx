@@ -29,12 +29,15 @@ export type SearchRef = {
   tracks: NeteaseTrackRecord[];
 };
 
-interface SearchProps {
+export type SearchVariant = "page" | "drawer";
+
+export interface SearchProps {
   ref?: Ref<SearchRef>;
   className?: string;
   routerActive: boolean;
+  variant?: SearchVariant;
   coverSize: NeteaseImageSize;
-  defaultKeyword: Optional<string>;
+  defaultKeyword?: Optional<string>;
   activeTrackID: Undefinable<number>;
   heartManager: HeartManager;
   playableManager: TrackListPlayableManager;
@@ -79,7 +82,8 @@ const Search: FC<SearchProps> = ({
   onClickPlaylist,
   coverSize,
   routerActive,
-  defaultKeyword
+  defaultKeyword,
+  variant = "page"
 }) => {
   const [keyword, setKeyword] = useState("");
   const [currentTab, setCurrentTab] = useState<Tab>(tabOptions[0]!);
@@ -100,6 +104,12 @@ const Search: FC<SearchProps> = ({
     }
   }, [defaultKeyword]);
 
+  // 抽屉内没有页面标题，打开即聚焦输入框，减少一次点击。
+  useEffect(() => {
+    if (variant !== "drawer") return;
+    inputRef.current?.focus();
+  }, [variant]);
+
   // 只有点击tab才会挂载，默认不渲染
   useEffect(() => setMounted((bit) => bit | (1 << currentTab.index)), [currentTab.index]);
 
@@ -116,21 +126,32 @@ const Search: FC<SearchProps> = ({
 
   useAgentFocusCtx({ page: "search", keyword }, routerActive);
 
+  const handleSetTabs = useCallback((tab: Tab["key"]) => {
+    setCurrentTab(tabOptions.find((option) => option.key === tab) ?? tabOptions[0]!);
+  }, []);
+
   return (
     <div className={cx("flex h-full w-full flex-col gap-3 overflow-hidden", className)}>
-      <div className="relative z-50 flex shrink-0 flex-wrap items-center gap-3">
-        <div className="min-w-0 shrink-0">
-          <h1 className="text-[28px] font-bold leading-tight">搜索</h1>
+      {variant === "page" ? (
+        <div className="relative z-50 flex shrink-0 flex-wrap items-center gap-3">
+          <div className="min-w-0 shrink-0">
+            <h1 className="text-[28px] font-bold leading-tight">搜索</h1>
+          </div>
+          <SearchInput
+            ref={inputRef}
+            className="min-w-0 flex-1"
+            setTabs={handleSetTabs}
+            onSearch={applySearch}
+          />
         </div>
+      ) : (
         <SearchInput
           ref={inputRef}
-          className="min-w-0 flex-1"
+          className="relative z-50 shrink-0"
+          setTabs={handleSetTabs}
           onSearch={applySearch}
-          setTabs={(tab) => {
-            setCurrentTab(tabOptions.find((option) => option.key === tab) ?? tabOptions[0]!);
-          }}
         />
-      </div>
+      )}
 
       <Card className="flex min-h-0 flex-1 flex-col overflow-hidden p-0!">
         <HotRecommend
@@ -141,47 +162,92 @@ const Search: FC<SearchProps> = ({
           }}
         />
 
-        <section className={cx("flex min-h-0 flex-1", !keyword && "hidden")}>
-          <aside className="flex w-48 shrink-0 flex-col border-r border-white/[0.06] px-4 py-4">
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Matches</p>
-              <p className="mt-1 flex items-baseline gap-1 leading-none">
-                <span className="text-[22px] font-bold tabular-nums">{count}</span>
-                <span className="text-[11px] font-semibold opacity-40">条</span>
-              </p>
-            </div>
-            <nav className="mt-4 flex flex-col gap-1" aria-label="搜索结果类型">
-              {tabOptions.map((option) => {
-                const Icon = option.icon;
-                const active = option.key === currentTab.key;
+        <section
+          className={cx(
+            "flex min-h-0 flex-1",
+            variant === "drawer" && "flex-col",
+            !keyword && "hidden"
+          )}>
+          {variant === "page" ? (
+            <aside className="flex w-48 shrink-0 flex-col border-r border-white/[0.06] px-4 py-4">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">
+                  Matches
+                </p>
+                <p className="mt-1 flex items-baseline gap-1 leading-none">
+                  <span className="text-[22px] font-bold tabular-nums">{count}</span>
+                  <span className="text-[11px] font-semibold opacity-40">条</span>
+                </p>
+              </div>
+              <nav className="mt-4 flex flex-col gap-1" aria-label="搜索结果类型">
+                {tabOptions.map((option) => {
+                  const Icon = option.icon;
+                  const active = option.key === currentTab.key;
 
-                return (
-                  <button
-                    key={option.key}
-                    className={cx(
-                      `
+                  return (
+                    <button
+                      key={option.key}
+                      className={cx(
+                        `
                         flex w-full items-center gap-2 rounded-md px-3 py-2 text-left
                         transition-colors duration-200 ease-in-out
                       `,
-                      active
-                        ? "bg-primary text-primary-text"
-                        : "text-(--text-color)/55 hover:bg-white/[0.06] hover:text-(--text-color)"
-                    )}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => setCurrentTab(option)}>
-                    <Icon className="size-4 shrink-0" />
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-semibold">{option.label}</span>
-                      <span className="block truncate text-[10px] font-bold opacity-50">
-                        {option.caption}
+                        active
+                          ? "bg-primary text-primary-text"
+                          : "text-(--text-color)/55 hover:bg-white/[0.06] hover:text-(--text-color)"
+                      )}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setCurrentTab(option)}>
+                      <Icon className="size-4 shrink-0" />
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold">{option.label}</span>
+                        <span className="block truncate text-[10px] font-bold opacity-50">
+                          {option.caption}
+                        </span>
                       </span>
-                    </span>
-                  </button>
-                );
-              })}
-            </nav>
-          </aside>
+                    </button>
+                  );
+                })}
+              </nav>
+            </aside>
+          ) : (
+            <div className="flex shrink-0 items-center gap-2 border-b border-white/[0.06] px-3 py-2">
+              <div
+                className="grid min-w-0 flex-1 grid-cols-4 gap-1"
+                role="group"
+                aria-label="搜索结果类型">
+                {tabOptions.map((option) => {
+                  const Icon = option.icon;
+                  const active = option.key === currentTab.key;
+
+                  return (
+                    <button
+                      key={option.key}
+                      className={cx(
+                        `
+                        flex min-w-0 cursor-pointer items-center justify-center gap-1 rounded-md
+                        px-1.5 py-1.5 text-[11px] font-semibold
+                        transition-colors duration-200 ease-in-out
+                      `,
+                        active
+                          ? "bg-primary text-primary-text"
+                          : "text-(--text-color)/55 hover:bg-white/[0.06] hover:text-(--text-color)"
+                      )}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setCurrentTab(option)}>
+                      <Icon className="size-3.5 shrink-0" />
+                      <span className="truncate">{option.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <span className="shrink-0 text-[10px] font-semibold tabular-nums opacity-40">
+                {count} 条
+              </span>
+            </div>
+          )}
 
           <div className="relative min-h-0 flex-1">
             {!!(mounted & 0b1) && (

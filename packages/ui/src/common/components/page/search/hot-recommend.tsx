@@ -46,7 +46,7 @@ const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch }) => {
       message="获取热门搜索失败"
       when={status === "error" && items.length === 0}>
       <AppLoading className="h-full" loading={status === "loading" && items.length === 0}>
-        <div className={cx("flex h-full min-h-0 flex-col", className)}>
+        <div className={cx("@container flex h-full min-h-0 flex-col", className)}>
           <header className="flex shrink-0 items-center justify-between gap-3 px-4 pb-2 pt-4">
             <div className="flex min-w-0 items-center gap-2">
               <TrendingUp className="size-4 shrink-0 text-primary" />
@@ -67,7 +67,7 @@ const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch }) => {
             {items.length === 0 ? (
               <AppEmpty className="h-full" tips="暂无热搜" />
             ) : (
-              <div className="columns-1 gap-x-8 md:columns-2">
+              <div className="columns-1 gap-x-8 @[28rem]:columns-2">
                 {items.map((item, index) => (
                   <HotRow key={item.searchWord} item={item} rank={index + 1} onSearch={onSearch} />
                 ))}

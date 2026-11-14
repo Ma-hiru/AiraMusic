@@ -1,4 +1,5 @@
 export { default } from "./use";
+export { createSearchDrawer, type SearchDrawerProps } from "./search-drawer";
 export {
   createPlayListDrawer,
   type PlayListDrawerProps,

@@ -22,6 +22,7 @@ import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
 import Title from "./title";
 import DisplayFloat from "./float";
 import Background from "./background";
+import SearchControl from "./search-control";
 import PlayListControl from "./play-list-control";
 import ListeningFootprintControl from "./listening-footprint-control";
 
@@ -149,7 +150,16 @@ const LayoutDisplay: FC<object> = () => {
           routePath={RoutePathDisplay}
           onClick={() => setBack(true)}
         />
-        <Control appends={[<PlayListControl />, <ListeningFootprintControl />]} max pin mini />
+        <Control
+          appends={[
+            <SearchControl key="search" />,
+            <PlayListControl key="play-list" />,
+            <ListeningFootprintControl key="listening-footprint" />
+          ]}
+          max
+          pin
+          mini
+        />
       </Drag>
       <AppErrorBoundary name="LayoutDisplayContent" canReset showError>
         <Background />
