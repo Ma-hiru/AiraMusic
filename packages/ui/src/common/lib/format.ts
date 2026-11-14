@@ -119,6 +119,23 @@ export class RendererFormat {
     }
   }
 
+  static qualityOfLevel(level: Optional<string>): Nullable<TrackQuality> {
+    switch (level) {
+      case NeteaseMusicLevel.standard:
+        return TrackQuality.l;
+      case NeteaseMusicLevel.higher:
+        return TrackQuality.m;
+      case NeteaseMusicLevel.exhigh:
+        return TrackQuality.h;
+      case NeteaseMusicLevel.lossless:
+        return TrackQuality.sq;
+      case NeteaseMusicLevel.hires:
+        return TrackQuality.hr;
+      default:
+        return null;
+    }
+  }
+
   static quality(text: Optional<string>) {
     if (!text) return null;
     switch (text) {

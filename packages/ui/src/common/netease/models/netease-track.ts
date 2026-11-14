@@ -168,7 +168,9 @@ export class NeteaseTrack implements NeteaseTrackModel {
   }
 
   /** 获取歌曲音质信息 */
-  qualities(isVip: Undefinable<boolean>) {
+  qualities(
+    isVip: Undefinable<boolean>
+  ): { br: number; vd: number; fid: number; sr?: number; size: number; label: TrackQuality }[] {
     const res = [];
     if (this.hr) res.push({ ...this.hr, label: TrackQuality.hr });
     if (this.sq) res.push({ ...this.sq, label: TrackQuality.sq });
@@ -257,6 +259,7 @@ export class NeteaseTrack implements NeteaseTrackModel {
   }
 
   static fromObject(object: NeteaseTrack | NeteaseTrackModel) {
+    if (object instanceof NeteaseTrack) return object;
     return new NeteaseTrack(object);
   }
   //endregion

@@ -139,7 +139,7 @@ export default class RendererPlayerAudio {
       this.errorID = track.id;
       this.errorCount += 1;
 
-      const audio = await NeteaseServicesAudio.track(track, source.quality, false);
+      const audio = await NeteaseServicesAudio.track(track);
       if (!audio || !audio.isLocal() || generation !== this.loadGeneration) return;
 
       queueMicrotask(() => {

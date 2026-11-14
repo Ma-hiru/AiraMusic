@@ -62,7 +62,10 @@ type Jsonify<T> =
           ? {
               [K in keyof T as Jsonify<T[K]> extends never ? never : K]: Jsonify<T[K]>;
             }
-          : // 5. 其他类型不属于 JSON，去掉
-            never;
+          : // 保留 unknown，默认unknown属于JSON原始值，方便类型转换（有些api类型定义有unknown字段）
+            unknown extends T
+            ? T
+            : // 5. 其他类型不属于 JSON，去掉
+              never;
 
 type AnyClass = abstract new (...args: any[]) => any;

@@ -2,18 +2,24 @@ import { TrackQuality } from "@/common/enum";
 
 import { NeteaseURL } from "./netease-url";
 
-export class NeteaseNetworkAudio {
-  readonly url;
-  readonly quality;
-  readonly id;
-  readonly meta;
+interface NeteaseNetworkAudioProps {
+  id: number;
+  url: string;
+  quality: TrackQuality;
+  meta: NeteaseAPI.NeteaseSongUrlNewItem;
+}
 
-  constructor(props: {
-    id: number;
-    url: string;
-    quality: TrackQuality;
-    meta: NeteaseAPI.NeteaseSongUrlNewItem;
-  }) {
+interface NeteaseLocalAudioProps extends NeteaseNetworkAudioProps {
+  localURL: string;
+}
+
+export class NeteaseNetworkAudio {
+  readonly url: string;
+  readonly quality: TrackQuality;
+  readonly id: number;
+  readonly meta: NeteaseAPI.NeteaseSongUrlNewItem;
+
+  constructor(props: NeteaseNetworkAudioProps) {
     this.quality = props.quality;
     this.url = NeteaseURL.toSecure(props.url);
     this.id = props.id;
@@ -41,13 +47,7 @@ export class NeteaseNetworkAudio {
 export class NeteaseLocalAudio extends NeteaseNetworkAudio {
   readonly localURL: string;
 
-  constructor(props: {
-    id: number;
-    url: string;
-    localURL: string;
-    quality: TrackQuality;
-    meta: NeteaseAPI.NeteaseSongUrlNewItem;
-  }) {
+  constructor(props: NeteaseLocalAudioProps) {
     super(props);
     this.localURL = props.localURL;
   }
@@ -56,7 +56,7 @@ export class NeteaseLocalAudio extends NeteaseNetworkAudio {
     return this.localURL || this.url;
   }
 
-  static fromNetwork(network: NeteaseNetworkAudio, localURL: string) {
+  static fromNetwork(network: NeteaseNetworkAudioProps, localURL: string) {
     return new NeteaseLocalAudio({
       id: network.id,
       url: network.url,
@@ -66,12 +66,16 @@ export class NeteaseLocalAudio extends NeteaseNetworkAudio {
     });
   }
 
-  static fromObject(
-    audio: Optional<NeteaseLocalAudio | NeteaseNetworkAudio>
-  ): Nullable<NeteaseLocalAudio | NeteaseNetworkAudio> {
-    if (!audio) return null;
-    if ("localURL" in audio) return new NeteaseLocalAudio(audio);
-    return new NeteaseNetworkAudio(audio);
+  static fromObject<T extends Optional<NeteaseLocalAudioProps | NeteaseNetworkAudioProps>>(
+    audio: T
+  ): FromObjectReturn<T> {
+    let res;
+
+    if (!audio) res = null;
+    else if ("localURL" in audio) res = new NeteaseLocalAudio(audio);
+    else res = new NeteaseNetworkAudio(audio);
+
+    return res as FromObjectReturn<T>;
   }
 }
 
@@ -88,3 +92,10 @@ export class NeteaseCommonAudio {
     return audio?.constructor === NeteaseNetworkAudio;
   }
 }
+
+type FromObjectReturn<T extends Optional<NeteaseLocalAudioProps | NeteaseNetworkAudioProps>> =
+  T extends Falsy
+    ? null
+    : T extends NeteaseLocalAudioProps
+      ? NeteaseLocalAudio
+      : NeteaseNetworkAudio;

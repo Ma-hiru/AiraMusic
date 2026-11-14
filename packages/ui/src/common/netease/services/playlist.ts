@@ -23,16 +23,24 @@ export default class _NeteasePlaylistSource {
   //region cache
   private static readonly cacheKey = "netease_playlist_detail_v2";
 
+  private static get userID() {
+    return userStoreSnapshot()._user?.userId ?? 0;
+  }
+
+  private static buildCacheKey(id: number) {
+    return `${_NeteasePlaylistSource.cacheKey}_${id}_${this.userID}`;
+  }
+
   private static storeCache(response: NullablePrivilegesPlaylistDetailResponse) {
     return RendererCache.service.object.setOne({
-      id: _NeteasePlaylistSource.cacheKey + "_" + response.playlist.id,
+      id: this.buildCacheKey(response.playlist.id),
       data: response
     });
   }
 
   private static getCache(id: number) {
     return RendererCache.service.object.getOne<NullablePrivilegesPlaylistDetailResponse>(
-      _NeteasePlaylistSource.cacheKey + "_" + id
+      this.buildCacheKey(id)
     );
   }
 

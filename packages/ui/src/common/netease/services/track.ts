@@ -1,6 +1,7 @@
 import { Log } from "@/common/lib/log";
 import { RendererCache } from "@/common/lib/cache";
 import { NeteaseAPITrack } from "@/common/netease/api";
+import { userStoreSnapshot } from "@/common/store/user";
 import { NeteaseTrack, NeteaseTrackRecord } from "@/common/netease/models";
 import pLimit from "p-limit";
 
@@ -14,8 +15,12 @@ type CacheEntry = {
 export default class _NeteaseTrackSource {
   private static readonly cacheKey = "netease_tracks_v2";
 
+  private static get userID() {
+    return userStoreSnapshot()._user?.userId ?? 0;
+  }
+
   private static getCacheKey(id: number) {
-    return _NeteaseTrackSource.cacheKey + "_" + id;
+    return `${_NeteaseTrackSource.cacheKey}_${id}_${this.userID}`;
   }
 
   private static getCache(ids: number[]) {

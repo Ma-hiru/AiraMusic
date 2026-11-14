@@ -98,10 +98,6 @@ export default class RendererPlayer extends Listenable<
     }
   }
 
-  private get settingsStore() {
-    return settingsStoreSnapshot();
-  }
-
   constructor(props?: {
     audio?: RendererPlayerAudio;
     status?: RendererPlayerStatus;
@@ -346,9 +342,9 @@ export default class RendererPlayer extends Listenable<
     track: NeteaseTrack,
     controller: AbortController
   ): Promise<Nullable<NeteaseLocalAudio | NeteaseNetworkAudio>> {
-    const preference = this.settingsStore._settings.trackQuality.quality;
     if (controller.signal.aborted) return null;
-    const audio = await NeteaseServicesAudio.track(track, preference, false);
+    const preference = settingsStoreSnapshot()._settings.trackQuality.quality;
+    const audio = await NeteaseServicesAudio.track(track);
     if (controller.signal.aborted) return null;
     const sessionID = this.session.sessionId;
 
@@ -357,7 +353,7 @@ export default class RendererPlayer extends Listenable<
       const download = () => {
         if (controller.signal.aborted) return;
         Log.info("load audio", "downloading audio after 10s", track.id);
-        NeteaseServicesAudio.download(audio);
+        NeteaseServicesAudio.download(audio, preference);
 
         const check = () => {
           if (controller.signal.aborted) return false;
@@ -391,7 +387,7 @@ export default class RendererPlayer extends Listenable<
           if (!check()) return;
           RendererIdle.runAsync(async function* () {
             if (!check()) return;
-            const audio = await NeteaseServicesAudio.track(track, preference, false);
+            const audio = await NeteaseServicesAudio.track(track);
             if (!audio || !audio.isLocal()) return Log.info("load audio", "downloaded not success");
             yield;
             exec(audio);

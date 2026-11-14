@@ -28,18 +28,20 @@ export default class _NeteaseStarSource {
     time_limit: CACHE_TIME
   });
 
+  private static get userID() {
+    return userStoreSnapshot()._user?.userId ?? 0;
+  }
+
   /** 通过代际号使旧缓存不可达，避免遍历 LRU 内部节点 */
   private static albumsGeneration = 0;
   private static artistsGeneration = 0;
 
   private static albumKey(offset: number, limit: number) {
-    const userID = userStoreSnapshot()._user?.userId ?? 0;
-    return `${userID}:${_NeteaseStarSource.albumsGeneration}:${offset}:${limit}`;
+    return `${this.userID}:${_NeteaseStarSource.albumsGeneration}:${offset}:${limit}`;
   }
 
   private static artistKey(offset: number, limit: number) {
-    const userID = userStoreSnapshot()._user?.userId ?? 0;
-    return `${userID}:${_NeteaseStarSource.artistsGeneration}:${offset}:${limit}`;
+    return `${this.userID}:${_NeteaseStarSource.artistsGeneration}:${offset}:${limit}`;
   }
 
   /** 收藏的歌单（用户 store 中非本人创建的歌单） */
