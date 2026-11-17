@@ -1,11 +1,9 @@
-import { parseLrc, parseQrc } from "@applemusic-like-lyrics/lyric";
 import { Log } from "@/common/lib/log";
-import { parseNeteaseLyric } from "@mahiru/wasm";
 import { RendererCache } from "@/common/lib/cache";
 import { NeteaseAPILyric } from "@/common/netease/api";
 import { QQMusicLyric } from "@/common/lib/qq-music-lyric";
-import { NeteaseLyric, NeteaseTrack, NeteaseLyricSchema } from "@/common/netease/models";
-import type { QQLyricContent } from "@/common/lib/qq-music-lyric/model";
+import { AppleMusicLyric } from "@/common/lib/apple-music-lyric";
+import { NeteaseLyric, NeteaseTrack } from "@/common/netease/models";
 
 type AbortInput = AbortSignal | AbortController;
 
@@ -30,50 +28,6 @@ export default class _NeteaseLyricSource {
   }
   //endregion
 
-  private static async fromQQMusic(
-    track: Optional<NeteaseTrack>,
-    signal?: AbortSignal
-  ): Promise<Nullable<NeteaseLyric>> {
-    signal?.throwIfAborted();
-    if (!track) return null;
-    try {
-      const songs = await QQMusicLyric.search(
-        `${track.name} ${track.artist.join(",")} ${track.al.name}`
-      );
-      signal?.throwIfAborted();
-
-      const match = QQMusicLyric.match(track, songs);
-      Log.info(
-        "qq-music-lyric",
-        `search qq music result: ${match?.song.title || "unknown"} (${match?.score ?? 0})`
-      );
-      if (match) {
-        const lyric = await QQMusicLyric.get(match.song);
-        signal?.throwIfAborted();
-        const parse = (content: Optional<QQLyricContent>) => {
-          if (content?.type === "qrc") return parseQrc(content.text);
-          if (content?.type === "lrc") return parseLrc(content.text);
-          return [];
-        };
-        const row = parse(lyric.lyric);
-        const roman = parse(lyric.roma);
-        const trans = parse(lyric.translation);
-        if (row.length) {
-          const parsedLyric = NeteaseLyricSchema.parse(parseNeteaseLyric(row, trans, roman));
-          return new NeteaseLyric({
-            ...parsedLyric,
-            id: track.id,
-            tips: parsedLyric.data.length >= 5 ? "歌词来源：QQ音乐" : undefined
-          });
-        }
-      }
-    } catch (err) {
-      signal?.throwIfAborted();
-      Log.warn("qq-music-lyric", err);
-    }
-    return null;
-  }
-
   static async id(
     id: number,
     abortInput?: AbortInput,
@@ -85,18 +39,11 @@ export default class _NeteaseLyricSource {
     signal?.throwIfAborted();
     if (cache && cache.data.length >= 1) return new NeteaseLyric(cache);
 
-    const ttmlController = new AbortController();
-    const relayAbort = () => ttmlController.abort(signal?.reason);
-    signal?.addEventListener("abort", relayAbort, { once: true });
-    const timer = setTimeout(() => ttmlController.abort(), 1500);
     const [ttml, response, qrc] = await Promise.allSettled([
-      NeteaseAPILyric.getTTM(id, ttmlController.signal),
+      AppleMusicLyric.getTTM(id, signal),
       NeteaseAPILyric.getYRC(id, signal),
-      this.fromQQMusic(track, signal)
-    ]).finally(() => {
-      clearTimeout(timer);
-      signal?.removeEventListener("abort", relayAbort);
-    });
+      QQMusicLyric.getQRC(track, signal)
+    ]);
     signal?.throwIfAborted();
 
     let lyric = NeteaseLyric.loadErrorLyric;

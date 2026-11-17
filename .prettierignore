@@ -1,5 +1,6 @@
 **/*.svg
 **/*.ttf
+**/*.jsonl
 **/target
 **/node_modules
 **/.idea

@@ -148,8 +148,25 @@ class Parser {
   }
 
   static parseTTMLyric(context: string) {
-    // TTML 文件先修复
     const ttml = Parser.handleTTMLSpaceWord(parseTTML(context));
+
+    /**
+     * @deprecated 仅为兼容历史脏数据保留，新代码不要再依赖它。
+     *
+     * 该修复是 `@applemusic-like-lyrics/lyric` 0.3.0（WASM 解析器）时代的兜底：
+     * 当时和声组 `<span ttm:role="x-bg">` 不带 begin/end，整行会被解析成从 0 秒开始。
+     *
+     * 升级到 1.1.0（底层换成 `@applemusic-like-lyrics/ttml`，纯 JS）后问题已在解析层根治：
+     * x-bg 组取子 span 的 min begin / max end，行起始也对齐到首词。
+     * 实测 24 个文件 / 1376 行经此函数零改动，属于幂等空操作。
+     *
+     * 保留原因：挡住第三方人工编辑的 TTML（整行写成 0 秒、endTime 早于 startTime 之类）。
+     * 已知副作用：首词时长超过 max(8s, 同行中位数×4) 时会被回推成 `endTime - 中位数`，
+     * 极端长音可能被截断；需要收窄时改 `packages/wasm/src/lyric/normalize.rs`
+     * 的 `WORD_DURATION_ANOMALY_MIN_MS`。
+     *
+     * 全项目仅此一处调用，QQ/LRC/YRC 等解析路径都不经过它。
+     */
     const lines = normalizeLyricLines(ttml.lines) as AMLyricLine[];
     const data = Parser.handleAMLyricLine(lines);
     const { rmCount, tlCount, noteCount } = data.reduce(
@@ -201,6 +218,7 @@ class Parser {
       return {
         ...line,
         isBG: line.isBG ?? false,
+        isDuet: line.isDuet ?? false,
         isBlank: LyricLineInfo.isBlank(rawLyric),
         isBackChorus: line.isBG || line.isDuet || LyricLineInfo.isBackChorus(rawLyric)
       };

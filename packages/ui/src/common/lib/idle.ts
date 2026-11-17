@@ -295,7 +295,15 @@ export class RendererIdle {
     });
   }
 
-  static normal(callback: IdleRequestCallback, timeout = 1_000) {
-    return window.requestIdleCallback(callback, { timeout });
+  static normal(callback: IdleRequestCallback, timeout = 1_000, delay?: number) {
+    const schedule = () => {
+      if (typeof window?.requestIdleCallback === "function")
+        return window.requestIdleCallback(callback, { timeout });
+      return setTimeout(() => callback({ didTimeout: false, timeRemaining: () => 0 }), 0);
+    };
+    if (delay && Number.isSafeInteger(delay) && delay > 0) {
+      return setTimeout(schedule, delay);
+    }
+    return schedule();
   }
 }

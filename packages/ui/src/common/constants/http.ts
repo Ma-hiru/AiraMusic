@@ -7,7 +7,7 @@ export default class RendererHTTPConstants {
    * */
   static readonly NCMBaseURL = "/api";
   static readonly CacheBaseURL = "/cache";
-  static readonly Timeout = 15 * 1000;
+  static readonly Timeout = 15 * 1_000;
   /** 不会修改服务器状态的 HTTP 方法，重试时仅重试这些方法(幂等) */
   static readonly IdempotentMethods = ["get", "head", "options"];
   /** 基础重试延迟，单位毫秒 */

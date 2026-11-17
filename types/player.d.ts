@@ -176,6 +176,8 @@ interface LyricLine {
   isBackChorus?: boolean;
   /** 背景歌词行(TTML) */
   isBG?: boolean;
+  /** 是否为对唱歌词行(TTML) */
+  isDuet?: boolean;
 }
 
 type NeteaseLyricModel = {

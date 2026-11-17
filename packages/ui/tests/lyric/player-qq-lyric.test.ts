@@ -19,9 +19,11 @@ vi.mock("@/common/lib/cache", () => ({
     }
   }
 }));
+vi.mock("@/common/lib/apple-music-lyric", () => ({
+  AppleMusicLyric: { getTTM: vi.fn().mockResolvedValue(null) }
+}));
 vi.mock("@/common/netease/api", () => ({
   NeteaseAPILyric: {
-    getTTM: vi.fn().mockResolvedValue(null),
     getYRC: vi.fn().mockResolvedValue({ lrc: { lyric: "" } })
   }
 }));

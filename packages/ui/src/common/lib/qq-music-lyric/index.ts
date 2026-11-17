@@ -1,8 +1,10 @@
 import { decryptQrc } from "qrc-decoder";
+import { parseLrc, parseQrc } from "@applemusic-like-lyrics/lyric";
 import { EqError } from "@mahiru/log";
 import { Log } from "@/common/lib/log";
 import { RendererNet } from "@/common/lib/net";
-import { NeteaseTrack } from "@/common/netease/models";
+import { parseNeteaseLyric } from "@mahiru/wasm";
+import { NeteaseLyric, NeteaseTrack, NeteaseLyricSchema } from "@/common/netease/models";
 
 import { scoreSong } from "./match";
 import { textToBase64, requestMusicuFcg } from "./utils";
@@ -216,5 +218,49 @@ export class QQMusicLyric {
       .sort((a, b) => b.score - a.score)[0];
 
     return best && best.score >= 70 ? best : null;
+  }
+
+  static async getQRC(
+    track: Optional<NeteaseTrack>,
+    signal?: AbortSignal
+  ): Promise<Nullable<NeteaseLyric>> {
+    signal?.throwIfAborted();
+    if (!track) return null;
+    try {
+      const songs = await QQMusicLyric.search(
+        `${track.name} ${track.artist.join(",")} ${track.al.name}`
+      );
+      signal?.throwIfAborted();
+
+      const match = QQMusicLyric.match(track, songs);
+      Log.info(
+        "qq-music-lyric",
+        `search qq music result: ${match?.song.title || "unknown"} (${match?.score ?? 0})`
+      );
+      if (match) {
+        const lyric = await QQMusicLyric.get(match.song);
+        signal?.throwIfAborted();
+        const parse = (content: Optional<QQLyricContent>) => {
+          if (content?.type === "qrc") return parseQrc(content.text);
+          if (content?.type === "lrc") return parseLrc(content.text);
+          return [];
+        };
+        const row = parse(lyric.lyric);
+        const roman = parse(lyric.roma);
+        const trans = parse(lyric.translation);
+        if (row.length) {
+          const parsedLyric = NeteaseLyricSchema.parse(parseNeteaseLyric(row, trans, roman));
+          return new NeteaseLyric({
+            ...parsedLyric,
+            id: track.id,
+            tips: parsedLyric.data.length >= 5 ? "歌词来源：QQ音乐" : undefined
+          });
+        }
+      }
+    } catch (err) {
+      signal?.throwIfAborted();
+      Log.warn("qq-music-lyric", err);
+    }
+    return null;
   }
 }

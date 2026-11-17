@@ -89,10 +89,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@applemusic-like-lyrics/lyric@npm:0.3.0":
-  version: 0.3.0
-  resolution: "@applemusic-like-lyrics/lyric@npm:0.3.0"
-  checksum: 10c0/245184b395f67ba03be3914b2ccafd52661ae7e190e448644cef37739881545f26ca8bfd00dc56e3751271eb3bfd72b22b2a54bef315b62f3fc4bd047cb73094
+"@applemusic-like-lyrics/lyric@npm:1.1.0":
+  version: 1.1.0
+  resolution: "@applemusic-like-lyrics/lyric@npm:1.1.0"
+  dependencies:
+    "@applemusic-like-lyrics/ttml": "npm:^1.0.1"
+    pako: "npm:^3.0.1"
+  checksum: 10c0/c1839d9fd159bf62484d4d7bdee123b9afee82fcf5b61d8b86cee253194bda757a243a55259c3659353fa3e0b12ee95b9e9fd79d4df6a714e6a6fcc27e568de2
+  languageName: node
+  linkType: hard
+
+"@applemusic-like-lyrics/ttml@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@applemusic-like-lyrics/ttml@npm:1.0.1"
+  checksum: 10c0/eb310b1ed5dcc12f1749183c8e345307f67b451a0e057a9b95c11b4c5bb3d38f32a0445fbc58aae8b4c7dfe4a577ddb0b6bd36b397f8eebf11fa61a0881beb0e
   languageName: node
   linkType: hard
 
@@ -1936,7 +1946,7 @@ __metadata:
   resolution: "@mahiru/ui@workspace:packages/ui"
   dependencies:
     "@ai-sdk/react": "npm:4.0.160"
-    "@applemusic-like-lyrics/lyric": "npm:0.3.0"
+    "@applemusic-like-lyrics/lyric": "npm:1.1.0"
     "@babel/core": "npm:^8.0.7"
     "@babel/plugin-proposal-decorators": "npm:^8.0.2"
     "@emotion/css": "npm:^11.13.5"
@@ -11678,6 +11688,13 @@ __metadata:
   version: 2.2.0
   resolution: "pako@npm:2.2.0"
   checksum: 10c0/e5d31de1940fdd13cc4014296b0026112483d0834bce4856ca29c8af8438d030c6416986a0f6df7d5372cae18d6dd6c57f48b24a49d6c207c0a4cc66af15c07d
+  languageName: node
+  linkType: hard
+
+"pako@npm:^3.0.1":
+  version: 3.0.3
+  resolution: "pako@npm:3.0.3"
+  checksum: 10c0/556ce60a9232817719a5f80ba77c9facc5741007a27e369305c6c4c3e0f32d700bd394f1d303d29032871b5dde81e3f74574a5834bfafa005f019e964d731dac
   languageName: node
   linkType: hard
 

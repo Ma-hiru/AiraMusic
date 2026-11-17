@@ -57,15 +57,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": join(__dirname, "./src"), // src
-        "@mahiru/ui": join(__dirname, "./src"), // vitest
-        ...(mode === "test"
-          ? {
-              // 包只有 module 入口；显式解析，让测试可通过 vi.unmock 使用真实 WASM
-              "@applemusic-like-lyrics/lyric": fileURLToPath(
-                import.meta.resolve("@applemusic-like-lyrics/lyric/pkg/amll_lyric.js")
-              )
-            }
-          : {})
+        "@mahiru/ui": join(__dirname, "./src") // vitest
       }
     },
     clearScreen: false,
@@ -89,9 +81,6 @@ export default defineConfig(({ mode }) => {
       }
     },
     test: {
-      server: {
-        deps: { inline: ["@applemusic-like-lyrics/lyric"] }
-      },
       include: ["tests/**/*.test.{ts,tsx,cts,mts,js,cjs,mjs}"],
       globals: true,
       environment: "jsdom",

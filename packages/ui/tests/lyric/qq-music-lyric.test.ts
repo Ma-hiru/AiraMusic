@@ -20,7 +20,8 @@ import japaneseLyricJSON from "./fixtures/qq-lyric-japanese.json";
 vi.mock("@/common/lib/net", () => ({
   RendererNet: { requestFromNode: vi.fn() }
 }));
-// 这个测试验证真实 WASM 解析器，不能使用 setup 中返回空数组的 mock。
+// 这个测试验证真实解析器，不能使用 setup 中返回空数组的 mock。
+// 1.x 起该包改为纯 JS 实现，不再依赖 pkg/amll_lyric.js 的 WASM 入口。
 vi.unmock("@applemusic-like-lyrics/lyric");
 
 // 2026-09-28 的真实响应；现代接口返回 2001，旧接口成功，歌词为加密 QRC。
@@ -82,7 +83,8 @@ describe("QQMusicLyric recorded API responses", () => {
     const words = lines.flatMap((line) => line.words);
     expect(words).toHaveLength(602);
     expect(words[0]).toMatchObject({ word: "晴", startTime: 0, endTime: 160 });
-    expect(lines.at(-1)).toMatchObject({ startTime: 262863, endTime: 265846 });
+    // 末行 endTime 取自 amll-lyric 1.x（纯 JS 解析器）；0.3.0 的 WASM 版为 265846
+    expect(lines.at(-1)).toMatchObject({ startTime: 262863, endTime: 266173 });
     expect(words.every((word) => Number.isFinite(word.startTime))).toBe(true);
     expect(words.every((word) => word.endTime > word.startTime)).toBe(true);
     expect(words.some((word) => /[<>]/.test(word.word))).toBe(false);
@@ -115,7 +117,7 @@ describe("QQMusicLyric recorded API responses", () => {
     }
   });
 
-  it("keeps the existing lyric output while adding timed roman words through WASM and schema", async () => {
+  it("keeps the existing lyric output while adding timed roman words through parseQrc and schema", async () => {
     vi.mocked(RendererNet.requestFromNode).mockResolvedValue(Response.json(japaneseLyricResponse));
     const result = await QQMusicLyric.get({
       id: japaneseLyricResponse.lyric.data.songID,
@@ -148,9 +150,11 @@ describe("QQMusicLyric recorded API responses", () => {
       }))
     });
     expect(withoutWordRoman(model)).toEqual(withoutWordRoman(baseline));
+    // 歌词正文与 baseline 完全一致（见上一条断言），这里只统计音译覆盖数：
+    // amll-lyric 1.x 的词元拆分方式变化，带音译的词从 405 变成 403
     expect(
       model.data.flatMap((line) => line.words).filter((word) => word.romanWord?.trim())
-    ).toHaveLength(405);
+    ).toHaveLength(403);
     const first = model.data.find((line) => line.startTime === 19953)!;
     expect(first.words.find((word) => word.word === "渚")?.romanWord).toBe("na gi sa");
     expect(first.words.find((word) => word.word === "渡")?.romanWord).toBe("wa ta");
