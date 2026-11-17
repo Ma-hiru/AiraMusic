@@ -27,3 +27,9 @@ temp
 !.yarn/versions
 
 .env.local
+
+# 本地授权凭据（Apple Music media-user-token）
+scripts/ttml/.auth.json
+
+# amll-ttml-db 索引缓存
+ttml/.amll-index.jsonl
