@@ -50,7 +50,7 @@ export class TimeManager extends Listenable<TimeManagerEvent> {
 
     let miss = 0;
     for (let i = last_active; i >= 0; i--) {
-      if (miss >= 5) break; // 最多再检查五行
+      if (miss >= 10) break; // 最多再检查十行（之前是五行，实际上还真有歌曲可以同时激活超过五行！！）
       if (time <= lines[i]!.endTime) ans.push(i);
       else miss++;
     }

@@ -7,6 +7,7 @@ import { RendererWindow } from "@/common/lib/window";
 import { NeteaseURL } from "@/common/netease/models";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useListenable } from "@/common/hooks/use-listenable";
+import { useWindowTitle } from "@/common/hooks/use-window-title";
 import { useWindowVisible } from "@/common/hooks/use-window-visible";
 import { useShortcutForwarder } from "@/common/hooks/use-shortcut-forwarder";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
@@ -28,6 +29,8 @@ const RadioPage: FC = () => {
     () => NeteaseURL.setImageSize(track?.al.picUrl, NeteaseImageSize.sm),
     [track?.al.picUrl]
   );
+
+  useWindowTitle(track);
 
   const close = useCallback(() => {
     RendererWindow.current.hide();

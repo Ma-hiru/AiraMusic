@@ -10,8 +10,23 @@ import {
 
 export type RendererWindowEvent = MessageData<"bus_deliver_window_event">["action"];
 
+export const RendererWindowLabelMap = <Record<WindowType, string>>{
+  main: import.meta.env.APP_NAME,
+  tray: "托盘",
+  miniplayer: "迷你播放器",
+  lyric: "歌词",
+  radio: "播放器",
+  image: "图片",
+  display: "拆分",
+  comments: "评论",
+  login: "登录",
+  agent: "智能体",
+  about: "关于"
+};
+
 export class RendererWindow extends Listenable<"react-ready" | RendererWindowEvent> {
   readonly type: WindowType;
+  readonly label: string;
   private readonly id: string;
   private _opened: boolean;
   private _show: boolean;
@@ -114,6 +129,7 @@ export class RendererWindow extends Listenable<"react-ready" | RendererWindowEve
   private constructor(type: WindowType) {
     super(`AppWindow(${type})`);
     this.type = type;
+    this.label = RendererWindowLabelMap[type] || RendererRuntime.name;
     this._opened = this.type === RendererRuntime.currentWindowType;
     this._max = false;
     this._min = false;
@@ -331,7 +347,11 @@ export class RendererWindow extends Listenable<"react-ready" | RendererWindowEve
     };
     const ok = () => {
       this.focus();
-      finish(resolve);
+      finish(() => {
+        resolve();
+        // 窗口就绪后同步主题和曲目信息
+        RendererIPC.MessageChannel.commit("bus_dispatch_update", ["theme", "track-meta"]);
+      });
     };
     const abort = () => {
       finish(() => {
@@ -353,12 +373,6 @@ export class RendererWindow extends Listenable<"react-ready" | RendererWindowEve
       listenerState.timer && clearTimeout(listenerState.timer); // 清理超时逻辑
       listenerState.timer = window.setTimeout(ok, 100);
     };
-
-    void promise.then(() => {
-      // 新建窗口自动分发一次基本的 bus
-      // 额外的 bus 可以自行 dispatch
-      RendererIPC.MessageChannel.commit("bus_dispatch_update", ["theme", "track-meta"]);
-    });
 
     if (options.signal?.aborted) {
       abort();
@@ -631,3 +645,7 @@ export class RendererWindowVisible extends Listenable<"visible-change"> {
     super[Symbol.dispose]();
   }
 }
+
+queueMicrotask(() => {
+  RendererWindow.current.title(RendererWindow.current.label);
+});

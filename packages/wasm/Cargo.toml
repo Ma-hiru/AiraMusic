@@ -20,10 +20,17 @@ csscolorparser = "0.7"
 web-sys = { version = "0.3", features = [
     "console",
     "HtmlCanvasElement",
+    "HtmlImageElement",
+    "CanvasRenderingContext2d",
+    "Document",
+    "WebGlContextAttributes",
+    "WebGlPowerPreference",
     "WebGlRenderingContext",
     "WebGlProgram",
     "WebGlShader",
     "WebGlBuffer",
+    "WebGlFramebuffer",
+    "WebGlTexture",
     "WebGlUniformLocation"
 ] }
 anyhow = "1.0.100"

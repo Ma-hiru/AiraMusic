@@ -87,9 +87,7 @@ const AlbumDisplay: FC<object> = () => {
       onClickArtist={jumpArtistDisplay}
       onDataLoaded={(album) => {
         if (!album) return;
-        const name = album.content.name;
-        const artist = album.content.artists.map((a) => a.name).join("&");
-        return setTitle(`${name} - ${artist}`);
+        return setTitle(album.content.name);
       }}
     />
   );

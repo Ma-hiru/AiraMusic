@@ -1,7 +1,7 @@
 import { memo, type FC, useMemo, useState, useEffect, useCallback } from "react";
-import { RendererWindow } from "@/common/lib/window";
 import { useAgent } from "@/wins/agent/hooks/useAgent";
 import { useMediaQuery } from "@/common/hooks/use-media-query";
+import { useWindowTitle } from "@/common/hooks/use-window-title";
 import { useShortcutForwarder } from "@/common/hooks/use-shortcut-forwarder";
 import Drag from "@/common/components/layout/drag/drag";
 import AppToast from "@/common/components/display/toast";
@@ -73,9 +73,7 @@ const AgentPage: FC<object> = () => {
   );
   const openCreateConfigModal = useCallback(() => openConfigModal(), [openConfigModal]);
 
-  useEffect(() => {
-    RendererWindow.current.title(`${currentTitle} - ${import.meta.env.APP_NAME} Agent`);
-  }, [currentTitle]);
+  useWindowTitle(currentTitle);
 
   useEffect(() => {
     setOpenList(!compactLayout);

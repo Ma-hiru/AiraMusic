@@ -1,9 +1,11 @@
 import { cx } from "@emotion/css";
 import { memo, type FC, useMemo, useState, useCallback, useLayoutEffect } from "react";
+import { lyricLanguageCode, preferredLyricLanguage } from "@/common/lib/lyric-language";
 
 import LyricWord from "./lyric-word";
 import type { LyricLineExtended } from "./utils";
 import type { TimeManager } from "./time-manager";
+import LyricEmbedContent, { type LyricArtistClick } from "./lyric-embed";
 
 interface LyricLineProps {
   /** 歌词行序号 */
@@ -21,14 +23,17 @@ interface LyricLineProps {
   rmActive: Optional<boolean>;
   tlActive: Optional<boolean>;
   noteActive: Optional<boolean>;
+  tlLanguages?: readonly string[];
   crossAlign?: "left" | "right" | "center";
   timeManager: TimeManager;
+  onArtistClick?: LyricArtistClick;
   onClick?: NormalFunc<[startTime: number]>;
 }
 
 const LyricLine: FC<LyricLineProps> = ({
   timeManager,
   onClick,
+  onArtistClick,
   line,
   hasRm,
   hasTl,
@@ -40,6 +45,7 @@ const LyricLine: FC<LyricLineProps> = ({
   tlActive,
   noteActive,
   activeColor,
+  tlLanguages,
   inactiveColor,
   spring = true,
   crossAlign = "left"
@@ -98,6 +104,18 @@ const LyricLine: FC<LyricLineProps> = ({
     }),
     [active, activeColor, fontSize, inactiveColor]
   );
+  const translations = useMemo(() => {
+    if (!hasTl || !tlActive) return [];
+    if (!line.translations?.length) {
+      return line.translatedLyric ? [{ text: line.translatedLyric }] : [];
+    }
+    const languages = tlLanguages ?? [
+      preferredLyricLanguage(line.translations.map(lyricLanguageCode))
+    ];
+    return line.translations.filter(
+      (translation) => translation.text.trim() && languages.includes(lyricLanguageCode(translation))
+    );
+  }, [hasTl, tlActive, tlLanguages, line.translations, line.translatedLyric]);
 
   return (
     <section
@@ -124,7 +142,13 @@ const LyricLine: FC<LyricLineProps> = ({
           crossAlign === "center" && "text-center justify-center",
           crossAlign === "right" && "text-right justify-end"
         )}>
-        {active ? (
+        {line.embeds ? (
+          <LyricEmbedContent
+            entries={line.embeds}
+            crossAlign={crossAlign}
+            onArtistClick={onArtistClick}
+          />
+        ) : active ? (
           line.words.map((word, index) => {
             let inlineNoteContent = "";
             if (noteActive && !word.inlineNote && line.words[index + 1]?.inlineNote) {
@@ -195,11 +219,12 @@ const LyricLine: FC<LyricLineProps> = ({
           {line.romanLyric}
         </div>
       )}
-      {hasTl && tlActive && !!line.translatedLyric && (
+      {translations.map((translation, translationIndex) => (
         <div
+          key={"language" in translation ? translation.language || "und" : translationIndex}
           className={cx(
             `
-            text-wrap select-none
+            text-wrap select-none whitespace-pre-line
             duration-500 ease-in-out transition-all
             contain-content
             font-normal text-[60%]
@@ -211,9 +236,9 @@ const LyricLine: FC<LyricLineProps> = ({
             crossAlign === "right" && "text-right"
           )}
           onClick={onClickLine}>
-          {line.translatedLyric}
+          {translation.text}
         </div>
-      )}
+      ))}
     </section>
   );
 };

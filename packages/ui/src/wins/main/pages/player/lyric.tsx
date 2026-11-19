@@ -1,4 +1,8 @@
+import { useSetAtom } from "jotai";
 import { memo, useRef, type FC, useMemo, useEffect, useCallback } from "react";
+import { useSettings } from "@/common/store/settings";
+import { playModalAtom } from "@/wins/main/atoms/layout";
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { useTailwindMediaQuery } from "@/common/hooks/use-tailwind-media-query";
 import { usePlayerViewVisible } from "@/wins/main/hooks/use-player-view-visible";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
@@ -8,6 +12,17 @@ const Lyric: FC<object> = () => {
   const player = RendererPlayerHandle.usePlayer();
   const lyricRef = useRef<Nullable<LyricRef>>(null);
   const visible = usePlayerViewVisible("player");
+  const { jumpArtistPage } = usePageJump();
+  const settings = useSettings();
+  const setPlayModal = useSetAtom(playModalAtom);
+  const handleArtistClick = useCallback(
+    (id: number) => {
+      const navigation = jumpArtistPage(id);
+      if (!settings.preference.defaultUseDisplayWindow) setPlayModal(false);
+      return navigation;
+    },
+    [jumpArtistPage, settings.preference.defaultUseDisplayWindow, setPlayModal]
+  );
 
   const handleWordClick = useCallback(
     (timeMS: number) => {
@@ -87,7 +102,9 @@ const Lyric: FC<object> = () => {
         rmActive={player.current?.rmActive}
         tlActive={player.current?.tlActive}
         noteActive={player.current?.noteActive}
+        tlLanguages={player.activeTranslationLanguages}
         onWordClick={handleWordClick}
+        onArtistClick={handleArtistClick}
       />
     </div>
   );

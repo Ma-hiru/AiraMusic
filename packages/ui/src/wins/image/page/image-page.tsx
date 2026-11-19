@@ -3,6 +3,7 @@ import { memo, type FC, useState, useEffect, useCallback } from "react";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
 import { useListenable } from "@/common/hooks/use-listenable";
+import { useWindowTitle } from "@/common/hooks/use-window-title";
 import { useShortcutForwarder } from "@/common/hooks/use-shortcut-forwarder";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import Drag from "@/common/components/layout/drag/drag";
@@ -58,6 +59,8 @@ const ImagePage: FC = () => {
       };
     });
   }, []);
+
+  useWindowTitle(images[index]?.alt);
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-black">

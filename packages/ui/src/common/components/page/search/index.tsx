@@ -47,6 +47,7 @@ export interface SearchProps {
   openComment: NormalFunc<[track: NeteaseTrackRecord]>;
   onClickAlbum: NormalFunc<[id: number]>;
   onClickArtist: NormalFunc<[id: number]>;
+  onSearch?: NormalFunc<[keyword: string]>;
   onClickPlaylist: Optional<NormalFunc<[id: number]>>;
   onClickTrack: NormalFunc<[track: NeteaseTrackRecord | NeteaseHistoryRecord, index: number]>;
 }
@@ -76,6 +77,7 @@ const Search: FC<SearchProps> = ({
   addToPlaylistNext,
   addTrackToPlaylist,
   openComment,
+  onSearch,
   onClickAlbum,
   onClickTrack,
   onClickArtist,
@@ -92,9 +94,14 @@ const Search: FC<SearchProps> = ({
   const inputRef = useRef<SearchInputRef>(null);
   const trackResultRef = useRef<TrackResultRef>(null);
 
-  const applySearch = useCallback((nextKeyword: string) => {
-    setKeyword(nextKeyword.trim());
-  }, []);
+  const applySearch = useCallback(
+    (nextKeyword: string) => {
+      nextKeyword = nextKeyword.trim();
+      setKeyword(nextKeyword);
+      onSearch?.(nextKeyword);
+    },
+    [onSearch]
+  );
 
   useEffect(() => {
     if (defaultKeyword && defaultKeyword !== inputRef.current?.keyword) {
@@ -169,7 +176,7 @@ const Search: FC<SearchProps> = ({
             !keyword && "hidden"
           )}>
           {variant === "page" ? (
-            <aside className="flex w-48 shrink-0 flex-col border-r border-white/[0.06] px-4 py-4">
+            <aside className="flex w-48 shrink-0 flex-col border-r border-white/6 px-4 py-4">
               <div className="min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">
                   Matches
@@ -194,7 +201,7 @@ const Search: FC<SearchProps> = ({
                       `,
                         active
                           ? "bg-primary text-primary-text"
-                          : "text-(--text-color)/55 hover:bg-white/[0.06] hover:text-(--text-color)"
+                          : "text-(--text-color)/55 hover:bg-white/6 hover:text-normal-text"
                       )}
                       type="button"
                       aria-pressed={active}
@@ -212,7 +219,7 @@ const Search: FC<SearchProps> = ({
               </nav>
             </aside>
           ) : (
-            <div className="flex shrink-0 items-center gap-2 border-b border-white/[0.06] px-3 py-2">
+            <div className="flex shrink-0 items-center gap-2 border-b border-white/6 px-3 py-2">
               <div
                 className="grid min-w-0 flex-1 grid-cols-4 gap-1"
                 role="group"
@@ -232,7 +239,7 @@ const Search: FC<SearchProps> = ({
                       `,
                         active
                           ? "bg-primary text-primary-text"
-                          : "text-(--text-color)/55 hover:bg-white/[0.06] hover:text-(--text-color)"
+                          : "text-(--text-color)/55 hover:bg-white/6 hover:text-normal-text"
                       )}
                       type="button"
                       aria-pressed={active}

@@ -1,5 +1,5 @@
 import { memo, type FC } from "react";
-import { Monitor, Palette, PanelLeft } from "lucide-react";
+import { Monitor, Palette, PanelLeft, FlaskConical } from "lucide-react";
 import { NeteaseSettings, type NeteaseSettingsModel } from "@/common/netease/models";
 import Card from "@/common/components/layout/card";
 
@@ -37,6 +37,20 @@ const Preference: FC<PreferenceSettings> = ({ data, patchSettings }) => {
             preference: {
               ...data,
               useLegacyPlaylistLayout: !data.useLegacyPlaylistLayout
+            }
+          })
+        }
+      />
+      <ToggleRow
+        icon={FlaskConical}
+        title="使用自建 TTML 补充歌词库（实验性）"
+        checked={!!data.useExtraTTML}
+        description="内置曲库查不到 TTML 时，回退到仓库 ttml 分支的补充库；该库带翻译与逐字罗马音，但由脚本抓取生成，可能随时变更。"
+        onClick={() =>
+          patchSettings({
+            preference: {
+              ...data,
+              useExtraTTML: !data.useExtraTTML
             }
           })
         }

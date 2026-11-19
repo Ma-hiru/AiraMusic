@@ -11,7 +11,7 @@ export const About: FC = () => {
   // 关于窗聚焦时，命中的快捷键转发给主窗口执行
   useShortcutForwarder();
   return (
-    <div className="w-screen h-screen overflow-hidden px-2 overflow-y-auto p-8 flex justify-center items-center">
+    <div className="w-screen h-screen overflow-hidden px-2 overflow-y-auto p-8 flex justify-center items-center scrollbar scrollbar-hide">
       <Drag className="w-screen h-8 fixed left-0 top-0 z-10" />
       <Background />
       <NoDrag children={<Version />} />

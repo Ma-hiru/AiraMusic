@@ -27,3 +27,5 @@ temp
 !.yarn/versions
 
 .env.local
+/scripts/ttml/.auth.json
+/ttml/.amll-index.jsonl

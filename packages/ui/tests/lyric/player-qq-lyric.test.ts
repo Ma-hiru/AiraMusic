@@ -20,7 +20,10 @@ vi.mock("@/common/lib/cache", () => ({
   }
 }));
 vi.mock("@/common/lib/apple-music-lyric", () => ({
-  AppleMusicLyric: { getTTM: vi.fn().mockResolvedValue(null) }
+  AppleMusicLyric: {
+    getTTML: vi.fn().mockResolvedValue(null),
+    getTTMLByLocal: vi.fn().mockResolvedValue(null)
+  }
 }));
 vi.mock("@/common/netease/api", () => ({
   NeteaseAPILyric: {
@@ -92,6 +95,45 @@ describe("player QQ lyrics", () => {
     ]);
     expect(lyric.rmExisted).toBe(true);
     expect(lyric.tlExisted).toBe(true);
+  });
+
+  it.each([
+    { type: "lrc", text: "[00:01.00] // \n[00:02.00]第二句\n[00:03.00]保留 // 正文" },
+    {
+      type: "qrc",
+      text: "[1000,500]/(1000,250)/(1250,250)\n[2000,500]第二句(2000,500)\n[3000,500]保留 // 正文(3000,500)"
+    }
+  ] as const)(
+    "removes only QQ's empty $type translation placeholders after matching times",
+    async (translation) => {
+      vi.spyOn(QQMusicLyric, "get").mockResolvedValue({
+        raw: response.lyric.data,
+        lyric: {
+          type: "qrc",
+          text: "[1000,500]//(1000,500)\n[2000,500]two(2000,500)\n[3000,500]three(3000,500)"
+        },
+        roma: null,
+        translation
+      });
+      const lyric = await loadLyric();
+      const lines = lyric.data.filter((line) => !line.isBlank);
+      expect(lines.map((line) => line.translatedLyric)).toEqual(["", "第二句", "保留 // 正文"]);
+      expect(lines[0]?.words[0]?.word).toBe("//");
+      expect(lyric.tlExisted).toBe(true);
+    }
+  );
+
+  it("does not report translations when every QQ translation is a placeholder", async () => {
+    vi.spyOn(QQMusicLyric, "get").mockResolvedValue({
+      raw: response.lyric.data,
+      lyric: { type: "qrc", text: "[1000,500]one(1000,500)\n[1200,500]two(1200,500)" },
+      roma: { type: "lrc", text: "[00:01.00]//\n[00:01.20]roman two" },
+      translation: { type: "lrc", text: "[00:01.00] // \n[00:01.20]//" }
+    });
+    const lyric = await loadLyric();
+    expect(lyric.data.map((line) => line.translatedLyric)).toEqual(["", ""]);
+    expect(lyric.data[0]?.romanLyric).toBe("//");
+    expect(lyric.tlExisted).toBe(false);
   });
 
   it.each([

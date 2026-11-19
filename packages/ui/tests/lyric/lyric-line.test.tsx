@@ -1,8 +1,84 @@
 import { act, render, screen, fireEvent } from "@testing-library/react";
+import { Log } from "@mahiru/ui/common/lib/log";
+import { RendererWindow } from "@mahiru/ui/common/lib/window";
+import { RendererIPCMessageBus } from "@mahiru/ui/common/lib/bus";
 import { TimeManager } from "@mahiru/ui/common/components/display/lyric/time-manager";
 import LyricLineComponent from "@mahiru/ui/common/components/display/lyric/lyric-line";
 
 describe("LyricLine", () => {
+  it("renders selected translation languages independently", () => {
+    const line = createLyricLine({
+      translatedLyric: "中文翻译",
+      translations: [
+        { language: "en", text: "English translation" },
+        { language: "zh-Hans", text: "中文翻译" }
+      ]
+    });
+    const { rerender } = renderLine(line, { hasTl: true, tlActive: true, tlLanguages: ["en"] });
+    expect(screen.getByText("English translation")).toBeInTheDocument();
+    expect(screen.queryByText("中文翻译")).not.toBeInTheDocument();
+    rerender(createElement(line, { hasTl: true, tlActive: true, tlLanguages: ["en", "zh-Hans"] }));
+    expect(screen.getByText("中文翻译")).toBeInTheDocument();
+    rerender(createElement(line, { hasTl: true, tlActive: false, tlLanguages: ["en", "zh-Hans"] }));
+    expect(screen.queryByText("English translation")).not.toBeInTheDocument();
+  });
+
+  it("renders supplied credit avatars and artist links without seeking on click", () => {
+    const onArtistClick = vi.fn();
+    const onClick = vi.fn();
+    const entry: LyricEmbed = {
+      t: 4000,
+      position: 8,
+      c: [
+        { tx: "演唱：" },
+        {
+          tx: "歌手",
+          li: "https://example.com/avatar.jpg",
+          or: "orpheus://nm/artist/home?id=17301&type=artist"
+        },
+        { tx: "纯文本", or: "https://example.com/artist/42" }
+      ]
+    };
+    const line = { ...createLyricLine({ words: [] }), embeds: [entry], wait: false as const };
+    const { container } = renderLine(line, { line, onClick, onArtistClick });
+    fireEvent.click(screen.getByRole("button", { name: "歌手" }));
+    expect(onArtistClick).toHaveBeenCalledExactlyOnceWith(17301);
+    expect(onClick).not.toHaveBeenCalled();
+    expect(container.querySelectorAll("img")).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: "纯文本" })).not.toBeInTheDocument();
+  });
+
+  it.each(["display", "callback"])("handles artist navigation timing out via %s", async (entry) => {
+    vi.useFakeTimers();
+    const deliver = vi.spyOn(RendererIPCMessageBus.display, "deliver");
+    try {
+      const onArtistClick =
+        entry === "callback" ? () => RendererWindow.display.reactReadyAwait() : undefined;
+      const lyric = createLyricLine({ words: [] });
+      const line = {
+        ...lyric,
+        embeds: [
+          { t: 0, position: 0, c: [{ tx: "歌手", or: "orpheus://nm/artist/home?id=17301" }] }
+        ],
+        wait: false as const
+      };
+      renderLine(lyric, { line, onArtistClick });
+      fireEvent.click(screen.getByRole("button", { name: "歌手" }));
+      await act(async () => await vi.advanceTimersByTimeAsync(5_000));
+
+      expect(deliver).not.toHaveBeenCalled();
+      expect(Log.warn).toHaveBeenCalledExactlyOnceWith(
+        "LyricEmbed",
+        "打开歌手页面失败",
+        17301,
+        expect.objectContaining({ name: "TimeoutError" })
+      );
+    } finally {
+      deliver.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
   it("shows timed word roman as notes only when enabled, preserving the roman lyric below", () => {
     const line = createLyricLine({
       words: [{ word: "渚", startTime: 0, endTime: 1000, romanWord: "na gi sa" }],

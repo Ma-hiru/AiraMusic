@@ -156,6 +156,7 @@ type MessageBus = {
     tlActive: boolean;
     noteActive: boolean;
     playlistMarkId: string;
+    tlLanguages?: string[];
     repeat: "all" | "off" | "one";
     lyric: Optional<NeteaseLyricModel>;
     mode: "fm" | "normal" | "intelligence";

@@ -1,10 +1,10 @@
 import { useSetAtom, useAtomValue } from "jotai";
 import { memo, type FC, useMemo, useEffect } from "react";
-import { RendererWindow } from "@/common/lib/window";
 import { useSettings } from "@/common/store/settings";
 import { typingAtom } from "@/wins/main/atoms/layout";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useRoamMode } from "@/wins/main/hooks/use-roam-mode";
+import { useWindowTitle } from "@/common/hooks/use-window-title";
 import { useMediaSession } from "@/wins/main/hooks/use-media-session";
 import { RendererShortcutConstants } from "@/common/constants/shortcut";
 import { useSpectrumActive } from "@/wins/main/hooks/use-spectrum-active";
@@ -21,24 +21,13 @@ import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 const MusicSource: FC<object> = () => {
   const player = RendererPlayerHandle.usePlayer();
-  const title = player.current.track?.name;
-  const artist = player.current.track?.detail.artist?.join("&");
 
   // 处理漫游模式
   useRoamMode();
   // 处理心动模式
   useIntelligenceMode();
   // 注册窗口标题
-  useEffect(() => {
-    let title;
-    if (title && artist) {
-      title = `${title} - ${artist}`;
-    } else {
-      title = import.meta.env.APP_NAME;
-    }
-    window.document.title = title;
-    RendererWindow.current.title(title);
-  }, [artist, title]);
+  useWindowTitle(player.current.track?.detail);
   // 注册局部键盘快捷键（绑定可在设置中自定义）
   const typing = useAtomValue(typingAtom);
   const shortcuts = useSettings().shortcuts;

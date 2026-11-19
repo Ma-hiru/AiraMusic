@@ -4,9 +4,9 @@ import { RendererCache } from "@/common/lib/cache";
 import { useMMCQ } from "@/wins/main/hooks/use-mmcq";
 import { useSettings } from "@/common/store/settings";
 import { playModalAtom } from "@/wins/main/atoms/layout";
-import { NeteaseNetworkImage } from "@/common/netease/models";
 import { NeteaseServicesImage } from "@/common/netease/services";
 import { playerBackgroundCoverAtom } from "@/wins/main/atoms/theme";
+import { NeteaseSettings, NeteaseNetworkImage } from "@/common/netease/models";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import AcrylicBackground from "@/common/components/display/acrylic-background";
 
@@ -50,11 +50,12 @@ const Background: FC<object> = () => {
       saturate={3}
       opacity={0.4}
       brightness={0.4}
+      fluidMode="shader"
       fluidPaused={paused}
       themeColors={themeColors}
       src={resolvedBackgroundCover ?? undefined}
       fluid={settings.performance.usePlayerFluid}
-      fluidSpeed={settings.performance.playerFluidSpeed}
+      fluidSpeed={NeteaseSettings.fluidSpeedMultiplier(settings.performance.playerFluidSpeed)}
     />
   );
 };

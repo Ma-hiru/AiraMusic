@@ -374,7 +374,6 @@ const ImageViewer: FC<ImageViewerProps> = ({ onIndexChange, onToolBarChange, ind
   }, [images.length, index, onIndexChange]);
 
   useEffect(() => {
-    document.title = current.url ? current.alt || current.url : "Image Viewer";
     resetTransform();
     setReloadToken(0);
     setStatus(current.url ? "loading" : "idle");

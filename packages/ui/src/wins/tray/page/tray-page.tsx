@@ -1,4 +1,4 @@
-import { memo, type FC, useMemo, useEffect, useCallback } from "react";
+import { memo, type FC, useMemo, useCallback } from "react";
 import {
   Copy,
   Play,
@@ -47,10 +47,6 @@ const TrayPage: FC = () => {
   const artistName = track?.ar.map((item) => item.name).join(" / ");
   const firstArtistID = track?.ar.find((item) => item.id > 0)?.id;
   const albumID = track?.al.id && track.al.id > 0 ? track.al.id : undefined;
-
-  useEffect(() => {
-    document.title = track?.name && artistName ? `${track.name} - ${artistName}` : "AiraMusic";
-  }, [artistName, track?.name]);
 
   const copy = useCallback(async (text: Optional<string>, label: string) => {
     if (!text) return;

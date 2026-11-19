@@ -141,6 +141,7 @@ export default function LyricPage() {
             rmActive={trackMetaBus.data?.rmActive}
             tlActive={trackMetaBus.data?.tlActive}
             noteActive={trackMetaBus.data?.noteActive}
+            tlLanguages={trackMetaBus.data?.tlLanguages}
             playing={trackMetaBus.data?.status === "playing"}
             activeColor={(color ?? themeBus.data?.theme.mainColor) || "#ffffff"}
           />

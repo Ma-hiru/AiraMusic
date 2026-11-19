@@ -1,9 +1,14 @@
+import { createRef } from "react";
 import { render, screen, within, cleanup, fireEvent } from "@testing-library/react";
-import Search, { type SearchProps } from "@mahiru/ui/common/components/page/search";
+import Search, { type SearchRef, type SearchProps } from "@mahiru/ui/common/components/page/search";
 
 vi.mock("@/common/hooks/use-agent-focus-ctx", () => ({ useAgentFocusCtx: vi.fn() }));
 vi.mock("@/common/components/page/search/input", () => ({
-  default: () => <div>search-input</div>
+  default: ({ onSearch }: { onSearch: NormalFunc<[keyword: string]> }) => (
+    <button type="button" onClick={() => onSearch("  晴天  ")}>
+      提交搜索
+    </button>
+  )
 }));
 vi.mock("@/common/components/page/search/hot-recommend", () => ({
   default: () => <div>hot-recommend</div>
@@ -58,4 +63,13 @@ it("swaps the page header for a compact tab bar in the drawer variant", () => {
   fireEvent.click(screen.getByRole("button", { name: "专辑" }));
   expect(screen.getByRole("button", { name: "专辑" })).toHaveAttribute("aria-pressed", "true");
   expect(screen.getByText("albums-result")).toBeInTheDocument();
+});
+
+it("submits a search from the drawer without a title callback", () => {
+  const searchRef = createRef<SearchRef>();
+  render(<Search {...baseProps} ref={searchRef} variant="drawer" />);
+
+  fireEvent.click(screen.getByRole("button", { name: "提交搜索" }));
+
+  expect(searchRef.current?.currentKeyword).toBe("晴天");
 });

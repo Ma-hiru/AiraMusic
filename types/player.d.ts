@@ -155,7 +155,29 @@ interface LyricWord {
   inlineNote?: boolean;
 }
 
-/** 一行歌词，存储多个单词 */
+/** 一条带语言标识的翻译轨道。 */
+interface LyricTranslation {
+  /** 完整语言标识，例如 en、zh-Hans；未标注语言时省略。 */
+  text: string;
+  language?: string;
+  words?: LyricWord[];
+}
+
+interface LyricEmbed {
+  /** 在原始歌词字符串中的行号，从 0 开始，保留同时间记录的顺序。 */
+  position: number;
+  /** 网易云原始时间，单位毫秒；负数表示开头的制作信息。 */
+  t: number;
+  c: {
+    tx: string;
+    /** 头像 URL，源数据未提供时省略。 */
+    li?: string;
+    /** 歌手等资源的原始引用，源数据未提供时省略。 */
+    or?: string;
+  }[];
+}
+
+/** 一行歌词，存储多个单词。 */
 interface LyricLine {
   /**
    * 该行的所有单词
@@ -164,6 +186,8 @@ interface LyricLine {
   words: LyricWord[];
   /** 该行的翻译歌词，将会显示在主歌词行的下方 */
   translatedLyric: string;
+  /** 多语言翻译；兼容只有 translatedLyric 的历史歌词。 */
+  translations?: LyricTranslation[];
   /** 该行的音译歌词，将会显示在翻译歌词行的下方 */
   romanLyric: string;
   /** 句子的起始时间，单位为毫秒 */
@@ -183,7 +207,11 @@ interface LyricLine {
 type NeteaseLyricModel = {
   id?: number;
   tips?: string;
+  /** 制作信息等嵌入内容，与演唱歌词分开保存。 */
+  embeds?: LyricEmbed[];
+  /** 歌曲时长，单位毫秒，用于展示层约束最后一条嵌入内容。 */
   data: LyricLine[];
+  duration?: number;
   rmExisted: boolean;
   tlExisted: boolean;
   noteExisted: boolean;

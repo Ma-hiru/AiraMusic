@@ -7,6 +7,7 @@ import { Listenable } from "@/common/utils/listenable";
 import { Status } from "@/common/netease/services/auth";
 import { userStoreSnapshot } from "@/common/store/user";
 import { settingsStoreSnapshot } from "@/common/store/settings";
+import { preferredLyricLanguage } from "@/common/lib/lyric-language";
 import {
   NeteaseServicesAuth,
   NeteaseServicesAudio,
@@ -108,6 +109,7 @@ export default class RendererPlayer extends Listenable<
       rmActive?: boolean;
       tlActive?: boolean;
       noteActive?: boolean;
+      tlLanguages?: string[];
       lyric: Nullable<NeteaseLyric>;
       track: Nullable<NeteaseTrackRecord>;
       audio: Nullable<NeteaseLocalAudio | NeteaseNetworkAudio>;
@@ -130,6 +132,7 @@ export default class RendererPlayer extends Listenable<
       cover: null,
       rmActive: false,
       tlActive: false,
+      tlLanguages: undefined,
       noteActive: false
     };
     this._status = props?.status || RendererPlayerStatus.idle;
@@ -552,6 +555,25 @@ export default class RendererPlayer extends Listenable<
   }
 
   /** 歌词切换 */
+  get activeTranslationLanguages(): string[] {
+    if (!this.current.tlActive) return [];
+    const languages = this.current.lyric?.translationLanguages ?? [];
+    const selected = this.current.tlLanguages?.filter((language) => languages.includes(language));
+    if (selected?.length) return selected;
+    const preferred = preferredLyricLanguage(languages);
+    return preferred ? [preferred] : [];
+  }
+
+  public toggleTranslationLanguage(language: string) {
+    if (!this.current.lyric?.translationLanguages.includes(language)) return;
+    const selected = this.activeTranslationLanguages;
+    this.current.tlLanguages = selected.includes(language)
+      ? selected.filter((value) => value !== language)
+      : [...selected, language];
+    this.current.tlActive = this.current.tlLanguages.length > 0;
+    this.executeListeners();
+  }
+
   public toggleLyric(next: "rm" | "tl" | "note") {
     if (next === "rm" && this.current.lyric?.rmExisted) {
       this.current.rmActive = !this.current.rmActive;

@@ -109,7 +109,7 @@ const PlaylistDisplay: FC<object> = () => {
       onPageAction={onPageAction}
       onClickAlbum={jumpAlbumDisplay}
       onClickArtist={jumpArtistDisplay}
-      onDataLoaded={(p) => p.name && setTitle(p.name)}
+      onDataLoaded={(p) => setTitle(p.name)}
     />
   );
 };

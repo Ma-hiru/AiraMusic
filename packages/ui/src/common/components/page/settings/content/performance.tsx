@@ -36,7 +36,7 @@ const Performance: FC<PerformanceSettings> = ({ data, patchSettings }) => {
             icon={Sparkles}
             title="播放页流体背景"
             checked={data.usePlayerFluid}
-            description="启用播放页的简单流体背景效果，关闭可以节省性能"
+            description="控制播放页背景流动，关闭后保留静态背景"
             onClick={() =>
               patchSettings({
                 performance: {
@@ -49,7 +49,7 @@ const Performance: FC<PerformanceSettings> = ({ data, patchSettings }) => {
 
           <ToggleRow
             title="播放页流体背景跟随音乐"
-            description="播放页的简单流体背景是否跟随音乐暂停"
+            description="播放页的流体背景是否跟随音乐暂停"
             checked={data.playerFluidWithPlaying}
             onClick={() =>
               patchSettings({
@@ -84,7 +84,7 @@ const Performance: FC<PerformanceSettings> = ({ data, patchSettings }) => {
             icon={Sparkles}
             title="主窗口流体背景"
             checked={data.useHomeFluid}
-            description="启用主窗口的简单流体背景效果，关闭可以节省性能"
+            description="控制主窗口背景流动，关闭后保留静态背景"
             onClick={() =>
               patchSettings({
                 performance: {
@@ -96,7 +96,7 @@ const Performance: FC<PerformanceSettings> = ({ data, patchSettings }) => {
           />,
           <ToggleRow
             title="主窗口流体背景跟随音乐"
-            description="主窗口的简单流体背景是否跟随音乐暂停"
+            description="主窗口的流体背景是否跟随音乐暂停"
             checked={data.homeFluidWithPlaying}
             onClick={() =>
               patchSettings({

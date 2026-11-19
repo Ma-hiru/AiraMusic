@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { useSettings } from "@/common/store/settings";
+import { NeteaseSettings } from "@/common/netease/models";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import AcrylicBackground from "@/common/components/display/acrylic-background";
 
@@ -14,10 +15,11 @@ const Background = () => {
         saturate={3}
         opacity={0.6}
         brightness={0.3}
+        fluidMode="shader"
         src={themeBus.data?.backgroundCover}
         fluid={settings.performance.useHomeFluid}
         themeColors={themeBus.data?.theme.themeColors}
-        fluidSpeed={settings.performance.homeFluidSpeed}
+        fluidSpeed={NeteaseSettings.fluidSpeedMultiplier(settings.performance.homeFluidSpeed)}
         fluidPaused
       />
     </div>

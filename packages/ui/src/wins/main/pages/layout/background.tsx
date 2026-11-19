@@ -4,10 +4,10 @@ import { memo, type FC, useMemo, useEffect, useLayoutEffect } from "react";
 import { NeteaseImageSize } from "@/common/enum";
 import { RendererCache } from "@/common/lib/cache";
 import { RendererWindow } from "@/common/lib/window";
-import { NeteaseURL } from "@/common/netease/models";
 import { useMMCQ } from "@/wins/main/hooks/use-mmcq";
 import { useSettings } from "@/common/store/settings";
 import { playModalAtom } from "@/wins/main/atoms/layout";
+import { NeteaseURL, NeteaseSettings } from "@/common/netease/models";
 import {
   mainColorAtom,
   textColorAtom,
@@ -113,11 +113,12 @@ const Background: FC<{ className?: string; onLoaded?: NormalFunc }> = ({ classNa
         saturate={3}
         opacity={0.6}
         brightness={0.3}
+        fluidMode="shader"
         fluidPaused={paused}
         themeColors={themeColors}
         fluid={settings.performance.useHomeFluid}
         src={resolvedBackgroundCover ?? undefined}
-        fluidSpeed={settings.performance.homeFluidSpeed}
+        fluidSpeed={NeteaseSettings.fluidSpeedMultiplier(settings.performance.homeFluidSpeed)}
         onLoaded={onLoaded}
       />
     </div>

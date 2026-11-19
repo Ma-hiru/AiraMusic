@@ -21,6 +21,7 @@ import RendererTheme from "@/common/player/ui";
 import LyricLine from "./lyric-line";
 import LyricTips from "./lyric-tips";
 import { TimeManager } from "./time-manager";
+import type { LyricArtistClick } from "./lyric-embed";
 
 const edgeFadeMask =
   "linear-gradient(to bottom, transparent 0, #000 min(12%, 56px), #000 calc(100% - min(12%, 56px)), transparent 100%)";
@@ -42,9 +43,11 @@ interface LyricContainerProps {
   rmActive: Optional<boolean>;
   tlActive: Optional<boolean>;
   noteActive: Optional<boolean>;
+  tlLanguages?: readonly string[];
   lyric: Optional<NeteaseLyricModel>;
   mainAlign?: "top" | "bottom" | "center";
   crossAlign?: "left" | "right" | "center";
+  onArtistClick?: LyricArtistClick;
   onWordClick?: NormalFunc<[startTime: number]>;
 }
 
@@ -52,6 +55,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
   ref,
   className,
   onWordClick,
+  onArtistClick,
   spring,
   fontSize,
   rmActive,
@@ -60,13 +64,18 @@ const LyricContainer: FC<LyricContainerProps> = ({
   crossAlign,
   noteActive,
   activeColor,
+  tlLanguages,
   inactiveColor,
   lyric: _lyric,
   playing: _playing
 }) => {
   const visible = useWindowVisible();
   const playing = visible ? _playing : false;
-  const lyricLines = useMemo(() => extendLyric(_lyric?.data ?? []), [_lyric?.data]);
+  const lyricLines = useMemo(
+    () => extendLyric(_lyric?.data ?? [], _lyric?.embeds, _lyric?.duration),
+    [_lyric?.data, _lyric?.embeds, _lyric?.duration]
+  );
+  const stableLanguages = useStableArray(tlLanguages ?? []);
 
   const [_currentLine, setCurrentLine] = useState([-1]);
   const currentLine = useStableArray(_currentLine);
@@ -183,7 +192,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
   // 参数变化时，计算布局
   useEffect(() => {
     calcLayout();
-  }, [calcLayout, rmActive, tlActive, mainAlign, crossAlign, noteActive, playing]);
+  }, [calcLayout, rmActive, tlActive, stableLanguages, mainAlign, crossAlign, noteActive, playing]);
 
   return (
     <div
@@ -223,7 +232,9 @@ const LyricContainer: FC<LyricContainerProps> = ({
             active={active_index !== -1}
             inactiveColor={inactiveColor}
             timeManager={timeManagerRef.current!}
+            tlLanguages={tlLanguages === undefined ? undefined : stableLanguages}
             onClick={onWordClick}
+            onArtistClick={onArtistClick}
           />
         );
       })}

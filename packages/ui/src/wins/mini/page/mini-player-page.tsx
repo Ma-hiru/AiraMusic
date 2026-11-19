@@ -15,6 +15,7 @@ import { RendererFormat } from "@/common/lib/format";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useListenable } from "@/common/hooks/use-listenable";
+import { useWindowTitle } from "@/common/hooks/use-window-title";
 import { useShortcutForwarder } from "@/common/hooks/use-shortcut-forwarder";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import { NeteaseURL, NeteaseArtist, NeteaseNetworkImage } from "@/common/netease/models";
@@ -59,6 +60,8 @@ const MiniPlayerPage: FC = () => {
       RendererWindow.current.hide();
     });
   }, [mainWindow]);
+
+  useWindowTitle(track);
 
   const marqueeOpts = {
     speed: 10,

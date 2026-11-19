@@ -250,8 +250,13 @@ export class QQMusicLyric {
         const trans = parse(lyric.translation);
         if (row.length) {
           const parsedLyric = NeteaseLyricSchema.parse(parseNeteaseLyric(row, trans, roman));
+          // 在时间匹配后清除 QQ 的空翻译占位，保留原始时间轴参与匹配。
+          for (const line of parsedLyric.data) {
+            if (line.translatedLyric.trim() === "//") line.translatedLyric = "";
+          }
           return new NeteaseLyric({
             ...parsedLyric,
+            tlExisted: parsedLyric.data.some((line) => line.translatedLyric.trim()),
             id: track.id,
             tips: parsedLyric.data.length >= 5 ? "歌词来源：QQ音乐" : undefined
           });

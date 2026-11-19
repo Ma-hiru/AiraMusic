@@ -42,7 +42,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("AppleMusicLyric.getTTM", () => {
+describe("AppleMusicLyric.getTTML", () => {
   it("索引命中后按 `<id>.ttml` 拉取歌词", async () => {
     const fetchMock = stubFetch((url) => {
       if (url.includes("ncm-lyrics/index.jsonl")) return asTextResponse(sampleJSONL);
@@ -52,7 +52,7 @@ describe("AppleMusicLyric.getTTM", () => {
 
     await TTMLDatabase.load();
 
-    await expect(AppleMusicLyric.getTTM(1987638572)).resolves.toBe(TTML_TEXT);
+    await expect(AppleMusicLyric.getTTML(1987638572)).resolves.toBe(TTML_TEXT);
     expect(ttmlCalls(fetchMock)).toEqual([
       "https://raw.githubusercontent.com/amll-dev/amll-ttml-db/refs/heads/main/ncm-lyrics/1987638572.ttml"
     ]);
@@ -67,7 +67,7 @@ describe("AppleMusicLyric.getTTM", () => {
     await TTMLDatabase.load();
 
     // 50747104 只出现在 metadata 里，是作者 GitHub ID，不是歌曲
-    await expect(AppleMusicLyric.getTTM(50747104)).resolves.toBeNull();
+    await expect(AppleMusicLyric.getTTML(50747104)).resolves.toBeNull();
     expect(ttmlCalls(fetchMock)).toHaveLength(0);
   });
 
@@ -79,8 +79,8 @@ describe("AppleMusicLyric.getTTM", () => {
 
     await TTMLDatabase.load();
 
-    await expect(AppleMusicLyric.getTTM(1921983207)).resolves.toBeNull();
-    await expect(AppleMusicLyric.getTTM(1921983207)).resolves.toBeNull();
+    await expect(AppleMusicLyric.getTTML(1921983207)).resolves.toBeNull();
+    await expect(AppleMusicLyric.getTTML(1921983207)).resolves.toBeNull();
 
     expect(ttmlCalls(fetchMock)).toHaveLength(1);
   });
@@ -94,7 +94,7 @@ describe("AppleMusicLyric.getTTM", () => {
 
     expect(TTMLDatabase.has(526464331)).toBeUndefined();
 
-    await expect(AppleMusicLyric.getTTM(526464331)).resolves.toBe(TTML_TEXT);
+    await expect(AppleMusicLyric.getTTML(526464331)).resolves.toBe(TTML_TEXT);
     expect(ttmlCalls(fetchMock)).toHaveLength(1);
   });
 });

@@ -3,10 +3,10 @@ import { memo, useRef, type FC, useMemo, useState, useEffect, startTransition } 
 import { Log } from "@/common/lib/log";
 import { NeteaseImageSize } from "@/common/enum";
 import { RendererFormat } from "@/common/lib/format";
-import { RendererWindow } from "@/common/lib/window";
 import { NeteaseAPIWiki } from "@/common/netease/api";
 import { useCacheRequest } from "@/common/utils/cache";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { useWindowTitle } from "@/common/hooks/use-window-title";
 import {
   NeteaseAlbum,
   NeteaseTrack,
@@ -96,18 +96,18 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
     }
   }, [commentBus.data?.id, commentBus.data?.type]);
 
+  const { updateTitle } = useWindowTitle();
   useEffect(() => {
-    let name = "评论";
+    let name: Undefinable<string> = undefined;
     if (commentBus.data?.type === "track" && track) {
-      name += ` - ${track.name}`;
+      name = track.name;
     } else if (commentBus.data?.type === "playlist" && playlist) {
-      name += ` - ${playlist.name}`;
+      name = playlist.name;
     } else if (commentBus.data?.type === "album" && album) {
-      name += ` - ${album.content.name}`;
+      name = album.content.name;
     }
-    window.document.title = name;
-    RendererWindow.current.title(name);
-  }, [album, commentBus.data?.type, playlist, track]);
+    updateTitle(name);
+  }, [album, commentBus.data?.type, playlist, track, updateTitle]);
 
   const marqueeOpts = {
     speed: 10,
@@ -145,7 +145,7 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
               return (
                 <span
                   key={tag}
-                  className="inline-block rounded-full px-1.5 py-0.5 text-[10px] bg-primary text-(--text-color-on-main)">
+                  className="inline-block rounded-full px-1.5 py-0.5 text-[10px] bg-primary text-primary-text">
                   {tag}
                 </span>
               );

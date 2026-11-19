@@ -15,15 +15,36 @@ const { send } = vi.hoisted(() => {
   );
   const send =
     vi.fn<(event: string, payload: undefined | NetFetchRequest) => Promise<NetFetchResponse>>();
-  // Other UI modules can initialize while this file's IPC mock is installed.
-  // Return a rejected promise by default so their `.catch(...)` handlers still work.
-  send.mockRejectedValue(new Error("unmocked IPC event"));
   return { send };
 });
 
 vi.mock("@mahiru/ipc/renderer", () => ({
   RendererIPC: {
-    NormalChannel: { send },
+    NormalChannel: {
+      send: (event: string, payload: unknown) => {
+        switch (event) {
+          case "invoke_net_fetch":
+            return send(event, payload as NetFetchRequest);
+          // QQMusicLyric 的依赖在导入时会初始化运行时和主窗口。
+          case "invoke_runtime_id":
+          case "invoke_runtime_token":
+            return Promise.resolve("test");
+          case "invoke_window_id":
+            return Promise.resolve("main");
+          case "invoke_window_opened":
+          case "invoke_window_shown":
+            return Promise.resolve(true);
+          case "invoke_window_maximized":
+          case "invoke_window_fullscreen":
+          case "invoke_window_pinned":
+            return Promise.resolve(false);
+          case "event_window_title":
+            return;
+          default:
+            return Promise.reject(new Error(`unmocked IPC event: ${event}`));
+        }
+      }
+    },
     MessageChannel: {
       listen: vi.fn(() => () => undefined),
       send: vi.fn(),

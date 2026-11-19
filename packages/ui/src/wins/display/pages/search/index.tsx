@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { RoutePath, RoutePathDisplay } from "@/common/routes";
 import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useDisplaySearch } from "@/wins/display/hooks/use-display-search";
+import { useDisplayTitleRegister } from "@/wins/display/hooks/use-display-title";
 import Search from "@/common/components/page/search";
 
 const SearchDisplay: FC<object> = () => {
@@ -10,6 +11,7 @@ const SearchDisplay: FC<object> = () => {
   const routerActive = useRouterActive(RoutePathDisplay, "search");
   const { keyword } = RoutePath.parseQuery<{ keyword?: string }>(location, RoutePathDisplay.search);
   const { props, searchRef } = useDisplaySearch({ active: routerActive });
+  const { setTitle } = useDisplayTitleRegister("search", "搜索");
 
   return (
     <Search
@@ -18,6 +20,7 @@ const SearchDisplay: FC<object> = () => {
       className="display-container"
       variant="page"
       defaultKeyword={keyword}
+      onSearch={setTitle}
     />
   );
 };

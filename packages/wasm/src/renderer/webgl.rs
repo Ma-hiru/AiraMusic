@@ -354,7 +354,11 @@ impl WebGLRenderer {
     }
 }
 
-fn compile_shader(gl: &GL, shader_type: u32, source: &str) -> Result<WebGlShader, JsValue> {
+pub(super) fn compile_shader(
+    gl: &GL,
+    shader_type: u32,
+    source: &str,
+) -> Result<WebGlShader, JsValue> {
     let shader = gl
         .create_shader(shader_type)
         .ok_or("Failed to create shader")?;

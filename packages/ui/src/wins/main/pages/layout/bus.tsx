@@ -54,6 +54,7 @@ const Bus: FC<object> = () => {
       shuffle: player.playlist.shuffle,
       rmActive: player.current?.rmActive || false,
       tlActive: player.current?.tlActive || false,
+      tlLanguages: player.activeTranslationLanguages,
       noteActive: player.current?.noteActive || false,
       quality: player.current.audio?.quality,
       status: player.statusText,

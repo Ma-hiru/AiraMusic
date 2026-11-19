@@ -1,4 +1,4 @@
-import { act, render, cleanup } from "@testing-library/react";
+import { act, render, cleanup, fireEvent } from "@testing-library/react";
 import AcrylicBackground from "@mahiru/ui/common/components/display/acrylic-background";
 
 const visibility = vi.hoisted(() => ({ visible: true }));
@@ -11,6 +11,26 @@ const resize = vi.hoisted(() => ({
 vi.mock("@/common/hooks/use-window-visible", () => ({
   useWindowVisible: () => visibility.visible
 }));
+vi.mock("@/common/components/display/acrylic-fluid-shader", async () => {
+  const { createElement } = await import("react");
+  return {
+    default: (props: {
+      opacity: number;
+      paused: boolean;
+      brightness: number;
+      image: HTMLImageElement;
+      onUnsupported: () => void;
+    }) =>
+      createElement("canvas", {
+        "data-testid": "fluid-shader",
+        "data-image": props.image.src,
+        "data-opacity": props.opacity,
+        "data-brightness": props.brightness,
+        "data-paused": props.paused,
+        onClick: props.onUnsupported
+      })
+  };
+});
 vi.mock("@/common/hooks/use-listen-resize", async () => {
   const { useSyncExternalStore } = await import("react");
   return {
@@ -217,3 +237,85 @@ function runFrame() {
   frames.delete(id);
   act(() => callback(0));
 }
+
+it("lets the shader own its tone and restores CSS overlays when falling back", async () => {
+  const view = (src: string) => (
+    <AcrylicBackground
+      src={src}
+      alt="专辑封面"
+      opacity={0.4}
+      brightness={0.4}
+      fluidMode="shader"
+      themeColors={["#44aacc", "#cc8844"]}
+      fluid
+    />
+  );
+  const { rerender, container, getByRole, getByTestId } = render(
+    view("https://covers.test/one.png")
+  );
+  await act(async () => images[0]!.resolve());
+  const shader = getByTestId("fluid-shader");
+  const image = getByRole("img", { name: "专辑封面" });
+  expect(shader.dataset["opacity"]).toBe("1");
+  expect(shader.dataset["brightness"]).toBe("0.7");
+  expect(shader.parentElement!.style.opacity).toBe("");
+  expect(container.querySelector("[style*='linear-gradient']")).toBeNull();
+
+  fireEvent.click(shader);
+  expect(container.querySelector("[data-testid='fluid-shader']")).toBeNull();
+  expect(container.querySelectorAll("canvas")).toHaveLength(4);
+  expect(container.querySelector("[style*='linear-gradient']")).not.toBeNull();
+  expect(container.querySelector("[style*='opacity: 0.4']")).not.toBeNull();
+
+  rerender(view("https://covers.test/two.png"));
+  await act(async () => images[1]!.resolve());
+  expect(container.querySelectorAll("canvas")).toHaveLength(8);
+  expect(getByRole("img", { name: "专辑封面" })).toBe(image);
+});
+
+it("keeps the latest shader cover while a replacement decodes or fails", async () => {
+  const view = (name: string) => (
+    <AcrylicBackground fluidMode="shader" src={`https://covers.test/${name}.png`} />
+  );
+  const { rerender, getByTestId } = render(view("first"));
+  await act(async () => images[0]!.resolve());
+  const shader = getByTestId("fluid-shader");
+  expect(shader.dataset["image"]).toBe("https://covers.test/first.png");
+
+  rerender(view("second"));
+  await act(async () => images[1]!.resolve());
+  expect(shader.dataset["image"]).toBe("https://covers.test/second.png");
+
+  rerender(view("broken"));
+  expect(shader.dataset["image"]).toBe("https://covers.test/second.png");
+  await act(async () => images[2]!.reject());
+  expect(shader.dataset["image"]).toBe("https://covers.test/second.png");
+
+  rerender(view("final"));
+  await act(async () => images[3]!.resolve());
+  expect(shader.dataset["image"]).toBe("https://covers.test/final.png");
+});
+
+it("keeps the shader for static backgrounds and forwards existing pause and visibility state", async () => {
+  const view = (fluid: boolean, fluidPaused: boolean) => (
+    <AcrylicBackground
+      fluid={fluid}
+      fluidMode="shader"
+      fluidPaused={fluidPaused}
+      src="https://covers.test/one.png"
+    />
+  );
+  const { rerender, getByTestId } = render(view(false, false));
+  await act(async () => images[0]!.resolve());
+  const canvas = getByTestId("fluid-shader");
+  expect(canvas.dataset["paused"]).toBe("true");
+  rerender(view(true, false));
+  expect(getByTestId("fluid-shader")).toBe(canvas);
+  expect(canvas.dataset["paused"]).toBe("false");
+  rerender(view(true, true));
+  expect(canvas.dataset["paused"]).toBe("true");
+  visibility.visible = false;
+  rerender(view(true, false));
+  expect(canvas.dataset["paused"]).toBe("true");
+  expect(images).toHaveLength(1);
+});

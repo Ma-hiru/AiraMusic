@@ -3,6 +3,7 @@ import { RendererWindow } from "@mahiru/ui/common/lib/window";
 import { useWindowVisible } from "@mahiru/ui/common/hooks/use-window-visible";
 
 const ipc = vi.hoisted(() => ({
+  commit: vi.fn(),
   listeners: new Map<string, (data: { type: string; action: string }) => void>()
 }));
 vi.mock("@/common/lib/runtime", () => ({ RendererRuntime: { currentWindowType: "main" } }));
@@ -10,6 +11,7 @@ vi.mock("@mahiru/ipc/renderer", () => ({
   RendererIPC: {
     NormalChannel: { send: () => Promise.resolve(false) },
     MessageChannel: {
+      commit: ipc.commit,
       listen: (
         name: string,
         _from: string,
@@ -63,5 +65,25 @@ it("reacts to real RendererWindow IPC notifications without a manual component r
     vi.clearAllTimers();
     vi.useRealTimers();
     vi.restoreAllMocks();
+  }
+});
+
+it("dispatches theme and track metadata after the display becomes ready", async () => {
+  vi.useFakeTimers();
+  const display = RendererWindow.display;
+  try {
+    const ready = display.reactReadyAwait();
+    expect(ipc.commit).not.toHaveBeenCalled();
+    display.reactReady = true;
+    await vi.advanceTimersByTimeAsync(200);
+    await ready;
+    expect(ipc.commit).toHaveBeenCalledExactlyOnceWith("bus_dispatch_update", [
+      "theme",
+      "track-meta"
+    ]);
+  } finally {
+    display.reactReady = false;
+    vi.clearAllTimers();
+    vi.useRealTimers();
   }
 });

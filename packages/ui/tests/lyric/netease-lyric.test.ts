@@ -1,5 +1,7 @@
 import { NeteaseLyric } from "@mahiru/ui/common/netease/models";
 
+vi.mock("@applemusic-like-lyrics/ttml", async () => await import("../mock/amll-ttml"));
+
 import { setTTMLMock } from "../mock/amll-lyric";
 
 type AMLLyricLine = {
@@ -85,7 +87,7 @@ describe("NeteaseLyric TTML parsing", () => {
 
 function parseTTMLLines(lines: AMLLyricLine[]) {
   setTTMLMock({ lines, metadata: [] });
-  return NeteaseLyric.fromTTMLyric("<tt />");
+  return NeteaseLyric.fromTTMLyric("<tt />", false);
 }
 
 function ttmlLine(

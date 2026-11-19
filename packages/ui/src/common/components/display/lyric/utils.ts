@@ -1,6 +1,7 @@
 export interface LyricLineExtended extends LyricLine {
   endTime: number;
   startTime: number;
+  embeds?: LyricEmbed[];
   wait:
     | false
     | {
@@ -13,42 +14,79 @@ export interface LyricLineExtended extends LyricLine {
       };
 }
 
-export function extendLyric(lyric: LyricLine[]): LyricLineExtended[] {
+export function extendLyric(
+  lyric: readonly LyricLine[],
+  embeds: readonly LyricEmbed[] = [],
+  duration?: number
+): LyricLineExtended[] {
+  // 展示层的归一化不能修改原始模型；缓存、IPC 和其他歌词视图还会复用它。
+  const rows: LyricLineExtended[] = lyric.map((line) => ({
+    ...line,
+    words: line.words.map((word) => ({ ...word })),
+    wait: false
+  }));
+  const groups = new Map<number, LyricEmbed[]>();
+  for (const embed of embeds) {
+    const time = Math.max(0, embed.t);
+    const group = groups.get(time) ?? [];
+    group.push(embed);
+    groups.set(time, group);
+  }
+  for (const [startTime, content] of groups) {
+    rows.push({
+      startTime,
+      endTime: startTime,
+      words: [],
+      translatedLyric: "",
+      romanLyric: "",
+      embeds: content.toSorted((a, b) => a.position - b.position),
+      wait: false
+    });
+  }
+  rows.sort((a, b) => a.startTime - b.startTime || Number(!!b.embeds) - Number(!!a.embeds));
+  let nextStart: number | undefined;
+  for (let index = rows.length - 1; index >= 0; index--) {
+    const line = rows[index]!;
+    if (rows[index + 1] && rows[index + 1]!.startTime > line.startTime) {
+      nextStart = rows[index + 1]!.startTime;
+    }
+    const end = nextStart === undefined ? duration : nextStart - 1;
+    if (line.embeds) {
+      line.endTime = Math.max(line.startTime, end ?? line.startTime);
+    } else if (line.endTime >= 59_999_999 && end !== undefined) {
+      // LRC 的未知末尾不能跨过真正有时间的制作信息。
+      line.endTime = Math.max(line.startTime, end);
+      for (const word of line.words) word.endTime = Math.min(word.endTime, line.endTime);
+    }
+  }
+
   const res: LyricLineExtended[] = [];
   const wait: LyricLine[] = [];
-
-  // 如果第一行的起始时间大于 5s，且不是单行，就插入一个空白行
-  if ((lyric.at(0)?.startTime ?? 0) > 5_000 && lyric.length > 1) {
-    lyric.unshift({
+  if ((rows[0]?.startTime ?? 0) > 5_000 && rows.length > 1) {
+    rows.unshift({
       startTime: 0,
-      endTime: lyric.at(0)!.startTime,
+      endTime: rows[0]!.startTime,
       words: [],
       translatedLyric: "",
       romanLyric: "",
       isBlank: false,
-      isBackChorus: false
+      wait: false
     });
   }
-
-  for (const line of lyric) {
-    const hasWords = !!line.words
-      .map((w) => w.word)
-      .join("")
-      .trim();
-
-    if (!hasWords) {
+  for (const line of rows) {
+    const hasContent = !!line.embeds?.length || line.words.some((word) => word.word.trim());
+    if (!hasContent) {
       wait.push(line);
-      continue;
-    } else if (wait.length) {
-      wait.at(0)!.startTime = (res.at(-1)?.endTime ?? 0) + 1;
-      wait.at(-1)!.endTime = line.startTime - 1;
-      res.push(mergeWaitLines(wait));
+    } else {
+      if (wait.length) {
+        wait[0]!.startTime = (res.at(-1)?.endTime ?? 0) + 1;
+        wait.at(-1)!.endTime = line.startTime - 1;
+        res.push(mergeWaitLines(wait));
+      }
+      wait.length = 0;
+      res.push(line);
     }
-
-    wait.length = 0;
-    res.push({ ...line, wait: false });
   }
-
   return res;
 }
 
