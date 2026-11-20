@@ -20,7 +20,9 @@ export interface NeteaseSettingsModel {
     playerFluidWithPlaying: boolean;
   };
   preference: {
+    useWavePlayerProgress: boolean;
     defaultUseDisplayWindow: boolean;
+    useWaveMiniPlayerProgress: boolean;
     /** 使用简约版歌单、专辑和歌手页面，未设置时使用详细版 */
     useLegacyPlaylistLayout?: boolean;
     /**
@@ -54,6 +56,8 @@ export const defaultSettings: NeteaseSettingsModel = {
   },
   preference: {
     defaultUseDisplayWindow: false,
+    useWavePlayerProgress: false,
+    useWaveMiniPlayerProgress: true,
     useExtraTTML: false,
     trayCapsuleEnabled: true,
     trayCapsuleWidth: 150

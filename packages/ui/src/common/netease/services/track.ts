@@ -191,4 +191,21 @@ export default class _NeteaseTrackSource {
       (detail) => new NeteaseTrackRecord({ detail, sourceID: 0, sourceName: "fm" })
     );
   }
+
+  static async chorus(
+    id: number,
+    signal?: AbortSignal
+  ): Promise<NeteaseAPI.NeteaseTrackChorusResponse> {
+    const key = `${this.cacheKey}_chorus_${id}_${this.userID}`;
+    const cache =
+      await RendererCache.service.object.getOne<NeteaseAPI.NeteaseTrackChorusResponse>(key);
+    if (cache) return cache;
+    signal?.throwIfAborted();
+
+    const res = await NeteaseAPITrack.chorus(id, signal);
+    signal?.throwIfAborted();
+
+    void RendererCache.service.object.setOne({ id: key, data: res });
+    return res;
+  }
 }

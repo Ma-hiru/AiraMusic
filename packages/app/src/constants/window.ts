@@ -33,9 +33,9 @@ export class MainWindowConstants {
     },
     // 迷你播放器：定高变宽，min/max 为 resize 边界
     miniplayer: {
-      base: { width: 260, height: 68 },
-      min: { width: 240, height: 68 },
-      max: { width: 300, height: 68 }
+      base: { width: 324, height: 104 },
+      min: { width: 300, height: 104 },
+      max: { width: 420, height: 104 }
     },
     radio: {
       base: { width: 640, height: 320 }

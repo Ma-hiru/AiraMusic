@@ -33,7 +33,6 @@ export type ShortcutAction =
 type MessageBus = {
   /** 其他窗口聚焦时命中的全局快捷键，转发给 main 统一执行 */
   bus_dispatch_shortcut: ShortcutAction;
-  bus_dispatch_player_action: PlayerAction;
   bus_deliver_focus_context: AgentFocusContext;
   bus_deliver_preview: {
     url: string;
@@ -69,6 +68,11 @@ type MessageBus = {
     senderId: string;
     sequence: number;
   };
+  bus_dispatch_player_action:
+    | PlayerAction
+    | "repeat-cycle"
+    | "shuffle-toggle"
+    | { type: "seek"; percent: number; trackID: number };
   bus_deliver_track_progress: {
     /** 实际已加载音频的歌曲，避免切歌时与先后到达的 meta 串用。 */
     volume: number;
@@ -76,6 +80,7 @@ type MessageBus = {
     duration: number;
     trackID?: number;
     currentTime: number;
+    immediate?: boolean;
   };
   bus_deliver_history: {
     list: {

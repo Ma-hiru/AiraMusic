@@ -13,7 +13,23 @@ const resolveAbortSignal = (input?: AbortInput) =>
 
 export default class _NeteaseLyricSource {
   //region cache
-  private static readonly cacheKey = "netease_lyric_v28";
+  private static readonly cacheKey = "netease_lyric_v29";
+  private static readonly extraTTMLExclusionKey = "netease_lyric_extra_ttml_excluded";
+
+  static excludeExtraTTML(id: number) {
+    const excluded =
+      RendererCache.browser.getOne<Record<number, boolean>>(this.extraTTMLExclusionKey) ?? {};
+    if (excluded[id] === true) return;
+    excluded[id] = true;
+    RendererCache.browser.setOne(this.extraTTMLExclusionKey, excluded);
+  }
+
+  static isExtraTTMLExcluded(id: number): boolean {
+    return (
+      RendererCache.browser.getOne<Record<number, boolean>>(this.extraTTMLExclusionKey)?.[id] ===
+      true
+    );
+  }
 
   private static buildCacheKey(id: number, isLocalTTML: boolean) {
     return `${this.cacheKey}_${id}_${isLocalTTML ? 1 : 0}`;
@@ -47,7 +63,9 @@ export default class _NeteaseLyricSource {
   ): Promise<NeteaseLyric> {
     const signal = resolveAbortSignal(abortInput);
     signal?.throwIfAborted();
-    const useExtraTTML = !!settingsStoreSnapshot()?._settings?.preference?.useExtraTTML;
+    const useExtraTTML =
+      !!settingsStoreSnapshot()?._settings?.preference?.useExtraTTML &&
+      !this.isExtraTTMLExcluded(id);
     const cache = await _NeteaseLyricSource.getCache(id, useExtraTTML);
     signal?.throwIfAborted();
     if (cache && cache.data.length >= 1)

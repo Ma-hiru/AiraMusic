@@ -14,6 +14,7 @@ import { RoutePath, RoutePathMain } from "@/common/routes";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { NeteaseTrackRecord } from "@/common/netease/models";
 import { useListenable } from "@/common/hooks/use-listenable";
+import { repeatModeControls } from "@/common/constants/repeat";
 import { useAudioOutput } from "@/common/hooks/use-audio-output";
 import { isDisplayResource } from "@/wins/main/hooks/use-display-action";
 import { fmModeAtom, intelligenceModeAtom } from "@/wins/main/atoms/track";
@@ -40,9 +41,20 @@ const Bus: FC<object> = () => {
 
   //#region -------- 需要推送给别人的BUS --------
   // 1. progress、info、player 歌曲、歌词、主题、进度信息
-  const updateProgressBus = useCallback(() => {
-    RendererIPCMessageBus.progress.deliver(player.audio.progress);
-  }, [player.audio.progress]);
+  const updateProgressBus = useCallback(
+    (event?: Event) => {
+      const { audio } = player;
+      const reset = event?.type === "loadstart";
+      RendererIPCMessageBus.progress.deliver({
+        ...audio.progress,
+        currentTime: audio.currentTime,
+        duration: reset ? 0 : audio.progress.duration,
+        buffered: reset ? 0 : audio.progress.buffered,
+        immediate: reset || event?.type === "seeked"
+      });
+    },
+    [player]
+  );
   const fmMode = useAtomValue(fmModeAtom);
   const intelligenceMode = useAtomValue(intelligenceModeAtom);
   const updateMetaBus = useCallback(() => {
@@ -88,12 +100,18 @@ const Bus: FC<object> = () => {
     player.audio.addEventListener("pause", updateProgressBus, { passive: true });
     player.audio.addEventListener("error", updateProgressBus, { passive: true });
     player.audio.addEventListener("loadstart", updateProgressBus, { passive: true });
+    player.audio.addEventListener("progress", updateProgressBus, { passive: true });
+    player.audio.addEventListener("durationchange", updateProgressBus, { passive: true });
+    player.audio.addEventListener("seeked", updateProgressBus, { passive: true });
     return () => {
       player.audio.removeEventListener("timeupdate", updateProgressBus);
       player.audio.removeEventListener("play", updateProgressBus);
       player.audio.removeEventListener("pause", updateProgressBus);
       player.audio.removeEventListener("error", updateProgressBus);
       player.audio.removeEventListener("loadstart", updateProgressBus);
+      player.audio.removeEventListener("progress", updateProgressBus);
+      player.audio.removeEventListener("durationchange", updateProgressBus);
+      player.audio.removeEventListener("seeked", updateProgressBus);
     };
   }, [player.audio, updateProgressBus]);
   useEffect(() => player.addListener(updateMetaBus), [player, updateMetaBus]);
@@ -200,6 +218,19 @@ const Bus: FC<object> = () => {
     RendererIPCMessageBus.consume(playerActionBus.type);
 
     for (const action of actions) {
+      if (typeof action !== "string") {
+        if (
+          action?.type === "seek" &&
+          player.current.track?.id === action.trackID &&
+          player.audio.progress.trackID === action.trackID &&
+          Number.isFinite(action.percent) &&
+          action.percent >= 0 &&
+          action.percent <= 100
+        ) {
+          player.audio.currentTime = `${action.percent}%`;
+        }
+        continue;
+      }
       switch (action) {
         case "play":
           player.audio.play();
@@ -220,6 +251,12 @@ const Bus: FC<object> = () => {
         case "next":
           player.playlist.next(true);
           break;
+        case "shuffle-toggle":
+          if (!fmMode && !intelligenceMode) player.playlist.shuffle = !player.playlist.shuffle;
+          break;
+        case "repeat-cycle":
+          player.playlist.repeat = repeatModeControls[player.playlist.repeat].next;
+          break;
         case "toggle-lyric-version-rm":
           RendererPlayerHandle.player.toggleLyric("rm");
           RendererPlayerHandle.player.afterUpdate(updateBus.current);
@@ -234,6 +271,9 @@ const Bus: FC<object> = () => {
       }
     }
   }, [
+    fmMode,
+    intelligenceMode,
+    player,
     player.audio,
     player.playlist,
     playerActionBus.data,

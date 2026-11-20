@@ -207,6 +207,8 @@ interface LyricLine {
 type NeteaseLyricModel = {
   id?: number;
   tips?: string;
+  /** 是否选用了实验性 TTML 补充库。 */
+  isLocalTTML?: boolean;
   /** 制作信息等嵌入内容，与演唱歌词分开保存。 */
   embeds?: LyricEmbed[];
   /** 歌曲时长，单位毫秒，用于展示层约束最后一条嵌入内容。 */

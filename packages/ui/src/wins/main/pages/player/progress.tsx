@@ -1,6 +1,4 @@
-import { css } from "@emotion/css";
 import { useSetAtom } from "jotai";
-import { motion } from "motion/react";
 import { memo, type FC, Fragment, useCallback } from "react";
 import { RendererFormat } from "@/common/lib/format";
 import { useSettings } from "@/common/store/settings";
@@ -11,14 +9,18 @@ import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { usePlayProgress } from "@/wins/main/hooks/use-play-progress";
 import Marquee from "@/common/components/display/marquee";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
+import WavePlayerProgress from "@/common/components/display/player-progress/wave";
+import NormalPlayerProgress from "@/common/components/display/player-progress/normal";
 
 const Progress: FC<object> = () => {
-  const { barRef, bufferScope, percentScope, chorusPercent, handleBarClick, handleBarMouseDown } =
-    usePlayProgress("player");
   const { progress } = useProgress("player");
   const settings = useSettings();
   const player = RendererPlayerHandle.usePlayer();
-  const track = player.current.track?.detail;
+  const waveProgress = settings.preference.useWavePlayerProgress;
+  const { onUpdate, track, visible, progressRef } = usePlayProgress(
+    "player",
+    waveProgress ? "wave" : "normal"
+  );
 
   const setPlayModal = useSetAtom(playModalAtom);
   const { jumpArtistPage } = usePageJump();
@@ -34,38 +36,18 @@ const Progress: FC<object> = () => {
   return (
     <div className="w-full contain-layout">
       <div className="h-3 flex flex-col justify-center">
-        <div
-          ref={barRef}
-          className="relative h-2 overflow-hidden cursor-pointer ease-in-out transition-all duration-300 rounded-full bg-white/10 backdrop-blur-lg hover:h-3 "
-          onClick={handleBarClick}
-          onMouseDown={handleBarMouseDown}>
-          <motion.span
-            ref={percentScope}
-            className="absolute left-0 top-0 block h-full bg-white/50 backdrop-blur-lg rounded-full"
-            initial={{ width: 0 }}
+        {waveProgress ? (
+          <WavePlayerProgress
+            ref={progressRef}
+            style={{ width: "100%", height: "100%" }}
+            track={track}
+            visible={visible}
+            playing={player.playing}
+            onUpdate={onUpdate}
           />
-          {/*缓冲区*/}
-          <motion.span
-            ref={bufferScope}
-            className="block h-full bg-white/30 backdrop-blur-lg rounded-full"
-            initial={{ width: 0 }}
-          />
-          {chorusPercent.map((percent, index) => {
-            return (
-              <span
-                key={index}
-                className={css`
-                  position: absolute;
-                  top: 0;
-                  left: ${percent}%;
-                  height: 100%;
-                  width: 3px;
-                `}
-                style={{ background: "white" }}
-              />
-            );
-          })}
-        </div>
+        ) : (
+          <NormalPlayerProgress ref={progressRef} track={track} onUpdate={onUpdate} />
+        )}
       </div>
       <div className="w-full flex justify-between items-center backdrop-blur-lg text-[12px] mt-1 gap-2">
         <Marquee

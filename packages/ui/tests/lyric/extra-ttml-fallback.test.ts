@@ -30,9 +30,15 @@ vi.mock("@/common/netease/api", () => ({
 vi.mock("@/common/lib/qq-music-lyric", () => ({
   QQMusicLyric: { getQRC: mocks.getQRC }
 }));
-vi.mock("@/common/lib/cache", () => ({
-  RendererCache: { service: { object: { getOne: mocks.getOne, setOne: mocks.setOne } } }
-}));
+vi.mock("@/common/lib/cache", async () => {
+  const { BrowserCache } = await import("@mahiru/ui/common/lib/cache/browser");
+  return {
+    RendererCache: {
+      browser: new BrowserCache(),
+      service: { object: { getOne: mocks.getOne, setOne: mocks.setOne } }
+    }
+  };
+});
 vi.mock("@/common/store/settings", () => ({
   settingsStoreSnapshot: () => ({
     _settings: { preference: { useExtraTTML: mocks.useExtraTTML } }
@@ -41,11 +47,12 @@ vi.mock("@/common/store/settings", () => ({
 
 const { default: lyricService } = await import("@mahiru/ui/common/netease/services/lyric");
 
-const CACHE_PREFIX = "netease_lyric_v28";
+const CACHE_PREFIX = "netease_lyric_v29";
 const TTML = `<tt xmlns="http://www.w3.org/ns/ttml" itunes:timing="Line" xmlns:itunes="http://music.apple.com/lyric-ttml-internal"><head><metadata/></head><body dur="10s"><div begin="1.000" end="9.000"><p begin="1.000" end="9.000" itunes:key="L1"><span begin="1.000" end="2.000">补</span><span begin="2.000" end="3.000">充</span></p></div></body></tt>`;
 
 describe("歌词来源回退链", () => {
   beforeEach(() => {
+    localStorage.clear();
     mocks.getTTML.mockReset().mockResolvedValue(null);
     mocks.getTTMLByLocal.mockReset().mockResolvedValue(TTML);
     mocks.getYRC.mockReset().mockResolvedValue({ lrc: { lyric: "" } });
@@ -78,7 +85,8 @@ describe("歌词来源回退链", () => {
 
   it("开关打开且内置库没有时，回退到补充库", async () => {
     mocks.useExtraTTML = true;
-    await lyricService.id(1002);
+    const lyric = await lyricService.id(1002);
+    expect(lyric.isLocalTTML).toBe(true);
     expect(mocks.getTTML).toHaveBeenCalledTimes(1);
     expect(mocks.getTTMLByLocal).toHaveBeenCalledTimes(1);
   });
@@ -120,6 +128,7 @@ describe("歌词来源回退链", () => {
       mocks.getYRC.mockResolvedValue({ yrc: { lyric: "[1000,1000](1000,500,0)逐(1500,500,0)字" } });
     else mocks.getQRC.mockResolvedValue(timedLyric());
     const result = await lyricService.id(2001);
+    expect(result.isLocalTTML).toBe(false);
     expect(result.hasWordTiming()).toBe(true);
     expect(
       result.data
@@ -201,6 +210,66 @@ describe("歌词来源回退链", () => {
     expect(result.data[0]?.words[0]?.word).toBe("常规");
     expect(mocks.getOne.mock.calls.map(([key]) => key)).toEqual([`${CACHE_PREFIX}_3001_0`]);
     expect(mocks.getTTML).not.toHaveBeenCalled();
+  });
+
+  it("逐曲写入浏览器缓存并跳过被排除曲目的补充缓存", async () => {
+    const cache = useMemoryCache();
+    mocks.useExtraTTML = true;
+    const extra = new NeteaseLyric({ ...cachedLyric("补充"), isLocalTTML: true });
+    cache.set(`${CACHE_PREFIX}_3101_1`, extra);
+    cache.set(`${CACHE_PREFIX}_3101_0`, cachedLyric("常规"));
+    cache.set(`${CACHE_PREFIX}_3102_1`, extra);
+    expect((await lyricService.id(3101)).isLocalTTML).toBe(true);
+    lyricService.excludeExtraTTML(3101);
+
+    mocks.getOne.mockClear();
+    const restored = await lyricService.id(3101);
+    expect(restored.isLocalTTML).toBe(false);
+    expect(restored.data[0]?.words[0]?.word).toBe("常规");
+    expect(mocks.getOne.mock.calls.map(([key]) => key)).toEqual([`${CACHE_PREFIX}_3101_0`]);
+    expect(mocks.hasLocalTTML).not.toHaveBeenCalled();
+    expect(mocks.getTTMLByLocal).not.toHaveBeenCalled();
+    expect((await lyricService.id(3102)).isLocalTTML).toBe(true);
+
+    lyricService.excludeExtraTTML(3102);
+    lyricService.excludeExtraTTML(3101);
+    const key = "netease_lyric_extra_ttml_excluded";
+    expect(Object.keys(localStorage).filter((item) => item.startsWith(key))).toEqual([key]);
+    expect(JSON.parse(localStorage.getItem(key)!)).toEqual({ 3101: true, 3102: true });
+  });
+
+  it("被排除的曲目没有常规缓存时仍按原规则选择内置 TTML 或逐字歌词", async () => {
+    mocks.useExtraTTML = true;
+    lyricService.excludeExtraTTML(3103);
+    lyricService.excludeExtraTTML(3104);
+    mocks.getTTML.mockResolvedValueOnce(TTML);
+    mocks.getQRC.mockResolvedValue(timedLyric());
+
+    const ttml = await lyricService.id(3103);
+    expect(ttml.isLocalTTML).toBe(false);
+    expect(ttml.data[0]?.words[0]?.word).toBe("补");
+    const fallback = await lyricService.id(3104);
+    expect(fallback.isLocalTTML).toBe(false);
+    expect(fallback.hasWordTiming()).toBe(true);
+    expect(mocks.getTTMLByLocal).not.toHaveBeenCalled();
+    expect(mocks.setOne.mock.calls.map(([item]) => item.id)).toEqual([
+      `${CACHE_PREFIX}_3103_0`,
+      `${CACHE_PREFIX}_3104_0`
+    ]);
+  });
+
+  it("v29 跳过 v28 的缓存并保存带来源的结果", async () => {
+    const cache = useMemoryCache();
+    cache.set("netease_lyric_v28_3105_1", cachedLyric("旧补充"));
+    cache.set("netease_lyric_v28_3105_0", cachedLyric("旧常规"));
+    mocks.useExtraTTML = true;
+
+    const lyric = await lyricService.id(3105);
+    expect(lyric.isLocalTTML).toBe(true);
+    expect(lyric.data[0]?.words[0]?.word).toBe("补");
+    expect(cache.get(`${CACHE_PREFIX}_3105_1`)).toBe(lyric);
+    expect((await lyricService.id(3105)).isLocalTTML).toBe(true);
+    expect(mocks.getTTMLByLocal).toHaveBeenCalledOnce();
   });
 
   it("打开开关但没有 localTTML 时，缺少补充缓存会继续读常规缓存", async () => {

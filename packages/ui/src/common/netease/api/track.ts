@@ -156,10 +156,11 @@ export default class _NeteaseTrackAPI {
    * 副歌时间
    * @desc 调用此接口, 传入歌曲 id, 获取副歌时间
    * */
-  static chorus(id: number) {
+  static chorus(id: number, signal?: AbortSignal) {
     return apiRequest<any, NeteaseAPI.NeteaseTrackChorusResponse>({
       url: "/song/chorus",
-      params: { id }
+      params: { id },
+      signal
     });
   }
 

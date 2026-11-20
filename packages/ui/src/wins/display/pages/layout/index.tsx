@@ -23,6 +23,7 @@ import Title from "./title";
 import DisplayFloat from "./float";
 import Background from "./background";
 import SearchControl from "./search-control";
+import SettingsControl from "./settings-control";
 import PlayListControl from "./play-list-control";
 import ListeningFootprintControl from "./listening-footprint-control";
 
@@ -76,7 +77,8 @@ const LayoutDisplay: FC<object> = () => {
           });
           break;
         case "settings":
-          target = RoutePath.withQuery(RoutePathDisplay.settings, {});
+          target = RoutePathDisplay.settings;
+          AppDrawer.close();
           break;
         case "history":
           target = RoutePathDisplay.history;
@@ -154,7 +156,8 @@ const LayoutDisplay: FC<object> = () => {
           appends={[
             <SearchControl key="search" />,
             <PlayListControl key="play-list" />,
-            <ListeningFootprintControl key="listening-footprint" />
+            <ListeningFootprintControl key="listening-footprint" />,
+            <SettingsControl key="settings" />
           ]}
           max
           pin

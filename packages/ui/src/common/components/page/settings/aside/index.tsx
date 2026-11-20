@@ -12,6 +12,7 @@ interface SettingsAsideProps {
   login: NormalFunc;
   className?: string;
   logout: NormalFunc;
+  showDetails: boolean;
   settings: NeteaseSettings;
   user: Nullable<NeteaseUser>;
   cacheStoreConfig: Nullable<InvokeEventPayload<"invoke_cache_config_get">>;
@@ -23,14 +24,18 @@ const SettingsAside: FC<SettingsAsideProps> = ({
   login,
   logout,
   settings,
+  showDetails,
   cacheStoreConfig
 }) => {
   return (
     <aside className={cx("w-full flex scrollbar flex-col gap-4", className)}>
       <UserDetail user={user} login={login} logout={logout} />
-      <SettingsSummary settings={settings} cacheStoreConfig={cacheStoreConfig} />
-      {/*<Github />*/}
-      <Version showExportLogs />
+      {showDetails && (
+        <>
+          <SettingsSummary settings={settings} cacheStoreConfig={cacheStoreConfig} />
+          <Version showExportLogs />
+        </>
+      )}
     </aside>
   );
 };

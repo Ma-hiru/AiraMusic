@@ -12,9 +12,9 @@ import type {
 
 import ToggleRow from "./toggle-row";
 
-const AgentSettings: FC = () => {
+const AgentSettings: FC<{ active: boolean }> = ({ active }) => {
   const [state, setState] = useState<AgentFeatureSettingsState>();
-  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string>();
   const [saving, setSaving] = useState(false);
   const [portDraft, setPortDraft] = useState("");
 
@@ -24,7 +24,7 @@ const AgentSettings: FC = () => {
   }, []);
 
   const load = useCallback(async () => {
-    setLoading(true);
+    setLoadError(undefined);
     try {
       const result = await RendererIPC.NormalChannel.send(
         "invoke_agent_feature_settings_get",
@@ -33,9 +33,7 @@ const AgentSettings: FC = () => {
       if (!result.ok) throw new Error(result.reason.message);
       applyState(result.data);
     } catch (error) {
-      AppToast.show({ type: "error", text: `加载 Agent 设置失败：${String(error)}` });
-    } finally {
-      setLoading(false);
+      setLoadError(`加载 Agent 设置失败：${String(error)}`);
     }
   }, [applyState]);
 
@@ -112,11 +110,27 @@ const AgentSettings: FC = () => {
     }
   }, [state]);
 
-  if (loading || !state) {
+  if (!active) return null;
+
+  if (!state) {
     return (
-      <div className="surface-1 flex min-h-40 items-center justify-center rounded-lg text-white/45">
-        <LoaderCircle className="mr-2 size-4 animate-spin" aria-hidden="true" />
-        <span className="text-xs">正在读取启动配置</span>
+      <div className="surface-1 flex min-h-40 flex-wrap items-center justify-center gap-2 rounded-lg p-3 text-xs text-white/45">
+        {loadError ? (
+          <>
+            <span role="alert">{loadError}</span>
+            <button
+              className="rounded-md px-2 py-1 text-primary hover:bg-white/[0.06]"
+              type="button"
+              onClick={() => void load()}>
+              重试
+            </button>
+          </>
+        ) : (
+          <>
+            <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+            <span role="status">正在读取启动配置</span>
+          </>
+        )}
       </div>
     );
   }

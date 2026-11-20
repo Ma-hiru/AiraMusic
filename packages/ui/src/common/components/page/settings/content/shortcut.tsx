@@ -116,7 +116,7 @@ const Shortcut: FC<ShortcutSettings> = ({ data, patchSettings }) => {
           <div className="min-w-0 flex-1">
             <h3 className="truncate text-sm font-semibold tracking-normal">恢复默认</h3>
             <p className="mt-0.5 line-clamp-2 text-[11px] leading-4">
-              将以上所有快捷键恢复为默认绑定。
+              将以上所有快捷键恢复为默认绑定
             </p>
           </div>
           <button

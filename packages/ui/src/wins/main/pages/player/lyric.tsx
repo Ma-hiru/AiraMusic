@@ -1,15 +1,21 @@
 import { useSetAtom } from "jotai";
-import { memo, useRef, type FC, useMemo, useEffect, useCallback } from "react";
+import { memo, useRef, type FC, useMemo, useState, useEffect, useCallback } from "react";
+import { Log } from "@/common/lib/log";
 import { useSettings } from "@/common/store/settings";
 import { playModalAtom } from "@/wins/main/atoms/layout";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { NeteaseServicesLyric } from "@/common/netease/services";
 import { useTailwindMediaQuery } from "@/common/hooks/use-tailwind-media-query";
 import { usePlayerViewVisible } from "@/wins/main/hooks/use-player-view-visible";
+import AppToast from "@/common/components/display/toast";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import LyricComponent, { type LyricRef } from "@/common/components/display/lyric";
 
 const Lyric: FC<object> = () => {
   const player = RendererPlayerHandle.usePlayer();
+  const lyric = player.current.lyric;
+  const trackId = player.current.track?.id;
+  const [restoringTrackId, setRestoringTrackId] = useState<number>();
   const lyricRef = useRef<Nullable<LyricRef>>(null);
   const visible = usePlayerViewVisible("player");
   const { jumpArtistPage } = usePageJump();
@@ -31,6 +37,32 @@ const Lyric: FC<object> = () => {
     },
     [player]
   );
+
+  const restoreOriginalLyric = useCallback(async () => {
+    if (
+      trackId === undefined ||
+      player.current.track?.id !== trackId ||
+      restoringTrackId === trackId
+    )
+      return;
+
+    setRestoringTrackId(trackId);
+    try {
+      NeteaseServicesLyric.excludeExtraTTML(trackId);
+      await player.reloadLyric();
+    } catch (error) {
+      AppToast.show({ text: "恢复原始歌词失败", type: "error" });
+      Log.error(error);
+    } finally {
+      setRestoringTrackId((current) => (current === trackId ? undefined : current));
+    }
+  }, [player, restoringTrackId, trackId]);
+
+  useEffect(() => {
+    if (!visible) return;
+    lyricRef.current?.setCurrentTime(player.audio.instance.currentTime * 1000);
+    lyricRef.current?.update(0);
+  }, [lyric, player, visible]);
 
   useEffect(() => {
     if (!visible) return;
@@ -67,9 +99,6 @@ const Lyric: FC<object> = () => {
       lyricRef.current?.calcLayout();
     };
 
-    // 确保visible恢复时，时间同步，且loop开启
-    lyricRef.current?.setCurrentTime(player.audio.instance.currentTime * 1000);
-    lyricRef.current?.update(0);
     !player.audio.paused && startLoop();
     player.audio.addEventListener("play", startLoop, { passive: true });
     player.audio.addEventListener("pause", stopLoop, { passive: true });
@@ -96,16 +125,25 @@ const Lyric: FC<object> = () => {
       <LyricComponent
         ref={lyricRef}
         className="contain-strict"
+        lyric={lyric}
         fontSize={fontSize}
-        lyric={player.current.lyric}
         playing={visible && player.playing}
         rmActive={player.current?.rmActive}
         tlActive={player.current?.tlActive}
         noteActive={player.current?.noteActive}
         tlLanguages={player.activeTranslationLanguages}
         onWordClick={handleWordClick}
-        onArtistClick={handleArtistClick}
-      />
+        onArtistClick={handleArtistClick}>
+        {trackId !== undefined && lyric?.isLocalTTML && lyric.id === trackId && (
+          <button
+            className="mx-4 my-1 cursor-pointer text-sm text-white/80 underline underline-offset-4 hover:text-white disabled:cursor-wait disabled:opacity-60"
+            type="button"
+            disabled={restoringTrackId === trackId}
+            onClick={restoreOriginalLyric}>
+            {restoringTrackId === trackId ? "正在恢复…" : "恢复原始歌词"}
+          </button>
+        )}
+      </LyricComponent>
     </div>
   );
 };

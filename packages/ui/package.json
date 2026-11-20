@@ -13,7 +13,7 @@
   "dependencies": {
     "@ai-sdk/react": "4.0.160",
     "@applemusic-like-lyrics/lyric": "1.1.0",
-    "@applemusic-like-lyrics/ttml": "^1.0.1",
+    "@applemusic-like-lyrics/ttml": "1.0.1",
     "@emotion/css": "^11.13.5",
     "@heroicons/react": "^2.2.0",
     "@mahiru/agent": "workspace:*",

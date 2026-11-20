@@ -1,4 +1,5 @@
 export { default } from "./use";
+export { createSettingsDrawer } from "./settings-drawer";
 export { createSearchDrawer, type SearchDrawerProps } from "./search-drawer";
 export {
   createPlayListDrawer,

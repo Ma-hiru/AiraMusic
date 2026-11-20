@@ -13,6 +13,7 @@ export type NormalEventMaps = {
   event_tray_capsule: TrayCapsuleConfig;
   event_window_browser: { url: string };
   event_window_show: Optional<WindowType>;
+  event_miniplayer_focus_window: undefined;
   event_window_close: Optional<WindowType>;
   event_window_debug: Optional<WindowType>;
   event_window_focus: Optional<WindowType>;

@@ -40,6 +40,13 @@ export const eventHandlers: EventHandlers = {
     Log.debug("event_window_focus", type, "win found:", !!win);
     win?.focus();
   },
+  event_miniplayer_focus_window: (e) => {
+    const sender = BrowserWindow.fromWebContents(e.sender);
+    if (!sender || MainWindowManager.getId(sender) !== "miniplayer") return;
+    for (const target of ["display", "comments", "image", "main"] as const) {
+      if (MainWindowManager.checkAndShow(target)) return;
+    }
+  },
   event_window_external: (e, { url, title }) => {
     if (!MainHandle.isTrustedOrigin(url)) {
       Log.warn("event_window_external", `origin "${url}" is not trusted`);

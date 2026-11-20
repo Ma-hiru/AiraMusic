@@ -9,6 +9,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  type ReactNode,
   useLayoutEffect,
   useImperativeHandle
 } from "react";
@@ -38,6 +39,7 @@ interface LyricContainerProps {
   fontSize?: number;
   className?: string;
   activeColor?: string;
+  children?: ReactNode;
   inactiveColor?: string;
   playing?: Optional<boolean>;
   rmActive: Optional<boolean>;
@@ -57,6 +59,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
   onWordClick,
   onArtistClick,
   spring,
+  children,
   fontSize,
   rmActive,
   tlActive,
@@ -238,8 +241,9 @@ const LyricContainer: FC<LyricContainerProps> = ({
           />
         );
       })}
-      <div className={cx("h-[55%]", lyricLines.length === 0 && "h-0 pt-0")}>
+      <div className={cx("min-h-[55%]", lyricLines.length === 0 && "min-h-0 pt-0")}>
         <LyricTips fontSize={fontSize} tips={_lyric?.tips} crossAlign={crossAlign} />
+        {children}
       </div>
     </div>
   );

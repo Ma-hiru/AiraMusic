@@ -99,7 +99,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@applemusic-like-lyrics/ttml@npm:^1.0.1":
+"@applemusic-like-lyrics/ttml@npm:1.0.1, @applemusic-like-lyrics/ttml@npm:^1.0.1":
   version: 1.0.1
   resolution: "@applemusic-like-lyrics/ttml@npm:1.0.1"
   checksum: 10c0/eb310b1ed5dcc12f1749183c8e345307f67b451a0e057a9b95c11b4c5bb3d38f32a0445fbc58aae8b4c7dfe4a577ddb0b6bd36b397f8eebf11fa61a0881beb0e
@@ -1947,7 +1947,7 @@ __metadata:
   dependencies:
     "@ai-sdk/react": "npm:4.0.160"
     "@applemusic-like-lyrics/lyric": "npm:1.1.0"
-    "@applemusic-like-lyrics/ttml": "npm:^1.0.1"
+    "@applemusic-like-lyrics/ttml": "npm:1.0.1"
     "@babel/core": "npm:^8.0.7"
     "@babel/plugin-proposal-decorators": "npm:^8.0.2"
     "@emotion/css": "npm:^11.13.5"

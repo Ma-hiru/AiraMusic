@@ -1,4 +1,5 @@
-import { render, screen, cleanup } from "@testing-library/react";
+import { act, render, screen, cleanup } from "@testing-library/react";
+import { RendererIPC } from "@mahiru/ipc/renderer";
 import AgentSettings from "@mahiru/ui/common/components/page/settings/content/agent";
 
 const { state } = vi.hoisted(() => ({
@@ -56,7 +57,7 @@ afterEach(cleanup);
 
 describe("Agent 功能设置", () => {
   it("区分内部 Agent MCP 与外部接入，并标识公共工具风险", async () => {
-    render(<AgentSettings />);
+    render(<AgentSettings active />);
 
     expect(await screen.findByText("外部 MCP 接入")).toBeInTheDocument();
     expect(screen.getByText(/Rust Agent 始终通过内部凭证使用完整工具目录/)).toBeInTheDocument();
@@ -67,5 +68,21 @@ describe("Agent 功能设置", () => {
     const searchTool = screen.getByRole("checkbox", { name: /搜索音乐/ });
     expect(searchTool).toHaveAttribute("title", "搜索歌曲、专辑和艺人。");
     expect(searchTool.querySelector(".line-clamp-2")).not.toBeNull();
+  });
+
+  it("提前读取配置，切换分类时直接显示 Agent 内容", async () => {
+    const send = vi.mocked(RendererIPC.NormalChannel.send);
+    send.mockClear();
+    const view = render(<AgentSettings active={false} />);
+    await act(async () => {});
+    expect(send).toHaveBeenCalledExactlyOnceWith("invoke_agent_feature_settings_get", undefined);
+    expect(screen.queryByText("外部 MCP 接入")).not.toBeInTheDocument();
+
+    view.rerender(<AgentSettings active />);
+    expect(screen.getByText("外部 MCP 接入")).toBeInTheDocument();
+    view.rerender(<AgentSettings active={false} />);
+    view.rerender(<AgentSettings active />);
+    expect(screen.getByText("外部 MCP 接入")).toBeInTheDocument();
+    expect(send).toHaveBeenCalledTimes(1);
   });
 });

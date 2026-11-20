@@ -9,11 +9,18 @@ import type { CacheStoreCategories } from "@/types/cache";
 import type { InvokeEventPayload } from "@mahiru/ipc/types";
 
 import SettingsAside from "./aside";
-import SettingsContent from "./content";
+import SettingsContent, { type SettingsTab } from "./content";
+
+export type { SettingsTab };
+
+const columnClassName =
+  "@[45rem]/settings:h-full @[45rem]/settings:contain-strict @[45rem]/settings:overflow-y-auto @[45rem]/settings:scrollbar-show @[45rem]/settings:pr-1";
 
 interface SettingsProps {
   login: NormalFunc;
+  tab?: SettingsTab;
   className?: string;
+  inDrawer?: boolean;
   logout: NormalFunc;
   routerActive: boolean;
   settings: NeteaseSettings;
@@ -21,18 +28,22 @@ interface SettingsProps {
   updateOutput: NormalFunc<[deviceId: string]>;
   updateSettings: NormalFunc<[settings: NeteaseSettingsModel]>;
   output: { selected: string; views: { deviceId: string; displayName: string }[] };
+  onTabChange?: NormalFunc<[tab: SettingsTab]>;
 }
 
 const Settings: FC<SettingsProps> = ({
   user,
   className,
+  onTabChange,
+  tab,
   login,
   logout,
   output,
   settings,
   routerActive,
   updateOutput,
-  updateSettings
+  updateSettings,
+  inDrawer = false
 }) => {
   const [cacheStoreSizes, setCacheStoreSizes] = useState<Nullable<CacheStoreCategories>>(null);
   const [cacheStoreConfig, setCacheStoreConfig] =
@@ -89,36 +100,40 @@ const Settings: FC<SettingsProps> = ({
 
   return (
     <section
-      className={cx(
-        `
-          h-full grid gap-4 overflow-x-hidden contain-layout
-          overflow-y-auto md:overflow-y-hidden
-          justify-items-center md:justify-items-normal
-          grid-cols-1 md:grid-cols-[minmax(120px,1fr)_2fr]
-          scrollbar scrollbar-show md:scrollbar-hidden
-        `,
-        className
-      )}>
-      <SettingsAside
-        className="md:h-full md:contain-strict md:overflow-y-auto md:scrollbar-show md:pr-1"
-        user={user}
-        login={login}
-        logout={logout}
-        settings={settings}
-        cacheStoreConfig={cacheStoreConfig}
-      />
-      <SettingsContent
-        className="md:h-full md:contain-strict md:overflow-y-auto md:scrollbar-show md:pr-1"
-        user={user}
-        output={output}
-        settings={settings}
-        updateOutput={updateOutput}
-        updateSettings={updateSettings}
-        cacheStoreSizes={cacheStoreSizes}
-        refreshSize={getCacheStoreStatus}
-        cacheStoreConfig={cacheStoreConfig}
-        updateCacheStoreConfig={updateCacheStoreConfig}
-      />
+      className={cx("h-full min-h-0 [container-name:settings] [container-type:size]", className)}>
+      <div
+        className="
+          grid h-full grid-cols-1 grid-rows-[auto_max-content]
+          justify-items-center gap-4 overflow-x-hidden overflow-y-auto
+          scrollbar scrollbar-show contain-layout
+          @[45rem]/settings:grid-cols-[minmax(120px,1fr)_2fr] @[45rem]/settings:grid-rows-1
+          @[45rem]/settings:justify-items-normal @[45rem]/settings:overflow-y-hidden
+          @[45rem]/settings:scrollbar-hidden
+        ">
+        <SettingsAside
+          className={columnClassName}
+          user={user}
+          login={login}
+          logout={logout}
+          settings={settings}
+          showDetails={!inDrawer}
+          cacheStoreConfig={cacheStoreConfig}
+        />
+        <SettingsContent
+          className={cx("min-h-[100cqh] @[45rem]/settings:min-h-0", columnClassName)}
+          tab={tab}
+          user={user}
+          output={output}
+          settings={settings}
+          updateOutput={updateOutput}
+          updateSettings={updateSettings}
+          cacheStoreSizes={cacheStoreSizes}
+          refreshSize={getCacheStoreStatus}
+          cacheStoreConfig={cacheStoreConfig}
+          updateCacheStoreConfig={updateCacheStoreConfig}
+          onTabChange={onTabChange}
+        />
+      </div>
     </section>
   );
 };

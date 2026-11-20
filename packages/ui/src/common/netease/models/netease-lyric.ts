@@ -29,9 +29,12 @@ const LyricEmbedSchema = z.object({
   position: z.number().int().nonnegative()
 });
 
+const localTTMLTips = "歌词来源：AppleMusic & QQ音乐 (实验性)";
+
 export const NeteaseLyricSchema = z.object({
   id: z.number().optional(),
   tips: z.string().optional(),
+  isLocalTTML: z.boolean().optional(),
   embeds: z.array(LyricEmbedSchema).optional(),
   duration: z.number().finite().nonnegative().optional(),
   data: z
@@ -95,6 +98,7 @@ export class NeteaseLyric implements NeteaseLyricModel {
   readonly id;
   readonly embeds;
   readonly duration;
+  readonly isLocalTTML;
 
   constructor(props: Partial<NeteaseLyricModel>) {
     this.data = props.data || [];
@@ -108,6 +112,7 @@ export class NeteaseLyric implements NeteaseLyricModel {
       );
     this.noteExisted = props.noteExisted || false;
     this.tips = props.tips || "";
+    this.isLocalTTML = props.isLocalTTML ?? props.tips === localTTMLTips;
     this.id = props.id;
     this.embeds = props.embeds;
     this.duration = props.duration;
@@ -115,7 +120,7 @@ export class NeteaseLyric implements NeteaseLyricModel {
   //endregion
 
   get key(): string {
-    return `${this.id || 0}_${this.tips}_${this.data?.length || 0}_${this.rmExisted}_${this.tlExisted}`;
+    return `${this.id || 0}_${this.tips}_${this.data?.length || 0}_${this.rmExisted}_${this.tlExisted}_${this.isLocalTTML}`;
   }
 
   get info() {
@@ -309,15 +314,11 @@ class Parser {
     return {
       lyric: <NeteaseLyricModel>{
         data,
+        isLocalTTML,
         rmExisted: Parser.hasExtraLyric(rmCount, lyricLineCount),
         tlExisted: Parser.hasExtraLyric(tlCount, lyricLineCount),
         noteExisted: noteCount > 0,
-        tips:
-          data.length >= 5
-            ? isLocalTTML
-              ? "歌词来源：AppleMusic & QQ音乐 (实验性)"
-              : "歌词来源：AppleMusic"
-            : undefined
+        tips: data.length >= 5 ? (isLocalTTML ? localTTMLTips : "歌词来源：AppleMusic") : undefined
       },
       metadata: ttml.metadata
     };

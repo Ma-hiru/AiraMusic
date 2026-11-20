@@ -1,5 +1,6 @@
 import { TrackQuality } from "@mahiru/ui/common/enum";
 import {
+  NeteaseLyric,
   NeteaseTrack,
   NeteaseLocalAudio,
   NeteaseTrackRecord,
@@ -11,6 +12,7 @@ import RendererPlayerAudio from "@mahiru/ui/common/player/audio";
 const mocks = vi.hoisted(() => ({
   track: vi.fn(),
   download: vi.fn(),
+  lyricTrack: vi.fn(),
   idleTasks: [] as AsyncGenerator<unknown, unknown, unknown>[]
 }));
 
@@ -25,7 +27,7 @@ vi.mock("@/common/netease/services", () => ({
   NeteaseServicesAuth: {},
   NeteaseServicesAudio: { track: mocks.track, download: mocks.download },
   NeteaseServicesImage: {},
-  NeteaseServicesLyric: {}
+  NeteaseServicesLyric: { track: mocks.lyricTrack }
 }));
 vi.mock("@/common/lib/idle", () => ({
   RendererIdle: {
@@ -140,6 +142,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   fetchMock.mockReset();
   mocks.track.mockReset();
+  mocks.lyricTrack.mockReset();
   mocks.idleTasks.length = 0;
   vi.stubGlobal("Audio", TestAudio);
   vi.stubGlobal("fetch", fetchMock);
@@ -309,5 +312,59 @@ describe("播放器缓存与恢复任务", () => {
     expect(restored.audio.instance.src).toBe(network(2).url);
     expect(restored.audio.currentTime).toBe(58);
     expect(restored.audio.paused).toBe(false);
+  });
+});
+
+describe("单独重新加载歌词", () => {
+  it("仅更新当前歌曲的歌词和展示状态", async () => {
+    const value = player();
+    value.current.track = record(1);
+    value.audio.currentTime = 27;
+    const original = new NeteaseLyric({ id: 1, tips: "原始歌词" });
+    mocks.lyricTrack.mockResolvedValueOnce(original);
+    await value.reloadLyric();
+
+    expect(mocks.lyricTrack).toHaveBeenCalledWith(
+      value.current.track.detail,
+      expect.any(AbortController)
+    );
+    expect(value.current.lyric).toBe(original);
+    expect(value.audio.currentTime).toBe(27);
+  });
+
+  it("加载失败时保留当前歌词，重试成功后才替换", async () => {
+    const value = player();
+    value.current.track = record(1);
+    const supplemental = new NeteaseLyric({ id: 1, isLocalTTML: true });
+    const original = new NeteaseLyric({ id: 1 });
+    value.current.lyric = supplemental;
+    mocks.lyricTrack.mockResolvedValueOnce(NeteaseLyric.loadErrorLyric);
+    mocks.lyricTrack.mockResolvedValueOnce(original);
+
+    await expect(value.reloadLyric()).rejects.toThrow("加载歌曲 1 的歌词失败");
+    expect(value.current.lyric).toBe(supplemental);
+
+    await value.reloadLyric();
+    expect(value.current.lyric).toBe(original);
+  });
+
+  it("切歌取消旧曲目的歌词重载并丢弃晚到的结果", async () => {
+    const value = player();
+    value.current.track = record(1);
+    const pending = Promise.withResolvers<NeteaseLyric>();
+    mocks.lyricTrack.mockReturnValueOnce(pending.promise);
+    const stale = value.reloadLyric();
+    const controller: AbortController = mocks.lyricTrack.mock.calls[0]![1];
+
+    mocks.track.mockResolvedValueOnce(network(2));
+    expect(await loadPlayer(value, record(2))).toBe("ok");
+    expect(controller.signal.aborted).toBe(true);
+    const lyric = new NeteaseLyric({ id: 2 });
+    mocks.lyricTrack.mockResolvedValueOnce(lyric);
+    await value.reloadLyric();
+    pending.resolve(new NeteaseLyric({ id: 1 }));
+    await stale;
+
+    expect(value.current.lyric).toBe(lyric);
   });
 });

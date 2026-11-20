@@ -1,6 +1,6 @@
 import { useRef, useCallback } from "react";
 import { NeteaseAPITrack } from "@/common/netease/api";
-import { NeteaseTrack, NeteaseTrackRecord } from "@/common/netease/models";
+import type { NeteaseTrackRecord } from "@/common/netease/models";
 
 type TrackLikeSource = {
   checkPoint: number;
@@ -17,7 +17,7 @@ export function useHeart(manager: Optional<HeartManager>) {
   const managerRef = useRef(manager);
   managerRef.current = manager;
 
-  const checkLiked = useCallback((track?: NeteaseTrack) => {
+  const checkLiked = useCallback((track?: NeteaseTrackModel) => {
     if (!track) return false;
     const manager = managerRef.current;
     if (!manager) return false;
@@ -27,7 +27,7 @@ export function useHeart(manager: Optional<HeartManager>) {
   }, []);
 
   const likedChange = useCallback(
-    (track?: NeteaseTrack | NeteaseTrackRecord) => {
+    (track?: NeteaseTrackModel | NeteaseTrackRecord) => {
       if (!track) return;
       const manager = managerRef.current;
       if (!manager) return;

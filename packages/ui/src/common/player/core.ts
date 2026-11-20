@@ -437,6 +437,22 @@ export default class RendererPlayer extends Listenable<
     return NeteaseServicesLyric.track(track, controller);
   }
 
+  async reloadLyric() {
+    const track = this.current.track?.detail;
+    const controller = this.controller;
+    if (!track || controller.signal.aborted) return;
+    try {
+      const lyric = await this.loadLyric(track, controller);
+      if (controller.signal.aborted) return;
+      // 歌词服务会给有效结果补齐歌曲 ID，失败占位没有 ID。
+      if (lyric.id !== track.id) throw new Error(`加载歌曲 ${track.id} 的歌词失败`);
+      this.current.lyric = lyric;
+      this.executeListeners();
+    } catch (error) {
+      if (!controller.signal.aborted) throw error;
+    }
+  }
+
   /** 持久化对象 */
   static save(instance: RendererPlayer) {
     return {

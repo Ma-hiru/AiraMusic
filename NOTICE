@@ -1,0 +1,14 @@
+AiraMusic
+
+Waveform progress bar
+
+This product includes portions of AxionOS's WaveformSeekBar.kt.
+Copyright (C) 2025 AxionOS
+Licensed under the Apache License, Version 2.0. See LICENSE-APACHE-2.0.
+
+Original source:
+https://github.com/AxionAOSP/android_frameworks_base/blob/b41823f8e730bb78dbaf742b3cf5fed9478b93cd/packages/SystemUI/src/com/android/systemui/media/controls/ui/view/WaveformSeekBar.kt
+
+AiraMusic ported the wave geometry and cubic Bézier interpolation to
+Rust/WASM with bounded sampling. It adapted the progress track and thumb
+to Canvas 2D and SVG, and the wave animation timing to a Web Worker.

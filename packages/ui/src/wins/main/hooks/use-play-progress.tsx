@@ -1,160 +1,49 @@
-import { useAnimate } from "motion/react";
-import { clamp, throttle } from "lodash-es";
-import {
-  useRef,
-  useState,
-  useEffect,
-  useCallback,
-  type MouseEvent as ReactMouseEvent
-} from "react";
-import { NeteaseAPITrack } from "@/common/netease/api";
-import { useCacheRequest } from "@/common/utils/cache";
+import { useRef, useEffect, useCallback } from "react";
 import { usePlayerViewVisible } from "@/wins/main/hooks/use-player-view-visible";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
+import type { PlayerProgressRef } from "@/common/hooks/use-progress-sync";
 
-export function usePlayProgress(view: "bar" | "player") {
-  const [percentScope, percentAnimate] = useAnimate();
-  const [bufferScope, bufferAnimate] = useAnimate();
-  const [chorus, setChorus] = useState<NeteaseAPI.NeteaseChorusData[]>([]);
-  const [chorusPercent, setChorusPercent] = useState<number[]>([]);
+export function usePlayProgress(view: "bar" | "player", variant: "wave" | "normal" = "normal") {
+  const progressRef = useRef<PlayerProgressRef>(null);
   const visible = usePlayerViewVisible(view);
   const player = RendererPlayerHandle.usePlayer();
-  const barRef = useRef<HTMLDivElement>(null);
-  const dragPercentRef = useRef(0);
-  const isDragging = useRef(false);
-
-  // 进度条动画
-  const updatePercent = useCallback(
-    (percent: number, duration?: number) => {
-      if (duration === undefined) duration = document.hidden ? 0 : 1;
-      percentAnimate(percentScope.current, { width: `${percent}%` }, { duration, ease: "linear" });
-    },
-    [percentAnimate, percentScope]
-  );
-
-  // 缓冲条动画
-  const updateBuffer = useCallback(
-    (buffer: number, duration?: number) => {
-      if (duration === undefined) duration = buffer <= 1 || document.hidden ? 0 : 1;
-      bufferAnimate(bufferScope.current, { width: `${buffer}%` }, { duration, ease: "linear" });
-    },
-    [bufferAnimate, bufferScope]
-  );
-
-  // 同步函数
-  const tick = useCallback(
-    (force: boolean = false) => {
-      if (!force && isDragging.current) return;
-      const { buffered, duration, currentTime } = player.audio.progress;
-      const percent = !duration ? 0 : (currentTime / duration) * 100;
-      const buffer = !duration ? 0 : (buffered / duration) * 100;
-      updatePercent(percent);
-      updateBuffer(buffer);
-    },
-    [player.audio.progress, updateBuffer, updatePercent]
-  );
-
-  const tickRef = useRef(tick);
-  tickRef.current = tick;
-  // prettier-ignore
-  const throttleTick = useRef(
-    throttle((force?: boolean) => tickRef.current(force), 1000)
-  ).current;
-
-  // 监听事件，自然更新
+  const track = player.current.track?.detail;
+  const { audio } = player;
+  const onUpdate = useCallback((percent: number) => (audio.currentTime = `${percent}%`), [audio]);
   useEffect(() => {
     if (!visible) return;
-    const handleTimeUpdate = () => throttleTick();
-    const handleLoad = () => throttleTick(true);
-    handleTimeUpdate();
-    player.audio.addEventListener("timeupdate", handleTimeUpdate, { passive: true });
-    player.audio.addEventListener("loadstart", handleLoad, { passive: true });
-    document.addEventListener("visibilitychange", handleLoad, { passive: true });
+    const tick = progressRef.current?.tick;
+    if (!tick) return;
+
+    const update = (force = false) => {
+      const { buffered, duration } = audio.progress;
+      const percent = !duration ? 0 : (audio.currentTime / duration) * 100;
+      const buffer = !duration ? 0 : (buffered / duration) * 100;
+      tick(force, { percent, buffer });
+    };
+    const handleTimeUpdate = () => update(false);
+    const handleSeeked = () => update(true);
+    const handleLoad = () => tick(true, { percent: 0, buffer: 0 });
+
+    // 切换组件后立即同步当前值，也覆盖暂停时切换进度条的场景。
+    update(true);
+
+    audio.addEventListener("timeupdate", handleTimeUpdate, { passive: true });
+    audio.addEventListener("progress", handleTimeUpdate, { passive: true });
+    audio.addEventListener("loadstart", handleLoad, { passive: true });
+    audio.addEventListener("seeked", handleSeeked, { passive: true });
     return () => {
-      throttleTick.cancel();
-      player.audio.removeEventListener("timeupdate", handleTimeUpdate);
-      player.audio.removeEventListener("loadstart", handleLoad);
-      document.removeEventListener("visibilitychange", handleLoad);
+      tick.cancel();
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("progress", handleTimeUpdate);
+      audio.removeEventListener("loadstart", handleLoad);
+      audio.removeEventListener("seeked", handleSeeked);
     };
-  }, [player, throttleTick, visible]);
-
-  // 点击和拖拽
-  const calcPercent = useCallback((clientX: number) => {
-    const element = barRef.current;
-    if (!element) return 0;
-    const rect = element.getBoundingClientRect();
-    const percent = ((clientX - rect.left) / rect.width) * 100;
-    return clamp(percent, 0, 100);
-  }, []);
-
-  // 点击进度条
-  const handleBarClick = useCallback(
-    (e: ReactMouseEvent) => {
-      if (isDragging.current) return;
-      const percent = calcPercent(e.clientX);
-      dragPercentRef.current = percent;
-      player.audio.currentTime = `${percent}%`;
-    },
-    [calcPercent, player.audio]
-  );
-
-  // 拖拽进度条
-  const handleBarMouseDown = useCallback(
-    (e: ReactMouseEvent) => {
-      e.preventDefault();
-      isDragging.current = true;
-      const mouseMoveHandler = (e: MouseEvent) => {
-        const percent = calcPercent(e.clientX);
-        dragPercentRef.current = percent;
-        updatePercent(percent, 0);
-      };
-      const mouseUpHandler = () => {
-        player.audio.currentTime = `${dragPercentRef.current}%`;
-        clearListeners();
-      };
-      function clearListeners() {
-        isDragging.current = false;
-        window.removeEventListener("mousemove", mouseMoveHandler);
-        window.removeEventListener("mouseup", mouseUpHandler);
-      }
-      window.addEventListener("mousemove", mouseMoveHandler);
-      window.addEventListener("mouseup", mouseUpHandler);
-      return clearListeners;
-    },
-    [calcPercent, player, updatePercent]
-  );
-
-  // 获取歌曲副歌时间
-  const buildCacheKey = useRef((id: number) => id).current;
-  const chorusRequestCache = useCacheRequest(NeteaseAPITrack.chorus, buildCacheKey, "memory");
-  useEffect(() => {
-    const fetchChorus = async () => {
-      if (!player.current.track) return;
-      try {
-        const response = await chorusRequestCache(player.current.track.id);
-        const duration = player.audio.instance.duration;
-        setChorus(response.chorus);
-        setChorusPercent(
-          response.chorus.map((c) => (c.startTime / (1000 * duration)) * 100).map(Math.floor)
-        );
-      } catch {
-        setChorus([]);
-        setChorusPercent([]);
-      }
-    };
-    player.audio.addEventListener("loadedmetadata", fetchChorus);
-    return () => player.audio.removeEventListener("loadedmetadata", fetchChorus);
-  }, [chorusRequestCache, player]);
-
+  }, [audio, visible, variant]);
   return {
-    barRef,
-    handleBarClick,
-    handleBarMouseDown,
-    percentScope,
-    bufferScope,
-    isPlaying: player.playing,
-    isDragging,
-    chorus,
-    chorusPercent
+    progressRef,
+    track,
+    visible,
+    onUpdate
   };
 }

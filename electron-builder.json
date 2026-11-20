@@ -11,6 +11,9 @@
   },
   "files": ["dist/**/*", "package.json"],
   "extraResources": [
+    "LICENSE-APACHE-2.0",
+    "LICENSE",
+    "NOTICE",
     {
       "from": "packages/ui/dist",
       "to": "ui"
