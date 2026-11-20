@@ -88,8 +88,7 @@ const WavePlayerProgress: FC<WaveformSeekBarProps> = ({
       ref={barRef}
       className={cx(
         "relative block max-w-full",
-        onUpdate &&
-          "touch-none cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+        onUpdate && "touch-none cursor-pointer outline-none",
         className
       )}
       style={{ width, height, ...style }}
