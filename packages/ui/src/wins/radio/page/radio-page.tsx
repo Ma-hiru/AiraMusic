@@ -3,6 +3,7 @@ import { X, ChevronRight } from "lucide-react";
 import { type FC, useMemo, useState, useEffect, useCallback } from "react";
 import { Log } from "@/common/lib/log";
 import { NeteaseImageSize } from "@/common/enum";
+import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererWindow } from "@/common/lib/window";
 import { NeteaseURL } from "@/common/netease/models";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
@@ -98,8 +99,13 @@ const RadioPage: FC = () => {
             `,
               !openCommentPanel ? "rotate-180" : ""
             )}
-            title="隐藏"
-            onClick={() => setOpenCommentPanel(!openCommentPanel)}>
+            aria-expanded={openCommentPanel}
+            title={openCommentPanel ? "折叠评论栏" : "展开评论栏"}
+            onClick={() => {
+              const expanded = !openCommentPanel;
+              setOpenCommentPanel(expanded);
+              RendererIPC.NormalChannel.send("event_radio_comment_panel", expanded);
+            }}>
             <ChevronRight className="size-4" />
           </button>
         </NoDrag>

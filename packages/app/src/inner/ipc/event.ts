@@ -1,4 +1,4 @@
-import { shell, BrowserWindow } from "electron";
+import { shell, screen, BrowserWindow } from "electron";
 import { MainTray } from "@/lib/tray";
 import { MainHandle } from "@/lib/handle";
 import { Log, runWithLogContext } from "@/lib/log";
@@ -6,6 +6,7 @@ import { MainWindowPreset } from "@/lib/window-preset";
 import { MainWindowConstants } from "@/constants/window";
 import { MainWindowCreator } from "@/lib/window-creator";
 import { MainWindowManager } from "@/lib/window-manager";
+import { MainScreenResolver } from "@/lib/screen-resolver";
 import { MainExitCodeConstants } from "@/constants/exit-code";
 import type { EventHandlers } from "@mahiru/ipc/types";
 
@@ -46,6 +47,20 @@ export const eventHandlers: EventHandlers = {
     for (const target of ["display", "comments", "image", "main"] as const) {
       if (MainWindowManager.checkAndShow(target)) return;
     }
+  },
+  event_radio_comment_panel: (e, expanded) => {
+    const win = BrowserWindow.fromWebContents(e.sender);
+    if (!win || MainWindowManager.getId(win) !== "radio") return;
+    const current = win.getBounds();
+    const size = expanded
+      ? MainWindowConstants.WINDOW_BASE_SIZE.radio.base
+      : MainWindowConstants.RADIO_COMPACT_SIZE;
+    const target = MainScreenResolver.forDisplay(screen.getDisplayMatching(current)).fitBounds({
+      x: current.x,
+      y: current.y,
+      ...size
+    });
+    resizeWindow(win, target, "absolute", false);
   },
   event_window_external: (e, { url, title }) => {
     if (!MainHandle.isTrustedOrigin(url)) {
@@ -216,7 +231,8 @@ for (const [key, handler] of Object.entries(eventHandlers)) {
 function resizeWindow(
   win: Optional<BrowserWindow>,
   props: Partial<{ x: number; y: number; width: number; height: number }>,
-  mode: "delta" | "absolute"
+  mode: "delta" | "absolute",
+  animate = true
 ) {
   if (!win) return {};
 
@@ -236,7 +252,7 @@ function resizeWindow(
           height: Math.floor(current.height + (props.height ?? 0))
         };
 
-  if (Object.values(next).some(isNaN) || Object.values(next).some((v) => v < 0)) {
+  if (!Object.values(next).every(Number.isFinite) || next.width <= 0 || next.height <= 0) {
     return {};
   }
   if (
@@ -250,8 +266,11 @@ function resizeWindow(
 
   const resizable = win.resizable;
   win.setResizable(true);
-  win.setBounds(next, true);
-  win.setResizable(resizable);
+  try {
+    win.setBounds(next, animate);
+  } finally {
+    win.setResizable(resizable);
+  }
 
   return { current, next };
 }

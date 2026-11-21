@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { memo, type FC, useMemo, type Ref, useCallback } from "react";
+import { memo, type FC, useMemo, useCallback } from "react";
 import { RendererWindow } from "@/common/lib/window";
 import { CommentSort, CommentType } from "@/common/enum";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
@@ -15,11 +15,10 @@ const edgeFadeMask =
   "linear-gradient(to bottom, transparent 0, #000 min(12%, 56px), #000 calc(100% - min(12%, 56px)), transparent 100%)";
 
 interface RadioCommentProps {
-  ref?: Ref<HTMLDivElement>;
   className?: string;
 }
 
-const RadioComment: FC<RadioCommentProps> = ({ ref, className }) => {
+const RadioComment: FC<RadioCommentProps> = ({ className }) => {
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
   const track = trackMetaBus.data?.track?.detail;
   const { data, status, fetchData } = useRequestStatusWrap(fetchHottestComment);
@@ -48,7 +47,6 @@ const RadioComment: FC<RadioCommentProps> = ({ ref, className }) => {
 
   return (
     <NoDrag
-      ref={ref}
       className={cx("flex flex-col justify-between items-center gap-2 cursor-pointer", className)}>
       <AppError
         className="text-[10px] font-semibold"

@@ -1,4 +1,4 @@
-import { app, screen, type Display } from "electron";
+import { app, screen, type Display, type Rectangle } from "electron";
 import { Log } from "@/lib/log";
 import { MainRuntime } from "@/lib/runtime";
 import { MainWindowConstants } from "@/constants/window";
@@ -55,6 +55,21 @@ export class MainScreenResolver {
     };
   }
 
+  fitBounds(bounds: Rectangle): Rectangle {
+    const area = this.display.workArea;
+    const { width, height } = this.resolveIdealFit(bounds);
+    return {
+      x: Math.max(area.x, Math.min(bounds.x, area.x + area.width - width)),
+      y: Math.max(area.y, Math.min(bounds.y, area.y + area.height - height)),
+      width,
+      height
+    };
+  }
+
+  static forDisplay(display: Display) {
+    return new MainScreenResolver(display);
+  }
+
   static get primary() {
     return new MainScreenResolver(screen.getPrimaryDisplay());
   }
@@ -71,9 +86,9 @@ export class MainScreenResolver {
         .getAllDisplays()
         .some(
           ({ bounds }) =>
-            x > bounds.x &&
+            x >= bounds.x &&
             x < bounds.x + bounds.width &&
-            y > bounds.y &&
+            y >= bounds.y &&
             y < bounds.y + bounds.height
         )
     );

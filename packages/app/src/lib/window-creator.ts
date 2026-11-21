@@ -22,13 +22,21 @@ export class MainWindowCreator {
     props.handleExits ||= "IGNORE";
     const { id, onCreate, loadURL, memoPos, options, handleExits } = props;
 
-    if (memoPos) {
-      const { x, y, width, height } = this.getMemoPos(id);
+    const saved = memoPos ? MainStoreForWindow.get(id) : undefined;
+    if (saved) {
+      const { x, y } = saved;
       if (!MainScreenResolver.isOutScreenDIPBounds(x, y)) {
-        const { width: workAreaWidth, height: workAreaHeight } = screen.getDisplayNearestPoint({
-          x,
-          y
-        }).workAreaSize;
+        const display = screen.getDisplayNearestPoint({ x, y });
+        const { width: workAreaWidth, height: workAreaHeight } = display.workAreaSize;
+        // 新建 Radio 时评论栏默认展开。旧记录只提供位置，尺寸按所在显示器重新计算。
+        const restored =
+          id === "radio"
+            ? MainScreenResolver.forDisplay(display).fitBounds({
+                x,
+                y,
+                ...MainWindowConstants.WINDOW_BASE_SIZE.radio.base
+              })
+            : saved;
         const { width: minWidth, height: minHeight } =
           MainWindowConstants.getWindowBaseSize(id)?.min ?? {};
         const { width: maxWidth, height: maxHeight } =
@@ -53,23 +61,23 @@ export class MainWindowCreator {
         );
         const nextWidth = next(
           workAreaWidth,
-          width,
+          restored.width,
           options.minWidth,
           options.maxWidth ?? maxWidth
         );
         const nextHeight = next(
           workAreaHeight,
-          height,
+          restored.height,
           options.minHeight,
           options.maxHeight ?? maxHeight
         );
 
         Log.info(
-          `Restoring window(${id}) position from store: x=${x}, y=${y}, width=${nextWidth}, height=${nextHeight}`
+          `Restoring window(${id}) position from store: x=${restored.x}, y=${restored.y}, width=${nextWidth}, height=${nextHeight}`
         );
 
-        options.x = x;
-        options.y = y;
+        options.x = restored.x;
+        options.y = restored.y;
         options.width = nextWidth;
         options.height = nextHeight;
       }
@@ -95,10 +103,6 @@ export class MainWindowCreator {
     }
 
     return this.loadURL(win, loadURL) as T extends null ? null : BrowserWindow;
-  }
-
-  private static getMemoPos(id: WindowType) {
-    return MainStoreForWindow.get(id, { x: 0, y: 0, width: 0, height: 0 });
   }
 
   private static loadURL(win: BrowserWindow, resolver: NormalFunc<[port: number], string>) {

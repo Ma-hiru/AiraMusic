@@ -10,6 +10,7 @@ export interface TrayCapsuleConfig {
 export type NormalEventMaps = {
   event_app_restart: boolean;
   event_window_open: WindowType;
+  event_radio_comment_panel: boolean;
   event_tray_capsule: TrayCapsuleConfig;
   event_window_browser: { url: string };
   event_window_show: Optional<WindowType>;
