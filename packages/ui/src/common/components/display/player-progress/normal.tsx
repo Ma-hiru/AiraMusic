@@ -37,7 +37,7 @@ const NormalPlayerProgress: FC<NormalPlayerProgressProps> = ({
         `
         relative h-2 overflow-hidden cursor-pointer
         ease-in-out transition-all duration-300
-        rounded-full bg-white/10 backdrop-blur-lg hover:h-3`,
+        rounded-full bg-ink/10 backdrop-blur-lg hover:h-3`,
         containerClassName
       )}
       tabIndex={0}
@@ -52,7 +52,7 @@ const NormalPlayerProgress: FC<NormalPlayerProgressProps> = ({
         className={cx(
           `
           absolute left-0 top-0 block h-full
-          bg-white/50 backdrop-blur-lg rounded-full`,
+          bg-ink/50 backdrop-blur-lg rounded-full`,
           percentClassName
         )}
         initial={{ width: 0 }}
@@ -62,7 +62,7 @@ const NormalPlayerProgress: FC<NormalPlayerProgressProps> = ({
         ref={bufferScope}
         className={cx(
           `
-          block h-full bg-white/30 backdrop-blur-lg rounded-full`,
+          block h-full bg-ink/30 backdrop-blur-lg rounded-full`,
           bufferClassName
         )}
         initial={{ width: 0 }}
@@ -72,7 +72,7 @@ const NormalPlayerProgress: FC<NormalPlayerProgressProps> = ({
           <span
             key={index}
             className={cx(
-              "absolute h-full top-0 bg-white w-[3px]",
+              "absolute h-full top-0 bg-ink w-[3px]",
               css`
                 left: ${percent}%;
               `,

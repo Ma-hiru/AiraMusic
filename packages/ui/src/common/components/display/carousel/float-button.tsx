@@ -12,8 +12,8 @@ const FloatButton: FC<FloatButtonProps> = ({ next, prev }) => {
       <button
         className="
           absolute left-3 top-1/2 z-20 flex size-9 -translate-y-1/2 cursor-pointer
-          items-center justify-center rounded-full bg-black/35 text-white shadow-md
-          backdrop-blur-md transition-all duration-300 ease-in-out hover:bg-black/55
+          items-center justify-center rounded-full bg-scrim/35 text-ink shadow-md
+          backdrop-blur-md transition-all duration-300 ease-in-out hover:bg-scrim/55
           active:scale-90
         "
         title="上一张"
@@ -23,8 +23,8 @@ const FloatButton: FC<FloatButtonProps> = ({ next, prev }) => {
       <button
         className="
           absolute right-3 top-1/2 z-20 flex size-9 -translate-y-1/2 cursor-pointer
-          items-center justify-center rounded-full bg-black/35 text-white shadow-md
-          backdrop-blur-md transition-all duration-300 ease-in-out hover:bg-black/55
+          items-center justify-center rounded-full bg-scrim/35 text-ink shadow-md
+          backdrop-blur-md transition-all duration-300 ease-in-out hover:bg-scrim/55
           active:scale-90
         "
         title="下一张"

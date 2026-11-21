@@ -19,6 +19,7 @@ import { NeteaseServicesArtist } from "@/common/netease/services";
 import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
 import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
 import { NeteaseArtist, NeteaseTrackRecord } from "@/common/netease/models";
+import { useResourcePageTheme } from "@/common/hooks/use-resource-page-theme";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import AppError from "@/common/components/fallback/app-error";
 import RendererImageConstants from "@/common/constants/image";
@@ -96,6 +97,11 @@ const Artist: FC<ArtistProps> = ({
   }, []);
   const { status, fetchData, data: artist = null } = useRequestStatusWrap(requestData);
   const { reload } = useRequestAutoRun(fetchData, [id]);
+  const pageTheme = useResourcePageTheme(
+    artist?.detail.artist.avatar,
+    routerActive,
+    onAvatarLoaded
+  );
 
   useEffect(() => {
     if (artist) onLoadedData?.(artist);
@@ -196,7 +202,13 @@ const Artist: FC<ArtistProps> = ({
 
   const { online } = useOnline();
   return (
-    <div className={cx("flex h-full min-h-0 w-full flex-col overflow-hidden", className)}>
+    <div
+      ref={pageTheme.ref}
+      className={cx(
+        "monet-scope resource-page flex h-full min-h-0 w-full flex-col overflow-hidden",
+        className
+      )}
+      data-palette-ready={pageTheme.ready ? "" : undefined}>
       <AppError
         reset={reload}
         when={status === "error"}
@@ -211,7 +223,7 @@ const Artist: FC<ArtistProps> = ({
             onPlayAll={playAll}
             onAddList={onAddList}
             onPageAction={onPageAction}
-            onAvatarLoaded={onAvatarLoaded}
+            onAvatarLoaded={pageTheme.onImageLoad}
             onShowIntro={() => changeTab("intro")}>
             <ContentTabs
               id={tabsID}

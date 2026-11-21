@@ -2,11 +2,12 @@ import { useRef, useState, useLayoutEffect } from "react";
 import RendererTheme from "@/common/player/ui";
 
 function getColor() {
-  const { main, secondary, textOnMainColor } = RendererTheme.themeInstance;
+  const { main, secondary, textColor, textOnMainColor } = RendererTheme.themeInstance;
   return {
     mainColor: main,
     secondaryColor: secondary,
-    textColorOnMain: textOnMainColor
+    textColorOnMain: textOnMainColor,
+    textColor
   };
 }
 

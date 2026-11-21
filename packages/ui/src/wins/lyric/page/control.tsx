@@ -108,9 +108,9 @@ const Control: FC<ControlProps> = ({
     <Drag
       className={cx(
         "w-screen px-2 py-1 rounded-md",
-        showBg && "bg-primary-text/40",
+        showBg && "bg-popover/55",
         css`
-          color: ${color || themeColor || "#ffffff"};
+          color: ${color || themeColor || "var(--m3-on-surface)"};
         `
       )}
       drag={showBg}
@@ -123,7 +123,7 @@ const Control: FC<ControlProps> = ({
           )}>
           <NoDrag
             className="relative size-4 rounded-sm cursor-pointer mr-1"
-            style={{ backgroundColor: color || themeColor || "#ffffff" }}
+            style={{ backgroundColor: color || themeColor || "var(--m3-on-surface)" }}
             onClick={() => setOpenColorSelect(!openColorSelect)}>
             <NoDrag
               className={cx(
@@ -213,8 +213,7 @@ const Control: FC<ControlProps> = ({
                   rounded-xs backdrop-blur-lg cursor-pointer
                 `,
                   existed ? "cursor-pointer" : "cursor-not-allowed",
-                  active && existed ? "bg-white" : "bg-white/20",
-                  color === "#FFFFFF" && "text-black"
+                  active && existed ? "bg-primary text-primary-text" : "bg-ink/15 text-ink"
                 )}
                 onClick={() => setLyricVersion(version)}>
                 {label}

@@ -35,7 +35,7 @@ const StarListView: FC<StarListViewProps> = ({ className, onClickItem, onContext
             className="
               flex w-full cursor-pointer items-center gap-3 rounded-md px-2 py-1.5
               text-left transition-colors duration-200 ease-in-out
-              hover:bg-black/10 active:bg-black/15
+              hover:bg-scrim/10 active:bg-scrim/15
             "
             type="button"
             onClick={() => onClickItem?.(item.id)}

@@ -18,6 +18,7 @@ import { type HeartManager } from "@/common/hooks/use-heart";
 import { NeteaseServicesAlbum } from "@/common/netease/services";
 import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
 import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
+import { useResourcePageTheme } from "@/common/hooks/use-resource-page-theme";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import {
   NeteaseUser,
@@ -137,6 +138,7 @@ const Album: FC<AlbumPageProps> = ({
     data: [album, dynamic] = [null, null]
   } = useRequestStatusWrap(requestData);
   const { reload } = useRequestAutoRun(fetchData, [id]);
+  const pageTheme = useResourcePageTheme(album?.content.picUrl, routerActive, onCoverLoaded);
 
   const tracks = useMemo(() => {
     const allTracks = album?.tracks ?? [];
@@ -202,7 +204,13 @@ const Album: FC<AlbumPageProps> = ({
 
   const { online } = useOnline();
   return (
-    <div className={cx("flex h-full min-h-0 w-full flex-col overflow-hidden", className)}>
+    <div
+      ref={pageTheme.ref}
+      className={cx(
+        "monet-scope resource-page flex h-full min-h-0 w-full flex-col overflow-hidden",
+        className
+      )}
+      data-palette-ready={pageTheme.ready ? "" : undefined}>
       <AppError
         reset={reload}
         when={status === "error"}
@@ -219,7 +227,7 @@ const Album: FC<AlbumPageProps> = ({
             onPlayAll={playAll}
             onAddList={onAddList}
             onPageAction={onPageAction}
-            onCoverLoaded={onCoverLoaded}
+            onCoverLoaded={pageTheme.onImageLoad}
             onEdited={() => onEdited?.(["star"])}>
             <ContentTabs
               id={tabsID}

@@ -113,8 +113,8 @@ const VisibleToolStep: FC<ToolStepProps> = ({ item, autoCollapse, collapseEnable
     <section
       className={cx(
         "relative w-full min-w-0 max-w-[min(100%,48rem)] overflow-hidden rounded-xl border",
-        "border-white/6 bg-white/[0.014] text-[12px] text-white/68",
-        "transition-colors duration-200 hover:border-white/9"
+        "border-ink/6 bg-ink/[0.014] text-[12px] text-ink/68",
+        "transition-colors duration-200 hover:border-ink/9"
       )}
       data-status={status}>
       <span
@@ -125,8 +125,8 @@ const VisibleToolStep: FC<ToolStepProps> = ({ item, autoCollapse, collapseEnable
         className={cx(
           `
             group flex h-10 w-full items-center gap-2 bg-transparent px-3 text-left
-            outline-none transition-colors duration-150 hover:bg-white/[0.035]
-            focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/45
+            outline-none transition-colors duration-150 hover:bg-ink/[0.035]
+            focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ink/45
           `,
           open && !canCollapse ? "cursor-default" : "cursor-pointer"
         )}
@@ -143,31 +143,28 @@ const VisibleToolStep: FC<ToolStepProps> = ({ item, autoCollapse, collapseEnable
           aria-hidden="true"
         />
         <div className="flex min-w-0 flex-1 items-baseline gap-1.5">
-          <span className="shrink-0 text-[11px] font-semibold tracking-[-0.01em] text-white/78">
+          <span className="shrink-0 text-[11px] font-semibold tracking-[-0.01em] text-ink/78">
             {presentation.label}
           </span>
-          <span className="truncate text-[10px] text-white/36">· {summary}</span>
+          <span className="truncate text-[10px] text-ink/36">· {summary}</span>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           {calls.length > 1 && (
-            <span className="text-[9px] tabular-nums text-white/28">{calls.length} 项</span>
+            <span className="text-[9px] tabular-nums text-ink/28">{calls.length} 项</span>
           )}
           <span className="flex items-center gap-1 text-[9px] font-medium">
             <span className={cx("size-1.5 rounded-full", statusVisual.dot)} aria-hidden="true" />
             <span className={statusVisual.text}>{getStatusLabel(status)}</span>
           </span>
           {open && canCollapse ? (
-            <ChevronDown className="size-3 text-white/26" aria-hidden="true" />
+            <ChevronDown className="size-3 text-ink/26" aria-hidden="true" />
           ) : !open ? (
-            <ChevronRight className="size-3 text-white/26" aria-hidden="true" />
+            <ChevronRight className="size-3 text-ink/26" aria-hidden="true" />
           ) : null}
         </div>
       </button>
 
-      <div
-        id={contentID}
-        className="min-w-0 border-t border-white/6 bg-black/[0.03]"
-        hidden={!open}>
+      <div id={contentID} className="min-w-0 border-t border-ink/6 bg-scrim/[0.03]" hidden={!open}>
         {open && (
           <>
             {calls.map((call, index) => (
@@ -187,7 +184,7 @@ const VisibleToolStep: FC<ToolStepProps> = ({ item, autoCollapse, collapseEnable
               />
             ))}
             {item.assistantTurn && (
-              <div className="border-t border-white/7 px-3 pb-2.5">
+              <div className="border-t border-ink/7 px-3 pb-2.5">
                 <AssistantTurnMeta turn={item.assistantTurn} />
               </div>
             )}
@@ -231,11 +228,11 @@ const ToolCallDetail: FC<{
       : null);
 
   return (
-    <article className={cx("min-w-0 px-3 py-3", divided && "border-t border-white/7")}>
+    <article className={cx("min-w-0 px-3 py-3", divided && "border-t border-ink/7")}>
       {showHeading && (
         <header className="mb-2.5 flex min-w-0 items-center gap-2">
-          <presentation.icon className="size-3.5 shrink-0 text-white/42" aria-hidden="true" />
-          <span className="min-w-0 flex-1 truncate text-[10px] font-semibold text-white/55">
+          <presentation.icon className="size-3.5 shrink-0 text-ink/42" aria-hidden="true" />
+          <span className="min-w-0 flex-1 truncate text-[10px] font-semibold text-ink/55">
             {presentation.label}
           </span>
         </header>
@@ -246,34 +243,31 @@ const ToolCallDetail: FC<{
 
       {waiting && (
         <div
-          className="flex items-center gap-2 rounded-r-lg border-l border-[color-mix(in_srgb,var(--theme-color-main)_32%,transparent)] bg-[color-mix(in_srgb,var(--theme-color-main)_4%,transparent)] px-3 py-2 text-[11px] text-white/45"
+          className="flex items-center gap-2 rounded-r-lg border-l border-primary/32 bg-primary/4 px-3 py-2 text-[11px] text-ink/45"
           role="status">
-          <LoaderCircle
-            className="size-3.5 animate-spin text-[color-mix(in_srgb,var(--theme-color-main)_68%,white)]"
-            aria-hidden="true"
-          />
+          <LoaderCircle className="size-3.5 animate-spin text-m3-primary-80" aria-hidden="true" />
           正在等待结果
         </div>
       )}
 
       {failed && (
         <div
-          className="flex items-start gap-2 rounded-r-lg border-l border-red-200/30 bg-red-200/[0.03] px-3 py-2 text-[11px] leading-5 text-red-100/72"
+          className="flex items-start gap-2 rounded-r-lg border-l border-danger/30 bg-danger/[0.03] px-3 py-2 text-[11px] leading-5 text-danger/72"
           role="alert">
           <AlertCircle className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
           <div className="min-w-0">
-            <div className="font-medium text-red-100/80">
+            <div className="font-medium text-danger/80">
               {semanticResult?.title || "工具没有完成这次操作"}
             </div>
-            <div className="text-[10px] text-red-100/42">技术详情中保留了完整返回原因。</div>
+            <div className="text-[10px] text-danger/42">技术详情中保留了完整返回原因。</div>
           </div>
         </div>
       )}
 
       {(input || output) && (
-        <div className="mt-2.5 border-t border-white/7 pt-2">
+        <div className="mt-2.5 border-t border-ink/7 pt-2">
           <button
-            className="group/technical flex w-full cursor-pointer items-center gap-1.5 rounded-md border border-dashed border-white/8 bg-black/10 px-2 py-1.5 text-[10px] font-medium text-white/34 outline-none transition-colors hover:border-white/13 hover:bg-white/[0.025] hover:text-white/62 focus-visible:ring-2 focus-visible:ring-white/35"
+            className="group/technical flex w-full cursor-pointer items-center gap-1.5 rounded-md border border-dashed border-ink/8 bg-scrim/10 px-2 py-1.5 text-[10px] font-medium text-ink/34 outline-none transition-colors hover:border-ink/13 hover:bg-ink/[0.025] hover:text-ink/62 focus-visible:ring-2 focus-visible:ring-ink/35"
             type="button"
             aria-label={technicalLabel}
             aria-expanded={technicalOpen}
@@ -281,7 +275,7 @@ const ToolCallDetail: FC<{
             onClick={() => setTechnicalOpen((value) => !value)}>
             <Braces className="size-3" aria-hidden="true" />
             技术详情
-            <span className="min-w-0 flex-1 truncate text-left text-[9px] font-normal text-white/22 transition-colors group-hover/technical:text-white/32">
+            <span className="min-w-0 flex-1 truncate text-left text-[9px] font-normal text-ink/22 transition-colors group-hover/technical:text-ink/32">
               输入参数与原始返回
             </span>
             {technicalOpen ? (
@@ -294,7 +288,7 @@ const ToolCallDetail: FC<{
           <div id={technicalContentID} className="mt-2 min-w-0" hidden={!technicalOpen}>
             {technicalOpen && (
               <div className="grid min-w-0 gap-2">
-                <div className="truncate font-mono text-[9px] text-white/22" title={callID}>
+                <div className="truncate font-mono text-[9px] text-ink/22" title={callID}>
                   call {callID}
                 </div>
                 {input && <CodeBlock label="输入" value={formatTechnicalValue(input)} />}
@@ -309,19 +303,17 @@ const ToolCallDetail: FC<{
 });
 
 const SemanticToolSummary: FC<{ result: AgentToolSemanticResult }> = ({ result }) => (
-  <div className="min-w-0 rounded-r-lg border-l border-[color-mix(in_srgb,var(--theme-color-main)_30%,transparent)] bg-[color-mix(in_srgb,var(--theme-color-main)_4%,transparent)] px-3 py-2.5">
-    <div className="flex items-center gap-1.5 text-[9px] font-medium tracking-[0.1em] text-[color-mix(in_srgb,var(--theme-color-main)_55%,white)]">
+  <div className="min-w-0 rounded-r-lg border-l border-primary/30 bg-primary/4 px-3 py-2.5">
+    <div className="flex items-center gap-1.5 text-[9px] font-medium tracking-[0.1em] text-m3-primary-80">
       <CheckCircle2 className="size-3" aria-hidden="true" />
       工具结果
     </div>
-    <div className="mt-1 text-[12px] leading-5 font-medium text-white/76">{result.title}</div>
+    <div className="mt-1 text-[12px] leading-5 font-medium text-ink/76">{result.title}</div>
     {result.description && (
-      <p className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-white/40">
-        {result.description}
-      </p>
+      <p className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-ink/40">{result.description}</p>
     )}
     {(result.facts.length > 0 || result.truncated) && (
-      <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[9px] text-white/32">
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[9px] text-ink/32">
         {result.facts.slice(0, 5).map((fact) => (
           <span key={fact.label}>
             {fact.label} {fact.value}
@@ -331,18 +323,18 @@ const SemanticToolSummary: FC<{ result: AgentToolSemanticResult }> = ({ result }
       </div>
     )}
     {result.items.length > 0 && (
-      <ol className="mt-2 border-t border-white/7 pt-1.5">
+      <ol className="mt-2 border-t border-ink/7 pt-1.5">
         {result.items.map((item, index) => (
           <li
             key={`${item.title}-${index}`}
-            className="flex min-w-0 items-baseline gap-2 border-b border-white/[0.045] py-1.5 last:border-b-0">
-            <span className="w-3 shrink-0 text-[8px] font-medium tabular-nums text-[color-mix(in_srgb,var(--theme-color-main)_42%,white)]">
+            className="flex min-w-0 items-baseline gap-2 border-b border-ink/[0.045] py-1.5 last:border-b-0">
+            <span className="w-3 shrink-0 text-[8px] font-medium tabular-nums text-m3-primary-90">
               {String(index + 1).padStart(2, "0")}
             </span>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[10px] font-medium text-white/58">{item.title}</div>
+              <div className="truncate text-[10px] font-medium text-ink/58">{item.title}</div>
               {item.subtitle && (
-                <div className="truncate text-[9px] text-white/28">{item.subtitle}</div>
+                <div className="truncate text-[9px] text-ink/28">{item.subtitle}</div>
               )}
             </div>
           </li>
@@ -375,45 +367,42 @@ const WebToolSummary: FC<{
   ].filter(Boolean);
 
   return (
-    <div className="min-w-0 rounded-r-lg border-l border-[color-mix(in_srgb,var(--theme-color-main)_30%,transparent)] bg-[color-mix(in_srgb,var(--theme-color-main)_4%,transparent)] px-3 py-2.5">
+    <div className="min-w-0 rounded-r-lg border-l border-primary/30 bg-primary/4 px-3 py-2.5">
       <div className="flex min-w-0 items-center gap-2">
-        <Globe2
-          className="size-3 text-[color-mix(in_srgb,var(--theme-color-main)_55%,white)]"
-          aria-hidden="true"
-        />
-        <span className="text-[9px] font-medium tracking-[0.1em] text-[color-mix(in_srgb,var(--theme-color-main)_55%,white)]">
+        <Globe2 className="size-3 text-m3-primary-80" aria-hidden="true" />
+        <span className="text-[9px] font-medium tracking-[0.1em] text-m3-primary-80">
           {heading}
         </span>
         {details.engine && (
-          <span className="text-[9px] text-white/25">· {formatEngine(details.engine)}</span>
+          <span className="text-[9px] text-ink/25">· {formatEngine(details.engine)}</span>
         )}
       </div>
-      <div className="mt-1 truncate text-[12px] leading-5 font-medium text-white/76">
+      <div className="mt-1 truncate text-[12px] leading-5 font-medium text-ink/76">
         {details.title ||
           details.query ||
           details.domain ||
           (running ? "正在连接网页" : "网页结果")}
       </div>
       {(searchScope || details.domain || details.site) && (
-        <div className="mt-0.5 truncate text-[10px] text-white/34">
+        <div className="mt-0.5 truncate text-[10px] text-ink/34">
           {searchScope || details.domain || details.site}
         </div>
       )}
       {provenance.length > 0 && (
-        <div className="mt-0.5 truncate text-[9px] text-white/28">{provenance.join(" · ")}</div>
+        <div className="mt-0.5 truncate text-[9px] text-ink/28">{provenance.join(" · ")}</div>
       )}
       {metrics.length > 0 && (
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 text-[9px] text-white/30">
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 text-[9px] text-ink/30">
           {metrics.map((metric, index) => (
             <span key={metric} className="flex items-center gap-2">
-              {index > 0 && <span className="text-white/16">·</span>}
+              {index > 0 && <span className="text-ink/16">·</span>}
               {metric}
             </span>
           ))}
         </div>
       )}
       {contentRange && (
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[9px] text-[color-mix(in_srgb,var(--theme-color-main)_50%,white)]">
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[9px] text-m3-primary-90">
           <span>
             已读取 {formatWebRangeNumber(contentRange.start)}–
             {formatWebRangeNumber(contentRange.end)} / {formatWebRangeNumber(contentRange.total)}{" "}
@@ -431,7 +420,7 @@ const WebToolSummary: FC<{
         </div>
       )}
       {find && (
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[9px] text-[color-mix(in_srgb,var(--theme-color-main)_50%,white)]">
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[9px] text-m3-primary-90">
           <span>
             “{find.pattern}” · 已返回 {find.offset + 1}–{find.offset + find.returnedMatches} /{" "}
             {find.totalMatches}
@@ -442,22 +431,20 @@ const WebToolSummary: FC<{
         </div>
       )}
       {details.results.length > 0 && (
-        <ol className="mt-2.5 border-t border-white/7 pt-1.5" aria-label="网页来源">
+        <ol className="mt-2.5 border-t border-ink/7 pt-1.5" aria-label="网页来源">
           {details.results.slice(0, 3).map((result, index) => (
             <li
               key={result.url}
-              className="flex min-w-0 items-start gap-2 border-b border-white/[0.045] py-1.5 last:border-b-0">
-              <span className="mt-0.5 w-3 shrink-0 text-[8px] font-medium tabular-nums text-[color-mix(in_srgb,var(--theme-color-main)_42%,white)]">
+              className="flex min-w-0 items-start gap-2 border-b border-ink/[0.045] py-1.5 last:border-b-0">
+              <span className="mt-0.5 w-3 shrink-0 text-[8px] font-medium tabular-nums text-m3-primary-90">
                 {String(index + 1).padStart(2, "0")}
               </span>
               <div className="min-w-0 flex-1">
-                <div
-                  className="truncate text-[10px] font-medium text-white/62"
-                  title={result.title}>
+                <div className="truncate text-[10px] font-medium text-ink/62" title={result.title}>
                   {result.title}
                 </div>
-                <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[9px] text-white/28">
-                  <span className="shrink-0 rounded bg-[color-mix(in_srgb,var(--theme-color-main)_7%,transparent)] px-1 py-px text-[color-mix(in_srgb,var(--theme-color-main)_52%,white)]">
+                <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[9px] text-ink/28">
+                  <span className="shrink-0 rounded bg-primary/7 px-1 py-px text-m3-primary-80">
                     {result.domain}
                   </span>
                   {result.snippet && <span className="truncate">· {result.snippet}</span>}
@@ -468,7 +455,7 @@ const WebToolSummary: FC<{
         </ol>
       )}
       {details.url && !details.results.length && (
-        <div className="mt-2 flex min-w-0 items-center gap-1.5 text-[9px] text-white/28">
+        <div className="mt-2 flex min-w-0 items-center gap-1.5 text-[9px] text-ink/28">
           <Globe2 className="size-3 shrink-0" aria-hidden="true" />
           <span className="truncate">{details.url}</span>
         </div>
@@ -485,12 +472,12 @@ function formatWebPublishedAt(value: string) {
 
 const CodeBlock: FC<{ label: string; value: string }> = memo(({ label, value }) => (
   <div className="min-w-0">
-    <div className="mb-1 text-[9px] font-medium tracking-[0.08em] text-white/26">{label}</div>
+    <div className="mb-1 text-[9px] font-medium tracking-[0.08em] text-ink/26">{label}</div>
     <pre
       className="
         agent-scroll max-h-56 min-w-0 overflow-auto whitespace-pre-wrap break-words
-        rounded-lg border border-white/7 bg-black/20 p-2.5 font-mono text-[10px]
-        leading-4 text-white/52
+        rounded-lg border border-ink/7 bg-scrim/20 p-2.5 font-mono text-[10px]
+        leading-4 text-ink/52
       ">
       {value}
     </pre>
@@ -505,25 +492,25 @@ const formatWebRangeNumber = (value: number) => value.toLocaleString("zh-CN");
 const getStatusVisual = (status: AgentToolTimelineItem["status"]) => {
   if (status === "running") {
     return {
-      rail: "animate-pulse bg-[color-mix(in_srgb,var(--theme-color-main)_72%,transparent)]",
-      dot: "bg-[color-mix(in_srgb,var(--theme-color-main)_85%,white)] shadow-[0_0_6px_color-mix(in_srgb,var(--theme-color-main)_60%,transparent)]",
-      icon: "text-[color-mix(in_srgb,var(--theme-color-main)_72%,white)]",
-      text: "text-[color-mix(in_srgb,var(--theme-color-main)_64%,white)]"
+      rail: "animate-pulse bg-primary/72",
+      dot: "bg-m3-primary-70 shadow-[0_0_6px_color-mix(in_srgb,var(--theme-color-main)_60%,transparent)]",
+      icon: "text-m3-primary-80",
+      text: "text-m3-primary-80"
     };
   }
   if (status === "error") {
     return {
-      rail: "bg-red-200/70",
-      dot: "bg-red-300/85",
-      icon: "text-red-100/72",
-      text: "text-red-100/62"
+      rail: "bg-danger/70",
+      dot: "bg-danger/85",
+      icon: "text-danger/72",
+      text: "text-danger/62"
     };
   }
   return {
-    rail: "bg-white/12",
-    dot: "bg-white/22",
-    icon: "text-white/40",
-    text: "text-white/30"
+    rail: "bg-ink/12",
+    dot: "bg-ink/22",
+    icon: "text-ink/40",
+    text: "text-ink/30"
   };
 };
 

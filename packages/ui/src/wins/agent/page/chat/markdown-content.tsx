@@ -142,7 +142,7 @@ const MarkdownContent: FC<MarkdownContentProps> = ({ className, content, streami
               ) : (
                 <Streamdown
                   key={`markdown-${index}`}
-                  className="agent-markdown text-[13px] leading-[1.78] font-normal text-white/82"
+                  className="agent-markdown text-[13px] leading-[1.78] font-normal text-ink/82"
                   controls={false}
                   lineNumbers={false}
                   isAnimating={!!streaming}

@@ -43,7 +43,7 @@ const SelectionIndicator: FC<SelectionIndicatorProps> = ({
       className={cx(
         `
         absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3
-        rounded-full border border-white/15 bg-black/15 px-4 py-2 text-[12px] font-bold
+        rounded-full border border-ink/18 bg-popover/85 px-4 py-2 text-[12px] font-bold text-ink
         shadow-lg backdrop-blur-lg backdrop-saturate-150
       `,
         className
@@ -61,7 +61,7 @@ const SelectionIndicator: FC<SelectionIndicatorProps> = ({
       </ActionButton>
       {editable && (
         <ActionButton
-          className="bg-red-500/80 text-white"
+          className="text-danger hover:bg-danger/14"
           disabled={selectedIds.size === 0}
           onClick={batchDelete}>
           <Trash2 className="size-3.5" /> 删除
@@ -91,7 +91,7 @@ const ActionButton = ({
         `
         flex items-center gap-1 rounded-full px-3 py-1
         transition-all duration-300 ease-in-out
-        hover:opacity-60 active:scale-98 disabled:opacity-60
+        hover:enabled:brightness-110 active:scale-98 disabled:opacity-45
         cursor-pointer disabled:cursor-auto disabled:active:scale-100
       `,
         className
@@ -120,9 +120,9 @@ const TextButton = ({
       className={cx(
         `
           ease-in-out duration-300 transition-all
-          hover:opacity-60 active:scale-98
+          px-1 rounded-sm hover:enabled:text-m3-primary-90 active:scale-98
           cursor-pointer disabled:cursor-auto
-          disabled:opacity-60 disabled:active:scale-100
+          disabled:bg-secondary-container/80 disabled:text-on-secondary-container disabled:active:scale-100
         `,
         className
       )}

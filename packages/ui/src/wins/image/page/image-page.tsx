@@ -63,7 +63,7 @@ const ImagePage: FC = () => {
   useWindowTitle(images[index]?.alt);
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-black">
+    <div className="relative h-screen w-screen overflow-hidden bg-scrim">
       <ImageViewer
         index={index}
         images={images}
@@ -80,17 +80,16 @@ const ImagePage: FC = () => {
         )}>
         <Control
           className="
-            rounded-md border border-white/10 bg-black/35 px-3 py-1.5
+            rounded-md border border-ink/10 bg-scrim/35 px-3 py-1.5
             shadow-[0_8px_32px_rgba(0,0,0,0.25)]
             backdrop-saturate-120 backdrop-blur-md
           "
-          color="#ffffff"
           max
           pin
           mini
         />
       </Drag>
-      <AppToast.Provider className="top-12 z-70" itemContainerClassName="bg-black/35!" />
+      <AppToast.Provider className="top-12 z-70" itemContainerClassName="bg-popover/78!" />
     </div>
   );
 };

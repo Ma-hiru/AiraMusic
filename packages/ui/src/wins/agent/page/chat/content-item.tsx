@@ -41,14 +41,14 @@ const AssistantTurnGroup: FC<AssistantTurnGroupProps> = ({
       role="group"
       aria-label="Aira 的连续回复"
       data-assistant-run-id={runID}>
-      <span className="mt-0.5 flex size-6 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--theme-color-main)_14%,transparent)] text-[color-mix(in_srgb,var(--theme-color-main)_78%,white)] ring-1 ring-[color-mix(in_srgb,var(--theme-color-main)_22%,transparent)]">
+      <span className="mt-0.5 flex size-6 items-center justify-center rounded-full bg-primary/14 text-m3-primary-70 ring-1 ring-primary/22">
         <Sparkles className="size-3" />
       </span>
       <div className="w-full min-w-0">
-        <div className="mb-1.5 flex items-center gap-1.5 text-[9.5px] font-semibold tracking-[0.06em] text-white/42">
+        <div className="mb-1.5 flex items-center gap-1.5 text-[9.5px] font-semibold tracking-[0.06em] text-ink/42">
           Aira
           {streaming && (
-            <span className="flex items-center gap-1.5 font-normal text-white/26">
+            <span className="flex items-center gap-1.5 font-normal text-ink/26">
               <span className="agent-typing-dots" aria-hidden="true">
                 <i />
                 <i />
@@ -102,9 +102,9 @@ const ContentItem: FC<ContentItemProps> = ({
           <div
             className="
               max-w-full whitespace-pre-wrap break-words rounded-2xl rounded-br-md border
-              border-[color-mix(in_srgb,var(--theme-color-main)_14%,transparent)]
-              bg-[color-mix(in_srgb,var(--theme-color-main)_8%,transparent)] px-3 py-2
-              text-left text-[13px] leading-[1.65] text-white/88
+              border-primary/14
+              bg-primary/8 px-3 py-2
+              text-left text-[13px] leading-[1.65] text-ink/88
             ">
             {message.content}
           </div>
@@ -120,10 +120,10 @@ const ContentItem: FC<ContentItemProps> = ({
         <button
           className="
             absolute top-0 right-0 inline-flex size-7 cursor-pointer items-center
-            justify-center rounded-lg border border-white/8 bg-black/12 text-white/42
-            opacity-0 outline-none transition-all duration-200 hover:bg-white/10
-            hover:text-white focus-visible:opacity-100 focus-visible:ring-2
-            focus-visible:ring-white/45 group-hover/assistant-message:opacity-100
+            justify-center rounded-lg border border-ink/8 bg-scrim/12 text-ink/42
+            opacity-0 outline-none transition-all duration-200 hover:bg-ink/10
+            hover:text-ink focus-visible:opacity-100 focus-visible:ring-2
+            focus-visible:ring-ink/45 group-hover/assistant-message:opacity-100
             disabled:pointer-events-none disabled:opacity-0
           "
           title="复制回复"

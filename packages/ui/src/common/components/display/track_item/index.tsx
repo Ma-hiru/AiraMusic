@@ -83,10 +83,13 @@ const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistoryRecord>({
           ? "grid-cols-[auto_minmax(0,1fr)_auto]"
           : "grid-cols-[auto_auto_minmax(0,1fr)_auto]",
         active
-          ? "bg-primary text-primary-text shadow-xs"
+          ? cx(
+              "bg-primary-container text-on-primary-container shadow-xs resource-page:text-ink resource-page:shadow-none",
+              selected ? "resource-page:bg-secondary/18" : "resource-page:bg-primary/16"
+            )
           : selected
-            ? "bg-secondary/15"
-            : "hover:bg-black/10 active:bg-black/20",
+            ? "bg-secondary/15 resource-page:bg-secondary/18"
+            : "hover:bg-scrim/10 active:bg-scrim/20 resource-page:hover:bg-ink/6 resource-page:active:bg-ink/12",
         !playable && !selectionMode && "cursor-not-allowed! opacity-50"
       )}
       onClick={playable || selectionMode ? undefined : showDisableReason}

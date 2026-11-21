@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => {
     displayReady: vi.fn(),
     user: { likedPlaylist: { id: 100 } },
     output: { views: [], selected: "default", setDevice: vi.fn() },
-    theme: {},
+    theme: { backgroundCover: undefined, theme: { mainColor: "#ff5358", themeColors: [] } },
     bus: {
       progress: channel("progress"),
       trackMeta: channel("trackMeta"),

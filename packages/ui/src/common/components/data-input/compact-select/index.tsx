@@ -74,9 +74,9 @@ const CompactSelect: FC<CompactSelectProps> = ({
       <button
         className="
           flex h-8 max-w-full cursor-pointer items-center gap-1.5 rounded-lg
-          border border-white/12 bg-white/8 px-2.5 text-left text-[12px] font-semibold
-          text-white/72 outline-none transition-colors duration-200 hover:bg-white/12
-          focus-visible:ring-2 focus-visible:ring-white/45 disabled:pointer-events-none
+          border border-ink/12 bg-ink/8 px-2.5 text-left text-[12px] font-semibold
+          text-ink/72 outline-none transition-colors duration-200 hover:bg-ink/12
+          focus-visible:ring-2 focus-visible:ring-ink/45 disabled:pointer-events-none
           disabled:cursor-not-allowed disabled:opacity-45
         "
         type="button"
@@ -86,13 +86,10 @@ const CompactSelect: FC<CompactSelectProps> = ({
         aria-haspopup="listbox"
         title={selected?.title ?? (typeof selected?.label === "string" ? selected.label : label)}
         onClick={toggleOpen}>
-        {Icon && <Icon className="size-3.5 shrink-0 text-white/48" />}
+        {Icon && <Icon className="size-3.5 shrink-0 text-ink/48" />}
         <span className="min-w-0 truncate">{selected?.label ?? placeholder}</span>
         <ChevronDown
-          className={cx(
-            "size-3.5 shrink-0 text-white/45 transition-transform",
-            open && "rotate-180"
-          )}
+          className={cx("size-3.5 shrink-0 text-ink/45 transition-transform", open && "rotate-180")}
         />
       </button>
 
@@ -101,7 +98,7 @@ const CompactSelect: FC<CompactSelectProps> = ({
           className={cx(
             `
               absolute z-50 w-72 max-w-[calc(100vw-3rem)] overflow-hidden rounded-xl
-              border border-white/14 bg-black/75 p-1.5 shadow-2xl shadow-black/35
+              border border-ink/14 bg-popover/90 p-1.5 shadow-2xl shadow-black/35
               backdrop-blur-2xl backdrop-saturate-150
             `,
             placement === "top"
@@ -120,10 +117,10 @@ const CompactSelect: FC<CompactSelectProps> = ({
                     `
                       flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2
                       text-left outline-none transition-colors duration-200
-                      focus-visible:ring-2 focus-visible:ring-white/45
+                      focus-visible:ring-2 focus-visible:ring-ink/45
                       disabled:pointer-events-none disabled:opacity-40
                     `,
-                    active ? "bg-primary/80 text-primary-text" : "text-white/72 hover:bg-white/10"
+                    active ? "bg-primary/80 text-primary-text" : "text-ink/72 hover:bg-ink/10"
                   )}
                   role="option"
                   type="button"
@@ -147,10 +144,10 @@ const CompactSelect: FC<CompactSelectProps> = ({
               );
             })
           ) : (
-            <div className="px-3 py-2 text-[12px] text-white/45">暂无可选项</div>
+            <div className="px-3 py-2 text-[12px] text-ink/45">暂无可选项</div>
           )}
           {renderFooter && (
-            <div className={cx(options.length > 0 && "mt-1 border-t border-white/10 pt-1")}>
+            <div className={cx(options.length > 0 && "mt-1 border-t border-ink/10 pt-1")}>
               {renderFooter(close)}
             </div>
           )}

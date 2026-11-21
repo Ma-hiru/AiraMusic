@@ -39,7 +39,7 @@ const MarkdownImage = ({
           图片加载失败{alt ? `：${alt}` : ""}
         </span>
       )}
-      <span className="pointer-events-none absolute inset-0 hidden rounded-lg bg-black/10 group-hover:block" />
+      <span className="pointer-events-none absolute inset-0 hidden rounded-lg bg-scrim/10 group-hover:block" />
     </span>
   );
 };

@@ -13,7 +13,7 @@ const Github: FC<object> = () => {
       <section className="flex items-center justify-center gap-3">
         {avatarOk ? (
           <img
-            className="size-12 shrink-0 rounded-full border border-white/30 object-cover"
+            className="size-12 shrink-0 rounded-full border border-ink/30 object-cover"
             alt={RendererVersion.author}
             src={RendererVersion.authorAvatar}
             onError={() => setAvatarOk(false)}
@@ -21,7 +21,7 @@ const Github: FC<object> = () => {
         ) : (
           <span
             className="
-              flex size-12 shrink-0 items-center justify-center rounded-full border border-white/30
+              flex size-12 shrink-0 items-center justify-center rounded-full border border-ink/30
             ">
             <SimpleIcon className="size-5" icon={siGithub} />
           </span>
@@ -34,7 +34,7 @@ const Github: FC<object> = () => {
       <button
         className={`
           mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-md
-          border border-white/30 text-[12px] font-bold
+          border border-ink/30 text-[12px] font-bold
           transition-all duration-300 hover:border-primary/40
           hover:bg-primary hover:text-primary-text
           active:scale-[0.98] cursor-pointer

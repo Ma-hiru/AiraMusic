@@ -13,7 +13,7 @@ const Modal: FC<{ className?: string }> = ({ className }) => {
     <div
       className={cx(
         `
-          fixed inset-0 overflow-hidden bg-gray-600
+          fixed inset-0 overflow-hidden bg-surface
           duration-400 ease-in-out transform transition-transform contain-content
         `,
         playModal ? "translate-y-0" : "translate-y-full",

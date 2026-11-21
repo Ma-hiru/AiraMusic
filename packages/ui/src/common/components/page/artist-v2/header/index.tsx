@@ -41,7 +41,7 @@ const actionClassName = `
   rounded-md border px-3 py-1.5
   text-[12px] font-semibold transition-all duration-200 ease-in-out
   active:scale-98 disabled:pointer-events-none disabled:opacity-35
-  focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60
+  focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink/60
 `;
 
 const Header: FC<HeaderProps> = ({
@@ -148,7 +148,7 @@ const Header: FC<HeaderProps> = ({
   return (
     <div
       className={cx("grid h-full min-h-0 w-full grid-cols-[12rem_minmax(0,1fr)] gap-6", className)}>
-      <aside className="min-h-0 min-w-0 overflow-y-auto border-r border-white/10 pb-2 pr-3 [scrollbar-gutter:stable] scrollbar scrollbar-show">
+      <aside className="min-h-0 min-w-0 overflow-y-auto border-r border-ink/10 pb-2 pr-3 [scrollbar-gutter:stable] scrollbar scrollbar-show">
         <Avatar
           className="aspect-square w-full shrink-0"
           artist={artist}
@@ -171,7 +171,9 @@ const Header: FC<HeaderProps> = ({
                 {artist?.detail.artist.name ?? "未知歌手"}
               </h1>
               {trans && (
-                <p className="mt-1 select-text text-[13px] opacity-65 wrap-break-word">{trans}</p>
+                <p className="mt-1 select-text text-[13px] text-ink-muted wrap-break-word">
+                  {trans}
+                </p>
               )}
             </div>
             <div className="flex shrink-0 items-center gap-2 pt-0.5">
@@ -211,7 +213,7 @@ const Header: FC<HeaderProps> = ({
               播放热门
             </button>
             <button
-              className={cx(actionClassName, "border-white/20 bg-white/5 hover:bg-white/15")}
+              className={cx(actionClassName, "border-ink/20 bg-ink/5 text-ink hover:bg-ink/15")}
               type="button"
               disabled={!artist?.hotTracks.length || !onAddList}
               onClick={onAddList}>
@@ -219,14 +221,17 @@ const Header: FC<HeaderProps> = ({
               加入队列
             </button>
             <button
-              className={cx(actionClassName, "border-white/20 bg-white/5 hover:bg-white/15")}
+              className={cx(
+                actionClassName,
+                "border-ink/20 bg-ink/5 text-ink hover:bg-ink/15 aria-pressed:bg-ink/15"
+              )}
               type="button"
               aria-busy={pending}
               disabled={!artist || pending}
               aria-pressed={current.followed}
               onClick={follow}>
               {current.followed ? (
-                <Check className="size-3.5" />
+                <Check className="size-3.5 text-secondary" />
               ) : (
                 <UserRound className="size-3.5" />
               )}

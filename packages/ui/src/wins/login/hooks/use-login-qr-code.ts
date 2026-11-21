@@ -18,13 +18,13 @@ export function useLoginQRCode(props?: LoginQRCodeProps) {
   // 请求并生成二维码
   const fetchQRCode = useCallback(async () => {
     try {
+      const styles = getComputedStyle(document.documentElement);
+      const dark = styles.getPropertyValue("--m3-primary-25").trim();
+      const light = styles.getPropertyValue("--m3-neutral-99").trim();
       const { QRCodeKey, QRDataURL } = await requestQRCode({
         width: 200,
         margin: 2,
-        color: {
-          dark: "#8a060b",
-          light: "#ffffff"
-        },
+        color: dark && light ? { dark, light } : undefined,
         ...qrOptions
       });
       setDataURL(QRDataURL);

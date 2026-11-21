@@ -6,6 +6,7 @@ import { NeteaseArtist } from "@/common/netease/models";
 import { playModalAtom } from "@/wins/main/atoms/layout";
 import { useProgress } from "@/wins/main/hooks/use-progress";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { useThemeColor } from "@/common/hooks/use-theme-color";
 import { usePlayProgress } from "@/wins/main/hooks/use-play-progress";
 import Marquee from "@/common/components/display/marquee";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
@@ -14,6 +15,7 @@ import NormalPlayerProgress from "@/common/components/display/player-progress/no
 
 const Progress: FC<object> = () => {
   const { progress } = useProgress("player");
+  const { textColor } = useThemeColor();
   const settings = useSettings();
   const player = RendererPlayerHandle.usePlayer();
   const waveProgress = settings.preference.useWavePlayerProgress;
@@ -42,7 +44,9 @@ const Progress: FC<object> = () => {
             style={{ width: "100%", height: "100%" }}
             track={track}
             visible={visible}
+            color={textColor.hex()}
             playing={player.playing}
+            thumbColor={textColor.hex()}
             onUpdate={onUpdate}
           />
         ) : (
@@ -62,7 +66,7 @@ const Progress: FC<object> = () => {
             return (
               <Fragment key={NeteaseArtist.computedKey(a, index)}>
                 <a
-                  className="hover:opacity-50 cursor-pointer active:scale-98 ease-in-out duration-300 transition-all truncate"
+                  className="hover:opacity-50 cursor-pointer active:scale-98 ease-in-out duration-300 transition-all truncate select-text"
                   onClick={() => jump(a.id)}>
                   {a.name}
                 </a>

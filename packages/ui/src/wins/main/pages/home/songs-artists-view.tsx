@@ -101,13 +101,13 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
               className={cx(
                 `
                   h-8 cursor-pointer rounded-lg
-                  border border-white/20 px-3 text-sm font-bold
+                  border border-ink/20 px-3 text-sm font-bold
                   transition-all duration-300
                   active:scale-[0.98]
                 `,
                 area.type === songArea.type
                   ? "bg-primary text-primary-text hover:bg-primary-active"
-                  : "bg-white/5 hover:bg-white/20"
+                  : "bg-ink/5 hover:bg-ink/20"
               )}
               onClick={() => setSongArea(area)}>
               {area.label}
@@ -139,13 +139,13 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
               className={cx(
                 `
                   h-8 cursor-pointer rounded-lg
-                  border border-white/20 px-3 text-sm font-bold
+                  border border-ink/20 px-3 text-sm font-bold
                   transition-all duration-300
                   active:scale-[0.98]
                 `,
                 area.type === artistArea.type
                   ? "bg-primary text-primary-text hover:bg-primary-active"
-                  : "bg-white/5 hover:bg-white/20"
+                  : "bg-ink/5 hover:bg-ink/20"
               )}
               type="button"
               onClick={() => setArtistArea(area)}>

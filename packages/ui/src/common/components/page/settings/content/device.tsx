@@ -65,8 +65,8 @@ const Device: FC<DeviceProps> = ({ output, updateOutput }) => {
         <button
           className={cx(
             `
-              flex h-16 w-full items-center gap-3 rounded-lg border border-white/15
-              bg-white/10 px-3 text-left shadow-sm outline-none
+              flex h-16 w-full items-center gap-3 rounded-lg border border-ink/15
+              bg-ink/10 px-3 text-left shadow-sm outline-none
               transition-all duration-300 ease-in-out
               hover:opacity-50 cursor-pointer active:scale-[0.99]
               disabled:cursor-not-allowed disabled:opacity-60
@@ -99,8 +99,8 @@ const Device: FC<DeviceProps> = ({ output, updateOutput }) => {
           ref={listRef}
           className={cx(
             `
-            max-h-48 overflow-y-auto rounded-lg border border-white/15
-            bg-black/10 p-1 shadow-sm scrollbar scrollbar-show
+            max-h-48 overflow-y-auto rounded-lg border border-ink/15
+            bg-scrim/10 p-1 shadow-sm scrollbar scrollbar-show
             transition-all duration-300 ease-in-out space-y-1
           `,
             !opened && "hidden"
@@ -118,7 +118,7 @@ const Device: FC<DeviceProps> = ({ output, updateOutput }) => {
                       transition-all duration-300 ease-in-out
                        active:scale-[0.98]
                     `,
-                  active ? "bg-primary text-primary-text hover:opacity-50" : "hover:bg-white/10"
+                  active ? "bg-primary text-primary-text hover:opacity-50" : "hover:bg-ink/10"
                 )}
                 onClick={() => selectDevice(device.deviceId)}>
                 <span className="min-w-0 flex-1 truncate">{device.displayName}</span>
@@ -130,7 +130,7 @@ const Device: FC<DeviceProps> = ({ output, updateOutput }) => {
         <div className="flex items-center justify-between gap-3 text-[10px] font-bold opacity-60">
           <span className="min-w-0 truncate">{deviceCountText}</span>
           {selectedDevice && (
-            <span className="shrink-0 rounded-md border border-white/15 px-2 py-1 bg-primary text-(--text-color-on-main)">
+            <span className="shrink-0 rounded-md border border-ink/15 px-2 py-1 bg-primary text-(--text-color-on-main)">
               正在使用 {selectedDevice.displayName}
             </span>
           )}

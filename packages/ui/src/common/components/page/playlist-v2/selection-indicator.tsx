@@ -6,10 +6,7 @@ import LegacySelectionIndicator, {
 } from "../playlist/selection-indicator";
 
 const SelectionIndicator: FC<SelectionIndicatorProps> = ({ className, ...props }) => (
-  <LegacySelectionIndicator
-    {...props}
-    className={cx("bottom-6! bg-black/60! backdrop-saturate-200!", className)}
-  />
+  <LegacySelectionIndicator {...props} className={cx("bottom-6!", className)} />
 );
 
 export default memo(SelectionIndicator);

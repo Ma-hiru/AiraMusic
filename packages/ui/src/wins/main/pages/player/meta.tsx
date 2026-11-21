@@ -94,7 +94,7 @@ const Meta: FC<ArtistProps> = ({ className }) => {
       <div className={cx("shrink-0 flex justify-center items-center gap-1")}>
         <section
           className={cx(
-            "flex justify-center items-center gap-1 bg-white/30 rounded-full px-1.5 py-px hover:opacity-50 active:scale-98 cursor-pointer ease-in-out duration-300 transition-all",
+            "flex justify-center items-center gap-1 bg-ink/30 rounded-full px-1.5 py-px hover:opacity-50 active:scale-98 cursor-pointer ease-in-out duration-300 transition-all",
             redCount === null && "bg-transparent!"
           )}
           onClick={starTrack}>
@@ -109,7 +109,7 @@ const Meta: FC<ArtistProps> = ({ className }) => {
         </section>
         <section
           className={cx(
-            "flex justify-center items-center gap-1 bg-white/30 rounded-full px-1.5 py-px hover:opacity-50 active:scale-98 cursor-pointer ease-in-out duration-300 transition-all",
+            "flex justify-center items-center gap-1 bg-ink/30 rounded-full px-1.5 py-px hover:opacity-50 active:scale-98 cursor-pointer ease-in-out duration-300 transition-all",
             commentCount === null && "bg-transparent!"
           )}
           onClick={openComment}>

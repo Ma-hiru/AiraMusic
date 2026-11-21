@@ -35,7 +35,7 @@ const TopCover: FC<TopCoverProps> = ({ onCoverLoaded, summary, coverCacheKey }) 
 
   return (
     <button
-      className="group relative aspect-square w-full shrink-0 overflow-hidden rounded-md cursor-pointer focus-visible:ring-2 focus-visible:ring-white/60"
+      className="group relative aspect-square w-full shrink-0 overflow-hidden rounded-md cursor-pointer focus-visible:ring-2 focus-visible:ring-ink/60"
       type="button"
       aria-label="查看歌单详情"
       disabled={!summary}
@@ -47,7 +47,7 @@ const TopCover: FC<TopCoverProps> = ({ onCoverLoaded, summary, coverCacheKey }) 
         onLoad={onLoad}
         cache
       />
-      <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/20 group-focus-visible:bg-black/20" />
+      <div className="absolute inset-0 bg-scrim/0 transition-colors duration-300 group-hover:bg-scrim/20 group-focus-visible:bg-scrim/20" />
     </button>
   );
 };

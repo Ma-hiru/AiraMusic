@@ -10,7 +10,7 @@ const BarProgress: FC<object> = () => {
       track={track}
       chorusClassName="bg-primary-text!"
       bufferClassName="block h-full bg-(--text-color-on-main)/35! rounded-none rounded-r-full!"
-      percentClassName="absolute left-0 top-0 block h-full bg-primary! backdrop-blur-none rounded-none rounded-r-full"
+      percentClassName="absolute left-0 top-0 block h-full bg-primary! bg-linear-to-r from-primary to-tertiary backdrop-blur-none rounded-none rounded-r-full"
       onUpdate={onUpdate}
       containerClassName={`
          absolute! w-screen h-1! bottom-(--playbar-height) overflow-hidden contain-strict

@@ -74,26 +74,8 @@ const Bus: FC<object> = () => {
     });
   }, [fmMode, intelligenceMode, player]);
   const updateThemeBus = useCallback(() => {
-    RendererIPCMessageBus.theme.deliver({
-      backgroundCover: theme.backgroundCover ?? undefined,
-      theme: {
-        mainColor: theme.mainColor,
-        secondaryColor: theme.secondaryColor,
-        textColorOnMain: theme.textColorOnMain,
-        textColorOnSecondary: theme.textColorOnSecondary,
-        textNormalColor: theme.textColor,
-        themeColors: theme.themeColors
-      }
-    });
-  }, [
-    theme.backgroundCover,
-    theme.mainColor,
-    theme.secondaryColor,
-    theme.textColor,
-    theme.textColorOnMain,
-    theme.textColorOnSecondary,
-    theme.themeColors
-  ]);
+    RendererIPCMessageBus.theme.deliver(theme);
+  }, [theme]);
   useEffect(() => {
     player.audio.addEventListener("timeupdate", updateProgressBus, { passive: true });
     player.audio.addEventListener("play", updateProgressBus, { passive: true });

@@ -44,10 +44,10 @@ const ToastProvider = ({
           className={cx(
             `
             px-2 py-1
-            rounded-sm border border-white/30
+            rounded-sm border border-ink/30
             select-none font-semibold text-[12px]
             backdrop-saturate-120 backdrop-blur-md
-            bg-black/15 shadow-[0_8px_32px_rgba(0,0,0,0.25)]
+            bg-popover/72 shadow-[0_8px_32px_rgba(0,0,0,0.25)]
            `,
             itemContainerClassName
           )}

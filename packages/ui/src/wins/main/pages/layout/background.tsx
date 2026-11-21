@@ -3,38 +3,26 @@ import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import { memo, type FC, useMemo, useEffect, useLayoutEffect } from "react";
 import { NeteaseImageSize } from "@/common/enum";
 import { RendererCache } from "@/common/lib/cache";
+import { useMonet } from "@/common/hooks/use-monet";
 import { RendererWindow } from "@/common/lib/window";
-import { useMMCQ } from "@/wins/main/hooks/use-mmcq";
 import { useSettings } from "@/common/store/settings";
 import { playModalAtom } from "@/wins/main/atoms/layout";
 import { NeteaseURL, NeteaseSettings } from "@/common/netease/models";
-import {
-  mainColorAtom,
-  textColorAtom,
-  themeColorsAtom,
-  secondaryColorAtom,
-  backgroundCoverAtom,
-  textColorOnMainAtom,
-  textColorOnSecondaryAtom
-} from "@/wins/main/atoms/theme";
+import { themeAtom, backgroundCoverAtom } from "@/wins/main/atoms/theme";
+import { applyMonetPalette, MONET_ACCENT_TONE } from "@/common/player/monet";
 import RendererTheme from "@/common/player/ui";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import AcrylicBackground from "@/common/components/display/acrylic-background";
 
 const Background: FC<{ className?: string; onLoaded?: NormalFunc }> = ({ className, onLoaded }) => {
-  const setThemeColor = useSetAtom(themeColorsAtom);
-  const setMainColor = useSetAtom(mainColorAtom);
-  const setSecondaryColor = useSetAtom(secondaryColorAtom);
-  const setTextColorOnMain = useSetAtom(textColorOnMainAtom);
-  const setTextColorOnSecondary = useSetAtom(textColorOnSecondaryAtom);
-  const setTextColor = useSetAtom(textColorAtom);
+  const setTheme = useSetAtom(themeAtom);
   const playModal = useAtomValue(playModalAtom);
   const [backgroundCover, setBackground] = useAtom(backgroundCoverAtom);
   const resolvedBackgroundCover = useMemo(
     () => RendererCache.service.read.updateKey(backgroundCover),
     [backgroundCover]
   );
-  const themeColors = useMMCQ(resolvedBackgroundCover);
+  const { colors, pending } = useMonet({ url: resolvedBackgroundCover });
   const player = RendererPlayerHandle.usePlayer();
   const settings = useSettings();
 
@@ -43,42 +31,18 @@ const Background: FC<{ className?: string; onLoaded?: NormalFunc }> = ({ classNa
   }, [setBackground]);
 
   useLayoutEffect(() => {
-    const mainColor = themeColors.at(0) || RendererTheme.themeDefault.main;
-    const textColorOnMain =
-      RendererTheme.calcTextColor(mainColor).string() || RendererTheme.themeDefault.textOnMain;
-
-    const secondaryColor = themeColors.at(-1) || RendererTheme.themeDefault.secondary;
-    const textColorOnSecondary =
-      RendererTheme.calcTextColor(secondaryColor).string() ||
-      RendererTheme.themeDefault.textOnSecondary;
-
-    const textColor = mainColor ? "#ffffff" : RendererTheme.themeDefault.text;
-
-    if (mainColor && secondaryColor) {
-      RendererTheme.theme = {
-        main: mainColor,
-        secondary: secondaryColor,
-        textOnMainColor: textColorOnMain,
-        textOnSecondaryColor: textColorOnSecondary,
-        textColor
-      };
-      RendererTheme.setPrimaryScale(mainColor);
-      setThemeColor(themeColors);
-      setMainColor(mainColor);
-      setSecondaryColor(secondaryColor);
-      setTextColorOnMain(textColorOnMain);
-      setTextColorOnSecondary(textColorOnSecondary);
-      setTextColor(textColor);
-    }
-  }, [
-    setMainColor,
-    setSecondaryColor,
-    setTextColor,
-    setTextColorOnMain,
-    setTextColorOnSecondary,
-    setThemeColor,
-    themeColors
-  ]);
+    if (pending) return;
+    const palette = colors?.palettes;
+    applyMonetPalette(palette ?? null);
+    setTheme({
+      backgroundCover: resolvedBackgroundCover ?? undefined,
+      theme: {
+        mainColor: palette?.primary[MONET_ACCENT_TONE] ?? RendererTheme.themeDefault.main,
+        themeColors: colors?.coverColors ?? [],
+        palette
+      }
+    });
+  }, [colors, pending, resolvedBackgroundCover, setTheme]);
 
   useEffect(() => {
     return RendererWindow.display.listenMessage("message_dispatch_cache_has_clear", () => {
@@ -115,7 +79,7 @@ const Background: FC<{ className?: string; onLoaded?: NormalFunc }> = ({ classNa
         brightness={0.3}
         fluidMode="shader"
         fluidPaused={paused}
-        themeColors={themeColors}
+        themeColors={colors?.coverColors}
         fluid={settings.performance.useHomeFluid}
         src={resolvedBackgroundCover ?? undefined}
         fluidSpeed={NeteaseSettings.fluidSpeedMultiplier(settings.performance.homeFluidSpeed)}

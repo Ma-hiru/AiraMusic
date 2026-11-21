@@ -1,7 +1,7 @@
 import { useRef, useEffect, useInsertionEffect } from "react";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
-import RendererTheme from "@/common/player/ui";
+import { applyMonetPalette, type MonetPalettes } from "@/common/player/monet";
 
 import { useListenable } from "./use-listenable";
 
@@ -21,13 +21,7 @@ export function useThemeInjectFromBus() {
     isInjectedID = uuid;
     id.current = uuid;
 
-    RendererTheme.theme = {
-      main: themeBus.data.theme.mainColor,
-      secondary: themeBus.data.theme.secondaryColor,
-      textOnMainColor: themeBus.data.theme.textColorOnMain,
-      textOnSecondaryColor: themeBus.data.theme.textColorOnSecondary,
-      textColor: themeBus.data.theme.textNormalColor
-    };
+    applyMonetPalette((themeBus.data.theme.palette as undefined | MonetPalettes) ?? null);
     return () => {
       isInjectedID = "";
       id.current = "";

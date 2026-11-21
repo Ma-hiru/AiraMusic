@@ -56,7 +56,11 @@ const RadioPage: FC = () => {
   }, [visible]);
 
   return (
-    <Drag className={cx("relative overflow-hidden", !coverURL && "text-black")}>
+    <Drag
+      className={cx(
+        "relative overflow-hidden",
+        !coverURL && "bg-inverse-surface text-inverse-ink"
+      )}>
       <section className="fixed inset-0 z-[-1]">
         <AcrylicBackground
           className="absolute inset-0"

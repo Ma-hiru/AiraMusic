@@ -92,7 +92,7 @@ const AddToPlaylistList: FC<{
             key={p.id}
             className={cx(
               "flex w-full items-center gap-3 rounded-md p-2 text-left transition-all",
-              "hover:bg-white/10 active:scale-98 disabled:opacity-50"
+              "hover:bg-ink/10 active:scale-98 disabled:opacity-50"
             )}
             type="button"
             disabled={adding != null}

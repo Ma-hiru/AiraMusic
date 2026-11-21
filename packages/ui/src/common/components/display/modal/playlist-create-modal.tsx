@@ -72,7 +72,7 @@ const PlaylistCreateForm: FC<{
     <div className="flex flex-col gap-4 text-[13px]">
       <input
         className="
-          w-full mt-1 rounded-md border border-white/15 bg-white/10 px-3 py-2 font-bold
+          w-full mt-1 rounded-md border border-ink/15 bg-ink/10 px-3 py-2 font-bold
           outline-none transition-colors focus:border-primary
         "
         value={name}
@@ -86,7 +86,7 @@ const PlaylistCreateForm: FC<{
       />
       {/* 隐私开关 */}
       <button
-        className="flex items-center justify-between rounded-md bg-white/5 px-3 py-2 text-left transition-colors hover:bg-white/10"
+        className="flex items-center justify-between rounded-md bg-ink/5 px-3 py-2 text-left transition-colors hover:bg-ink/10"
         type="button"
         onClick={() => setPrivacy((v) => !v)}>
         <span className="flex items-center gap-2">
@@ -99,11 +99,11 @@ const PlaylistCreateForm: FC<{
         <span
           className={cx(
             "relative h-5 w-9 shrink-0 rounded-full transition-colors duration-300",
-            privacy ? "bg-primary" : "bg-white/20"
+            privacy ? "bg-primary" : "bg-ink/20"
           )}>
           <span
             className={cx(
-              "absolute top-0.5 left-0.5 size-4 rounded-full bg-white transition-transform duration-300",
+              "absolute top-0.5 left-0.5 size-4 rounded-full bg-inverse-surface transition-transform duration-300",
               privacy && "translate-x-4"
             )}
           />

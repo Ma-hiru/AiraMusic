@@ -21,6 +21,7 @@ export function createSearchDrawer({
     title: "搜索",
     width: 480,
     resizable: { minWidth: 420, maxWidth: 720 },
+    className: "bg-surface/88! text-ink",
     contentClassName: "overflow-hidden!",
     headerActions: onPageAction ? (
       <IconButton

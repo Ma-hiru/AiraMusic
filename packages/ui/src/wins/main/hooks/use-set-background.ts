@@ -1,26 +1,29 @@
 import { useSetAtom } from "jotai";
+import { useLocation } from "react-router-dom";
 import { useRef, useEffect, useCallback } from "react";
 import { RoutePathMain } from "@/common/routes";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { backgroundCoverAtom } from "@/wins/main/atoms/theme";
-import { useRouterActive } from "@/common/hooks/use-router-active";
 
-export function useSetBackground(page: keyof typeof RoutePathMain) {
-  const active = useRouterActive(RoutePathMain, page);
+export function useSetBackground(page: "home" | "album" | "artist" | "playlist") {
+  const location = useLocation();
+  const active = RoutePathMain.matchPathname(location, RoutePathMain[page]);
+  const activeRef = useLatestRef(active);
   const coverRef = useRef("");
   const setBackgroundCover = useSetAtom(backgroundCoverAtom);
 
   const setBackground = useCallback(
     (src: string) => {
-      setBackgroundCover(src);
       coverRef.current = src;
+      if (activeRef.current) setBackgroundCover(src);
     },
-    [setBackgroundCover]
+    [activeRef, setBackgroundCover]
   );
 
   useEffect(() => {
     const cover = coverRef.current;
-    cover && setBackground(cover);
-  }, [setBackground, active]);
+    if (active && cover) setBackgroundCover(cover);
+  }, [active, setBackgroundCover]);
 
   return {
     setBackground

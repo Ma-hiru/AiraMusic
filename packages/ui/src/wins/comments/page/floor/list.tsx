@@ -40,7 +40,7 @@ const FloorList: FC<FloorListProps> = ({
   return (
     <div
       className={cx(
-        "mt-0.5 ml-0.5 pl-2.5 border-l border-white/20 flex flex-col gap-2 min-w-0",
+        "mt-0.5 ml-0.5 pl-2.5 border-l border-ink/20 flex flex-col gap-2 min-w-0",
         className
       )}>
       {floors.map((floor) => (

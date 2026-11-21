@@ -39,7 +39,7 @@ const ContextUsage: FC<ContextUsageProps> = ({ config, context, running, auxilia
 
   return (
     <UsageTooltip
-      className="inline-flex size-8 shrink-0 cursor-default items-center justify-center rounded-full text-white/45 outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+      className="inline-flex size-8 shrink-0 cursor-default items-center justify-center rounded-full text-ink/45 outline-none focus-visible:ring-2 focus-visible:ring-ink/40"
       placement="left"
       aria-label="当前上下文估算"
       aria-valuenow={progress}
@@ -49,11 +49,11 @@ const ContextUsage: FC<ContextUsageProps> = ({ config, context, running, auxilia
       aria-valuetext={progress === undefined ? undefined : value}
       content={
         <span className="block max-w-60">
-          <span className="block font-medium text-white/85">{value}</span>
-          <span className="mt-1 block text-white/48">{description}</span>
+          <span className="block font-medium text-ink/85">{value}</span>
+          <span className="mt-1 block text-ink/48">{description}</span>
           {auxiliaryUsage && (
-            <span className="mt-2 block border-t border-white/10 pt-2">
-              <span className="block font-medium text-white/70">本会话辅助请求</span>
+            <span className="mt-2 block border-t border-ink/10 pt-2">
+              <span className="block font-medium text-ink/70">本会话辅助请求</span>
               <AuxiliaryUsage label="标题总结" usage={auxiliaryUsage.title} />
               <AuxiliaryUsage label="历史压缩" usage={auxiliaryUsage.compaction} />
             </span>
@@ -62,7 +62,7 @@ const ContextUsage: FC<ContextUsageProps> = ({ config, context, running, auxilia
       }>
       <svg
         className={
-          percentage !== undefined && percentage >= 80 ? "size-5 text-amber-200/70" : "size-5"
+          percentage !== undefined && percentage >= 80 ? "size-5 text-tertiary/70" : "size-5"
         }
         aria-hidden="true"
         viewBox="0 0 24 24">
@@ -102,8 +102,8 @@ const ContextUsage: FC<ContextUsageProps> = ({ config, context, running, auxilia
 const AuxiliaryUsage: FC<{ label: string; usage: RequestUsageTotals }> = ({ label, usage }) => {
   const complete = usage.requests === usage.reportedRequests;
   return (
-    <span className="mt-1.5 block text-white/48">
-      <span className="block text-white/65">{label}</span>
+    <span className="mt-1.5 block text-ink/48">
+      <span className="block text-ink/65">{label}</span>
       <span className="block">
         {usage.requests === 0
           ? "尚未发起请求"

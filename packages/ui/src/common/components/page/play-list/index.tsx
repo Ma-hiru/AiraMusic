@@ -24,7 +24,7 @@ const PlayList = ({ className, active = true, statsRevision, ...queueProps }: Pl
         <PlayListQueue {...queueProps} active={active} />
       </div>
       <PlayListStats
-        className="row-start-1 border-b border-white/10 pb-4 lg:col-start-2 lg:border-b-0 lg:border-l lg:pb-0 lg:pl-4"
+        className="row-start-1 border-b border-ink/10 pb-4 lg:col-start-2 lg:border-b-0 lg:border-l lg:pb-0 lg:pl-4"
         active={active}
         statsRevision={statsRevision}
       />

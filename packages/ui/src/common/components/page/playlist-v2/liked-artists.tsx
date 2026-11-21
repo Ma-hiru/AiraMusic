@@ -83,13 +83,13 @@ const ArtistCard: FC<{
 
   return (
     <button
-      className="group flex min-w-0 cursor-pointer items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-2 text-left transition-colors duration-200 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
+      className="group flex min-w-0 cursor-pointer items-center gap-3 rounded-lg border border-ink/10 bg-ink/5 p-2 text-left transition-colors duration-200 hover:bg-ink/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink/60"
       type="button"
       aria-label={`${artist.name}，已喜欢 ${artist.trackIDs.length} 首`}
       onClick={() => onSelect(artist)}>
       <span
         className={cx(
-          "grid size-13 shrink-0 overflow-hidden rounded-md bg-white/10",
+          "grid size-13 shrink-0 overflow-hidden rounded-md bg-ink/10",
           covers.length > 1 && "grid-cols-2",
           covers.length > 2 && "grid-rows-2"
         )}>

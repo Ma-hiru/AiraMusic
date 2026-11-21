@@ -69,10 +69,10 @@ const ConversationList: FC<ConversationListProps> = ({
             "agent-panel flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border",
             overlay && "shadow-md shadow-black/18"
           )}>
-          <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-white/7 px-3">
+          <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-ink/7 px-3">
             <div className="min-w-0">
-              <div className="truncate text-[12px] font-semibold text-white/78">对话记录</div>
-              <div className="mt-0.5 text-[9px] tabular-nums text-white/28">
+              <div className="truncate text-[12px] font-semibold text-ink/78">对话记录</div>
+              <div className="mt-0.5 text-[9px] tabular-nums text-ink/28">
                 {conversations.length} 个会话
               </div>
             </div>
@@ -109,7 +109,7 @@ const ConversationList: FC<ConversationListProps> = ({
             ))}
             {conversations.length === 0 && (
               <AppEmpty
-                className="min-h-28 rounded-lg border border-white/8 bg-white/[0.025] text-[11px] opacity-45"
+                className="min-h-28 rounded-lg border border-ink/8 bg-ink/[0.025] text-[11px] opacity-45"
                 tips="暂无对话"
               />
             )}

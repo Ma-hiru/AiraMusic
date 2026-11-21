@@ -21,20 +21,20 @@ const QRCode: FC<QRCodeProps> = ({ url, status, update }) => {
   return (
     <div className="flex justify-center flex-col items-center gap-1">
       <div
-        className="relative overflow-hidden rounded-md bg-black/60"
+        className="relative overflow-hidden rounded-md bg-scrim/60"
         onMouseEnter={() => setShowUpdateMask(true)}>
         <div className="size-40">
           {url && <img className="w-full h-full" src={url} alt="QRCode" />}
         </div>
         <div
           className={cx(
-            "absolute inset-0 bg-black/60 flex justify-center items-center",
+            "absolute inset-0 bg-scrim/60 flex justify-center items-center",
             "ease-in-out transition-opacity duration-300",
             showUpdateMask ? "opacity-100" : "opacity-0"
           )}
           onMouseLeave={() => status !== QRCodeStatus.EXPIRED && setShowUpdateMask(false)}>
           <button
-            className="flex gap-1 text-sm justify-center items-center text-white cursor-pointer hover:text-white/80 active:scale-95 p-1"
+            className="flex gap-1 text-sm justify-center items-center text-ink cursor-pointer hover:text-ink/80 active:scale-95 p-1"
             onClick={update}>
             <RotateCcw className="size-4" />
             <span>刷新</span>

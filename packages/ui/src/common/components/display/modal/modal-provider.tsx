@@ -94,7 +94,7 @@ const ModalProvider: FC<{ className?: string }> = ({ className }) => {
     <div>
       <button
         className={cx(
-          "fixed z-(--z-index-modal) inset-0 cursor-default bg-black/30",
+          "fixed z-(--z-index-modal) inset-0 cursor-default bg-scrim/30",
           render?.hiddenMaskBlur ? "backdrop-blur-none" : "backdrop-saturate-150 backdrop-blur-lg",
           !(visible && render) && "hidden",
           className
@@ -179,7 +179,7 @@ const ModalProvider: FC<{ className?: string }> = ({ className }) => {
                 {render.content}
               </div>
               {render.footer && (
-                <footer className="border-t border-white/10 px-4 py-3">{render.footer}</footer>
+                <footer className="border-t border-ink/10 px-4 py-3">{render.footer}</footer>
               )}
             </motion.section>
           </motion.div>

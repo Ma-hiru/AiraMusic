@@ -1957,6 +1957,7 @@ __metadata:
     "@mahiru/ipc": "workspace:*"
     "@mahiru/log": "workspace:*"
     "@mahiru/wasm": "workspace:*"
+    "@material/material-color-utilities": "npm:^0.4.0"
     "@rolldown/plugin-babel": "npm:^0.2.2"
     "@tailwindcss/vite": "npm:^4.1.17"
     "@testing-library/dom": "npm:^10.4.1"
@@ -2025,6 +2026,13 @@ __metadata:
     lodash: "npm:^4.17.15"
     tmp-promise: "npm:^3.0.2"
   checksum: 10c0/b3c87f6482b1956411af1118c771afb39cd9a0568fbb5e86015547ff6d68d2e73a7f0d74b75a57f0a156391c347c8d0adc1037e75172b92da72b96e0a05a2f4f
+  languageName: node
+  linkType: hard
+
+"@material/material-color-utilities@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "@material/material-color-utilities@npm:0.4.0"
+  checksum: 10c0/cf4e6ea31ce4d357cd305efd2ef4f22f1830a2f3718f8da3f0968b6eb426290c86e148245530056311ff3d24d39aa9e7c931e5c5b345b3ed21294aa938976ea6
   languageName: node
   linkType: hard
 

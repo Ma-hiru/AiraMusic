@@ -42,7 +42,7 @@ const ToggleRow: FC<ToggleRowProps> = ({
               disabled:cursor-not-allowed disabled:opacity-35 disabled:active:scale-100
               flex justify-start items-center p-0
             `,
-              checked ? "border-primary pl-6" : "border-white/50 pl-1"
+              checked ? "border-primary pl-6" : "border-ink/50 pl-1"
             )}
             type="button"
             disabled={disabled}

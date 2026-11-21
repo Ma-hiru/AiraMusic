@@ -27,14 +27,14 @@ const ConversationItem: FC<ConversationItemProps> = ({
           transition-colors duration-200
         `,
         active
-          ? "border-white/9 bg-white/9 text-white shadow-sm shadow-black/8"
-          : "text-white/58 hover:border-white/7 hover:bg-white/5 hover:text-white/78"
+          ? "border-ink/9 bg-ink/9 text-ink shadow-sm shadow-black/8"
+          : "text-ink/58 hover:border-ink/7 hover:bg-ink/5 hover:text-ink/78"
       )}>
       {active && (
         <span className="absolute top-2 bottom-2 left-0 w-0.5 rounded-full bg-primary/85" />
       )}
       <button
-        className="min-w-0 flex-1 rounded-lg px-2.5 py-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/40"
+        className="min-w-0 flex-1 rounded-lg px-2.5 py-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ink/40"
         type="button"
         aria-current={active ? "page" : undefined}
         onClick={() => onOpen(conversation.id)}>

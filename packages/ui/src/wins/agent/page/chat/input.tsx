@@ -99,9 +99,9 @@ const ChatInput: FC<ChatInputProps> = ({
         <form
           ref={formRef}
           className="
-            rounded-2xl border border-white/12 bg-black/28 p-1.5
+            rounded-2xl border border-ink/12 bg-scrim/28 p-1.5
             backdrop-blur-xl transition-colors duration-200
-            focus-within:border-white/22
+            focus-within:border-ink/22
           "
           onSubmit={submit}>
           <div className="flex items-end gap-1.5">
@@ -110,7 +110,7 @@ const ChatInput: FC<ChatInputProps> = ({
               className="
                 agent-scroll max-h-28 min-h-9 min-w-0 flex-1 resize-none overflow-y-auto rounded-xl border border-transparent
                 bg-transparent px-2.5 py-1.5 text-[13px] leading-5 outline-none
-                transition-colors duration-200 placeholder:text-white/32
+                transition-colors duration-200 placeholder:text-ink/32
               "
               rows={1}
               value={input}
@@ -132,7 +132,7 @@ const ChatInput: FC<ChatInputProps> = ({
             )}
             {runningRunID ? (
               <button
-                className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-red-200/18 bg-red-200/10 text-red-100/78 outline-none transition-colors hover:bg-red-200/16 focus-visible:ring-2 focus-visible:ring-red-100/40"
+                className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-danger/18 bg-danger/10 text-danger/78 outline-none transition-colors hover:bg-danger/16 focus-visible:ring-2 focus-visible:ring-danger/40"
                 title="停止生成"
                 type="button"
                 aria-label="停止生成"
@@ -155,7 +155,7 @@ const ChatInput: FC<ChatInputProps> = ({
               </button>
             )}
           </div>
-          <div className="flex items-center justify-between px-2.5 pt-1 pb-0.5 text-[8.5px] text-white/24">
+          <div className="flex items-center justify-between px-2.5 pt-1 pb-0.5 text-[8.5px] text-ink/24">
             <span className="truncate">
               {activeConfig ? `${activeConfig.name} · Aira 可能出错，请注意核实` : "未接入模型"}
             </span>

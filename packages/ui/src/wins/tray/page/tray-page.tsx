@@ -178,12 +178,11 @@ const TrayPage: FC = () => {
     <div className="w-screen overflow-hidden p-0.5 overflow-y-auto scrollbar">
       <main
         className="
-          w-full rounded-xl border border-black/8
-          backdrop-saturate-150 backdrop-blur-xl p-2 relative bg-white/80
+          relative isolate w-full overflow-hidden rounded-xl border border-ink/15
+          bg-surface p-2 text-ink
         ">
-        <div className="fixed inset-0 z-[-1]">
+        <div className="pointer-events-none absolute inset-0 -z-10 opacity-45">
           <AcrylicBackground
-            className="rounded-xl overflow-hidden"
             blur={20}
             saturate={3}
             opacity={0.8}

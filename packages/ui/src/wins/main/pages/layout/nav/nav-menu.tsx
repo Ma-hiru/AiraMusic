@@ -76,25 +76,31 @@ const NavMenu: FC<NavMenuProps> = ({ className, barOpened }) => {
       {NavConstants.LAYOUT_NAV.map(({ icon, path, label }) => {
         const active = RoutePathMain.matchPathname(location, path, true);
         return (
-          <div
+          <button
             key={path}
             className={cx(
               `
-              flex flex-row h-12 items-center mx-3 rounded-md
-              ease-in-out duration-300 transition-all
+              mx-3 flex h-12 cursor-pointer items-center rounded-md text-left
+              transition-colors duration-200 focus-visible:bg-ink/12
             `,
-              active ? barOpened && "bg-primary text-primary-text" : barOpened && "hover:bg-black/5"
+              active
+                ? cx("text-on-primary-container", barOpened && "bg-primary-container")
+                : cx("text-ink", barOpened && "hover:bg-ink/12")
             )}
             title={label}
+            type="button"
+            aria-label={label}
+            aria-current={active ? "page" : undefined}
             onClick={() => jump(path, active)}>
             <span
               className={cx(
                 `
-                    w-[calc(50%-var(--spacing)*3)] h-full
-                    flex items-center justify-center font-bold rounded-md
-                    ease-in-out duration-300 transition-all
+                    relative flex h-full w-[calc(50%-var(--spacing)*3)] shrink-0 items-center justify-center rounded-md
+                    transition-colors duration-200
                 `,
-                active ? "bg-primary" : !barOpened && "hover:bg-black/5"
+                active &&
+                  "text-m3-primary-80 before:absolute before:left-1 before:h-4 before:w-0.5 before:rounded-full before:bg-m3-primary-80",
+                !barOpened && (active ? "bg-primary-container" : "hover:bg-ink/8")
               )}>
               {icon}
             </span>
@@ -109,7 +115,7 @@ const NavMenu: FC<NavMenuProps> = ({ className, barOpened }) => {
               )}>
               {label}
             </span>
-          </div>
+          </button>
         );
       })}
     </div>

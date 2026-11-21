@@ -142,7 +142,7 @@ const WindowResizeArea: FC<WindowResizeAreaProps> = ({
             key={direction}
             className={cx(
               "absolute pointer-events-auto",
-              showArea ? "bg-white/10" : "bg-transparent"
+              showArea ? "bg-ink/40" : "bg-transparent"
             )}
             style={style}
             onMouseDown={handleResizeStart(direction)}

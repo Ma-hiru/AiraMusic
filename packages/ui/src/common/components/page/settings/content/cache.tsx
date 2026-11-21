@@ -215,7 +215,7 @@ const Cache: FC<CacheProps> = ({
           <p
             className={cx(
               `
-               h-11 flex-1 select-text rounded-md border border-white/30
+               h-11 flex-1 select-text rounded-md border border-ink/30
                px-3 text-[14px] font-semibold
                transition-all duration-300
                flex justify-start items-center
@@ -231,7 +231,7 @@ const Cache: FC<CacheProps> = ({
       <BaseItem
         className={cx("py-0!", (movingPercent === null || movingPercent >= 100) && "hidden")}>
         <div className="w-full flex flex-col gap-3">
-          <div className="w-full rounded-md bg-white/30 h-1.5 overflow-hidden">
+          <div className="w-full rounded-md bg-ink/30 h-1.5 overflow-hidden">
             <span
               className={cx(
                 `
@@ -277,7 +277,7 @@ const Button = ({
     <button
       className={cx(
         `
-          shrink-0 h-8 rounded-md border border-white/30 px-3
+          shrink-0 h-8 rounded-md border border-ink/30 px-3
           text-[12px] font-semibold transition-all duration-300
           hover:bg-primary hover:text-primary-text
           active:scale-[0.98]

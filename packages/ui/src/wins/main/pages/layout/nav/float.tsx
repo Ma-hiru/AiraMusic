@@ -88,8 +88,7 @@ const NavFloat: FC<NavFloatProps> = ({
             className={cx(
               `
                 cursor-pointer backdrop-blur-sm rounded-full p-1
-                flex items-center justify-center text-primary
-                bg-(--text-color-on-main)/60
+                flex items-center justify-center bg-popover/75 text-ink
             `
             )}
             exit={{ opacity: 0, scale: 0 }}
@@ -125,7 +124,7 @@ const NavFloat: FC<NavFloatProps> = ({
                 className={cx(
                   `
                   size-5 scale-95 absolute right-0 top-1/2
-                  -translate-y-1/2 z-10 hover:opacity-60
+                  -translate-y-1/2 z-10 hover:text-m3-primary-90
                   `
                 )}
                 onClick={(e) => {

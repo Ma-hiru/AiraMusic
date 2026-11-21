@@ -22,7 +22,7 @@ const ContentTabs: FC<ContentTabsProps> = ({
   searchTracks
 }) => {
   return (
-    <div className="mt-4 flex min-h-10 shrink-0 items-center justify-between gap-3 border-b border-white/15">
+    <div className="mt-4 flex min-h-10 shrink-0 items-center justify-between gap-3 border-b border-ink/15">
       <div className="flex self-stretch gap-5" role="tablist" aria-label="专辑内容">
         {(
           [
@@ -34,10 +34,10 @@ const ContentTabs: FC<ContentTabsProps> = ({
             key={value}
             id={`${id}-${value}-tab`}
             className={cx(
-              "relative flex cursor-pointer items-center gap-1.5 py-2 text-[12px] font-semibold outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-white/60",
+              "relative flex cursor-pointer items-center gap-1.5 whitespace-nowrap py-2 text-[12px] font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ink/60",
               active === value
-                ? "after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full after:bg-secondary"
-                : "opacity-60"
+                ? "text-m3-primary-90 after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full after:bg-m3-primary-80"
+                : "text-ink/70 hover:text-ink"
             )}
             role="tab"
             type="button"
@@ -46,7 +46,7 @@ const ContentTabs: FC<ContentTabsProps> = ({
             onClick={() => onChange(value)}>
             {label}
             {value === "tracks" && (
-              <span className="text-[10px] font-medium tabular-nums opacity-60">{trackCount}</span>
+              <span className="text-[10px] font-medium tabular-nums opacity-70">{trackCount}</span>
             )}
           </button>
         ))}
@@ -57,7 +57,7 @@ const ContentTabs: FC<ContentTabsProps> = ({
           iconClass="size-3.5!"
           setIsTyping={setIsTyping}
           containerClass="w-36 max-w-full"
-          inputClass="h-7! w-full! rounded-md! border-white/20! bg-white/5 pl-2! text-[11px]! focus:w-full!"
+          inputClass="h-7! w-full! rounded-md! border-ink/15! bg-ink/5! pl-2! text-ink! text-[11px]! placeholder:text-ink/65! focus:w-full!"
           onSearch={searchTracks}
         />
       </div>

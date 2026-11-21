@@ -257,10 +257,10 @@ const ListeningFootprint = ({
               key={value}
               id={`${tabsId}-${value}`}
               className={cx(
-                "flex min-w-0 cursor-pointer flex-col items-start rounded-md border px-2 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-white/60",
+                "flex min-w-0 cursor-pointer flex-col items-start rounded-md border px-2 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-ink/60",
                 period === value
-                  ? "border-white/20 bg-white/10"
-                  : "border-transparent opacity-60 hover:bg-white/5 hover:opacity-90"
+                  ? "border-ink/20 bg-ink/10"
+                  : "border-transparent opacity-60 hover:bg-ink/5 hover:opacity-90"
               )}
               role="tab"
               type="button"
@@ -338,7 +338,7 @@ const ListeningFootprint = ({
             onSelectDay={setSelectedDay}
           />
         )}
-        <section className="flex min-h-0 flex-1 flex-col gap-2 border-t border-white/10 pt-3">
+        <section className="flex min-h-0 flex-1 flex-col gap-2 border-t border-ink/10 pt-3">
           <header className="flex shrink-0 items-center justify-between gap-3">
             <h3 className="text-xs font-medium opacity-70">{listTitle}</h3>
             <div className="flex items-center gap-2 text-[10px] opacity-50">

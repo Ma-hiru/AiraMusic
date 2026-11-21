@@ -13,8 +13,8 @@ const LyricTips: FC<LyricTipsProps> = ({ tips, fontSize, crossAlign }) => {
     <div
       className={cx(
         `
-            w-full px-4 py-1 rounded-md hover:blur-none hover:bg-white/20
-          text-white/80 truncate font-semibold text-lg
+            w-full px-4 py-1 rounded-md hover:blur-none hover:bg-ink/20
+          text-ink/80 truncate font-semibold text-lg
           `,
         crossAlign === "left" && "text-left",
         crossAlign === "center" && "text-center",

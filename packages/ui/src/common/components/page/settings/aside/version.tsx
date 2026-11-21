@@ -48,7 +48,7 @@ const Version: FC<VersionProps> = ({ showExportLogs = false }) => {
           <h1 className="truncate text-lg font-bold">{RendererVersion.appName}</h1>
           <span
             className="
-              mt-1 inline-block rounded-sm border border-white/30 px-1.5
+              mt-1 inline-block rounded-sm border border-ink/30 px-1.5
               text-[11px] font-semibold tracking-wide
             ">
             {RendererVersion.appVersion}
@@ -61,7 +61,7 @@ const Version: FC<VersionProps> = ({ showExportLogs = false }) => {
       <button
         className={`
           mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-md
-          border border-white/30 text-[12px] font-bold
+          border border-ink/30 text-[12px] font-bold
           transition-all duration-300 hover:border-primary/40
           hover:bg-primary hover:text-primary-text
           active:scale-[0.98] cursor-pointer
@@ -77,7 +77,7 @@ const Version: FC<VersionProps> = ({ showExportLogs = false }) => {
         <button
           className={`
           mt-2 flex h-9 w-full items-center justify-center gap-2 rounded-md
-          border border-white/30 text-[12px] font-bold
+          border border-ink/30 text-[12px] font-bold
           transition-all duration-300 enabled:hover:border-primary/40
           enabled:hover:bg-primary enabled:hover:text-primary-text
           enabled:active:scale-[0.98] cursor-pointer

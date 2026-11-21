@@ -210,7 +210,7 @@ const RadioMeta: FC<RadioMetaProps> = ({ className }) => {
             preview
           />
         ) : (
-          <div className="flex size-full items-center justify-center bg-white/50">
+          <div className="flex size-full items-center justify-center bg-ink/50">
             <Music2 className="size-5" />
           </div>
         )}
@@ -231,7 +231,7 @@ const RadioMeta: FC<RadioMetaProps> = ({ className }) => {
         <div
           className={cx(
             `
-              flex justify-center items-center gap-1 bg-white/30 rounded-sm
+              flex justify-center items-center gap-1 bg-ink/30 rounded-sm
               px-1 py-px hover:opacity-50 active:scale-98 cursor-pointer
               ease-in-out duration-300 transition-all
            `,
@@ -250,7 +250,7 @@ const RadioMeta: FC<RadioMetaProps> = ({ className }) => {
       </NoDrag>
       {/* Progress */}
       <NoDrag
-        className="h-1.25 w-35 mt-1.5 overflow-hidden rounded-full bg-white/50 cursor-pointer"
+        className="h-1.25 w-35 mt-1.5 overflow-hidden rounded-full bg-ink/50 cursor-pointer"
         onMouseDown={handleProgressJump}>
         <span
           className="block h-full rounded-full bg-primary transition-[width] duration-300 ease-in-out"

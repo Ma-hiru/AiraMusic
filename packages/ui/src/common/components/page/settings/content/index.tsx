@@ -91,7 +91,7 @@ const SettingsContent: FC<SettingsContentProps> = ({
       className={cx("w-full space-y-4 scrollbar scrollbar-show contain-layout", className)}>
       <div className="sticky top-0 z-20 flex justify-center py-1 @[45rem]/settings:justify-start">
         <div
-          className="surface-1 inline-flex rounded-lg border border-white/[0.07] p-1 shadow-lg shadow-black/10 backdrop-blur-xl"
+          className="surface-1 inline-flex rounded-lg border border-ink/[0.07] p-1 shadow-lg shadow-black/10 backdrop-blur-xl"
           role="tablist"
           aria-label="设置分类">
           {(
@@ -106,7 +106,7 @@ const SettingsContent: FC<SettingsContentProps> = ({
                 key={value}
                 className={cx(
                   "min-w-24 rounded-md px-3 py-1.5 text-[11px] font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/35",
-                  active ? "bg-primary text-primary-text" : "text-white/42 hover:bg-white/[0.06]"
+                  active ? "bg-primary text-primary-text" : "text-ink/42 hover:bg-ink/[0.06]"
                 )}
                 role="tab"
                 type="button"

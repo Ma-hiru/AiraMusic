@@ -11,11 +11,12 @@ import IconButton from "@/common/components/data-input/icon-button";
 
 interface HotRecommendProps {
   className?: string;
+  inDrawer?: boolean;
   onSearch: NormalFunc<[keyword: string]>;
 }
 
 /** 无关键词时的实时趋势：双列排行，不再使用 hero 卡 + 卡片 + 列表的三层结构 */
-const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch }) => {
+const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch, inDrawer }) => {
   const {
     status,
     fetchData,
@@ -49,9 +50,14 @@ const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch }) => {
         <div className={cx("@container flex h-full min-h-0 flex-col", className)}>
           <header className="flex shrink-0 items-center justify-between gap-3 px-4 pb-2 pt-4">
             <div className="flex min-w-0 items-center gap-2">
-              <TrendingUp className="size-4 shrink-0 text-primary" />
+              <TrendingUp
+                className={cx("size-4 shrink-0", inDrawer ? "text-tertiary" : "text-primary")}
+              />
               <h2 className="truncate text-[18px] font-bold">实时趋势</h2>
-              <span className="shrink-0 text-[11px] opacity-35">{items.length} 条</span>
+              <span
+                className={cx("shrink-0 text-[11px]", inDrawer ? "text-ink-muted" : "opacity-35")}>
+                {items.length} 条
+              </span>
             </div>
             <IconButton
               label="刷新热搜"
@@ -69,7 +75,13 @@ const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch }) => {
             ) : (
               <div className="columns-1 gap-x-8 @[28rem]:columns-2">
                 {items.map((item, index) => (
-                  <HotRow key={item.searchWord} item={item} rank={index + 1} onSearch={onSearch} />
+                  <HotRow
+                    key={item.searchWord}
+                    item={item}
+                    rank={index + 1}
+                    inDrawer={inDrawer}
+                    onSearch={onSearch}
+                  />
                 ))}
               </div>
             )}
@@ -82,19 +94,20 @@ const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch }) => {
 
 const HotRow: FC<{
   rank: number;
+  inDrawer?: boolean;
   onSearch: NormalFunc<[keyword: string]>;
   item: NeteaseAPI.NeteaseSearchHotListDetail;
-}> = ({ onSearch, item, rank }) => {
+}> = ({ onSearch, item, rank, inDrawer }) => {
   const top = rank <= 3;
 
   return (
     <button
       className="
         group flex h-10 w-full break-inside-avoid items-center gap-3
-        rounded-md border-b border-white/[0.06] px-2 text-left
+        rounded-md border-b border-ink/[0.06] px-2 text-left
         transition-colors duration-200 ease-in-out
-        hover:bg-white/[0.06] focus-visible:outline-none
-        focus-visible:ring-2 focus-visible:ring-primary/35 active:bg-white/[0.09]
+        hover:bg-ink/[0.06] focus-visible:outline-none
+        focus-visible:ring-2 focus-visible:ring-primary/35 active:bg-ink/[0.09]
       "
       type="button"
       title={`搜索${item.searchWord}`}
@@ -102,7 +115,13 @@ const HotRow: FC<{
       <span
         className={cx(
           "w-6 shrink-0 font-mono text-[11px] tabular-nums",
-          top ? "font-bold text-secondary" : "opacity-35"
+          inDrawer && "rounded-sm py-0.5 text-center",
+          inDrawer && !top && "text-ink-muted",
+          top &&
+            (inDrawer
+              ? "bg-tertiary-container font-bold text-on-tertiary-container"
+              : "font-bold text-secondary"),
+          !top && !inDrawer && "opacity-35"
         )}>
         {rank.toString().padStart(2, "0")}
       </span>
@@ -110,7 +129,11 @@ const HotRow: FC<{
         className={cx("min-w-0 flex-1 truncate text-[13px]", top ? "font-bold" : "font-medium")}>
         {item.searchWord}
       </span>
-      <span className="shrink-0 text-[11px] tabular-nums opacity-40">
+      <span
+        className={cx(
+          "shrink-0 text-[11px] tabular-nums",
+          inDrawer ? "text-ink-muted" : "opacity-40"
+        )}>
         {RendererFormat.count(item.score)}
       </span>
     </button>

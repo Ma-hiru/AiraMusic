@@ -31,17 +31,17 @@ const AssistantTurnMeta: FC<AssistantTurnMetaProps> = ({ turn }) => {
   if (!metrics.length && !turn.usage && !showFinishReason) return null;
 
   return (
-    <footer className="mt-2.5 text-white/32">
+    <footer className="mt-2.5 text-ink/32">
       {turn.usage && <TokenUsageGrid usage={turn.usage} />}
       {showFinishReason && (
         <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[9px]">
           {turn.status === "incomplete" && (
-            <span className="rounded-full border border-amber-200/13 bg-amber-200/7 px-2 py-0.5 font-semibold text-amber-100/62">
+            <span className="rounded-full border border-tertiary/13 bg-tertiary/7 px-2 py-0.5 font-semibold text-tertiary/62">
               回复未完整结束
             </span>
           )}
           {turn.finishReason && (
-            <span className="font-mono text-white/26">finish: {turn.finishReason}</span>
+            <span className="font-mono text-ink/26">finish: {turn.finishReason}</span>
           )}
         </div>
       )}
@@ -69,12 +69,12 @@ const RunTerminalCard: FC<RunTerminalCardProps> = ({ terminal }) => {
       <div className="agent-terminal-layout">
         <Icon className="mt-0.5 size-4 shrink-0 opacity-75" aria-hidden="true" />
         <div className="min-w-0 flex-1">
-          <div className="text-[12px] font-semibold text-white/76">{presentation.title}</div>
-          <p className="mt-0.5 text-[11px] leading-5 text-white/44">
+          <div className="text-[12px] font-semibold text-ink/76">{presentation.title}</div>
+          <p className="mt-0.5 text-[11px] leading-5 text-ink/44">
             {terminal.error || presentation.description}
           </p>
           {(terminal.runID || duration) && (
-            <div className="agent-terminal-meta mt-1.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[9px] text-white/24">
+            <div className="agent-terminal-meta mt-1.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[9px] text-ink/24">
               {duration && <span>耗时 {duration}</span>}
               {terminal.runID && <span className="min-w-0 truncate">run {terminal.runID}</span>}
             </div>
@@ -97,23 +97,21 @@ const TokenUsageGrid: FC<{ className?: string; usage?: AgentTokenUsage }> = ({
 
   return (
     <section className={className} aria-label="本轮模型用量">
-      <p className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-medium text-white/50">
+      <p className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-medium text-ink/50">
         <span>本轮模型用量 · Token</span>
         {(incomplete || unknown) && (
-          <span className="text-amber-100/55">
-            {incomplete ? "统计不完整" : "历史统计覆盖未知"}
-          </span>
+          <span className="text-tertiary/55">{incomplete ? "统计不完整" : "历史统计覆盖未知"}</span>
         )}
         {usage.lastInputStatus === "missing" && <span>末次请求未报告用量</span>}
         {usage.lastInputStatus === "not_requested" && <span>本轮未发起聊天请求</span>}
       </p>
-      <dl className="agent-turn-usage text-white/50">
+      <dl className="agent-turn-usage text-ink/50">
         {metrics.map(({ unit, label, value, emphasis, icon: Icon, description }) => (
           <div
             key={label}
-            className={cx("agent-turn-usage-item", emphasis && "text-white/60")}
+            className={cx("agent-turn-usage-item", emphasis && "text-ink/60")}
             title={`${label}: ${value.toLocaleString("zh-CN")} ${unit}。${description}`}>
-            <dt className="flex min-w-0 items-center gap-1 text-[9px] font-normal text-white/40">
+            <dt className="flex min-w-0 items-center gap-1 text-[9px] font-normal text-ink/40">
               <Icon className="size-2.5 shrink-0" aria-hidden="true" />
               <span className="truncate">{label}</span>
             </dt>
@@ -122,12 +120,12 @@ const TokenUsageGrid: FC<{ className?: string; usage?: AgentTokenUsage }> = ({
               {(label === "模型请求" || label === "已报告请求") && (
                 <>
                   {label === "模型请求" && usage.reportedRequests !== undefined && (
-                    <span className="font-normal text-white/35">
+                    <span className="font-normal text-ink/35">
                       （已报告 {usage.reportedRequests}）
                     </span>
                   )}
                   <UsageTooltip
-                    className="inline-flex size-4 shrink-0 items-center justify-center rounded text-white/40 outline-none hover:text-white/65 focus-visible:ring-2 focus-visible:ring-white/40"
+                    className="inline-flex size-4 shrink-0 items-center justify-center rounded text-ink/40 outline-none hover:text-ink/65 focus-visible:ring-2 focus-visible:ring-ink/40"
                     role="img"
                     aria-label="本轮用量说明"
                     content="本轮从你这条消息开始。工具调用可能触发多次聊天请求，累计输入会重复计算每次发送的历史，不代表当前上下文占用；不含标题总结和历史压缩请求。模型请求统计实际发起的聊天请求，已报告指收到用量的请求；缺失的用量不会记作零。上下文大小是本轮最后一次请求的输入快照，仅在该次请求报告用量时展示，当前估算见输入框圆环。">
@@ -155,20 +153,19 @@ const terminalPresentation: Record<
   failed: {
     icon: CircleAlert,
     title: "本轮运行失败",
-    className: "border-red-200/13 bg-red-200/[0.055] text-red-100/68",
+    className: "border-danger/13 bg-danger/[0.055] text-danger/68",
     description: "模型或工具执行时发生错误。你可以调整问题后重新发送。"
   },
   aborted: {
     icon: Ban,
     title: "本轮已停止",
-    className: "border-amber-200/12 bg-amber-200/[0.045] text-amber-100/65",
+    className: "border-tertiary/12 bg-tertiary/[0.045] text-tertiary/65",
     description: "生成已被停止，停止前已经产生的内容仍保留在当前对话中。"
   },
   max_steps: {
     icon: ListEnd,
     title: "已达到最大步骤",
-    className:
-      "border-[color-mix(in_srgb,var(--theme-color-main)_18%,transparent)] bg-[color-mix(in_srgb,var(--theme-color-main)_6%,transparent)] text-[color-mix(in_srgb,var(--theme-color-main)_62%,white)]",
+    className: "border-primary/18 bg-primary/6 text-m3-primary-80",
     description: "Agent 已停止继续调用工具。可以缩小任务范围，或基于现有结果继续提问。"
   }
 };

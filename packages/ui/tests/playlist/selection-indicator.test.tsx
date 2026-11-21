@@ -15,12 +15,12 @@ const layouts = [
   {
     name: "legacy",
     Component: LegacySelectionIndicator,
-    classes: ["bottom-3", "bg-black/15", "backdrop-saturate-150"]
+    classes: ["bottom-3", "bg-popover/85", "text-ink", "backdrop-saturate-150"]
   },
   {
     name: "detailed",
     Component: SelectionIndicator,
-    classes: ["bottom-6!", "bg-black/60!", "backdrop-saturate-200!"]
+    classes: ["bottom-6!", "bg-popover/85", "text-ink"]
   }
 ];
 const tracks = [{ id: 1 }, { id: 2 }] as NeteaseTrackRecord[];
@@ -44,6 +44,7 @@ it.each(layouts)(
     const view = render(<Component {...props} />);
     const toolbar = view.getByRole("button", { name: "全选" }).parentElement!;
     expect(toolbar).toHaveClass("custom-selection", ...classes);
+    expect(view.getByRole("button", { name: "删除" })).toHaveClass("text-danger");
     expect(view.getByRole("button", { name: "已选 1" })).toBeDisabled();
 
     fireEvent.click(view.getByRole("button", { name: "全选" }));

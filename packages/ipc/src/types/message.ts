@@ -98,10 +98,8 @@ type MessageBus = {
     theme: {
       mainColor: string;
       themeColors: string[];
-      secondaryColor: string;
-      textColorOnMain: string;
-      textNormalColor: string;
-      textColorOnSecondary: string;
+      /** Material You 色板：色板名 → 色调阶 → hex，缺省表示取色不可用 */
+      palette?: Record<string, Record<string, string>>;
     };
   };
   bus_deliver_play_list: {

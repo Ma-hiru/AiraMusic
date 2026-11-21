@@ -72,11 +72,11 @@ const TopInfo: FC<TopInfoProps> = ({ album, dynamic, coverCacheKey }) => {
         noPadding>
         {stats.map(({ label, value, icon: Icon }) => (
           <div key={label} className={cx("min-w-0", label === "发行" && "sm:col-span-2")}>
-            <dt className="flex items-center gap-1 text-[10px] leading-4 opacity-55">
+            <dt className="flex items-center gap-1 text-[10px] leading-4 text-ink-muted">
               <Icon className="size-3 shrink-0" />
               {label}
             </dt>
-            <dd className="mt-0.5 truncate text-[12px] font-semibold leading-4 tabular-nums opacity-85">
+            <dd className="mt-0.5 truncate text-[12px] font-semibold leading-4 tabular-nums">
               {value}
             </dd>
           </div>
@@ -85,31 +85,29 @@ const TopInfo: FC<TopInfoProps> = ({ album, dynamic, coverCacheKey }) => {
       <Section title="标签">
         <div className="flex flex-wrap items-center gap-1.5">
           {tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-sm bg-primary/50 px-1 py-px text-[10px] text-primary-text opacity-80">
+            <span key={tag} className="rounded-sm bg-ink/10 px-1.5 py-px text-[10px] text-ink">
               {tag}
             </span>
           ))}
-          {tags.length === 0 && <p className="text-[11px] italic opacity-45">暂无标签</p>}
+          {tags.length === 0 && <p className="text-[11px] italic text-ink-muted">暂无标签</p>}
         </div>
       </Section>
       <Section title="唱片公司" show={!!album.content.company}>
-        <p className="select-text text-[11px] leading-4 opacity-75 wrap-break-word">
+        <p className="select-text text-[11px] leading-4 text-ink-muted wrap-break-word">
           {album.content.company}
         </p>
       </Section>
       <Section title="简介">
         <p
           className={cx(
-            "line-clamp-3 select-text whitespace-pre-wrap text-[11px] leading-4 wrap-break-word",
-            description ? "opacity-75" : "italic opacity-45"
+            "line-clamp-3 select-text whitespace-pre-wrap text-[11px] leading-4 wrap-break-word text-ink-muted",
+            !description && "italic"
           )}>
           {description || "暂无简介"}
         </p>
         {description && (
           <button
-            className="mt-1.5 flex cursor-pointer items-center gap-0.5 text-[11px] opacity-65 transition-opacity duration-200 hover:opacity-100"
+            className="mt-1.5 flex cursor-pointer items-center gap-0.5 text-[11px] text-ink-muted transition-colors duration-200 hover:text-ink"
             type="button"
             disabled={!dynamic}
             onClick={openDetails}>
@@ -149,7 +147,7 @@ const Section: FC<
     as,
     {
       title,
-      className: cx(!noPadding && "border-t border-white/15 pt-2", className),
+      className: cx(!noPadding && "border-t border-ink/15 pt-2", className),
       ...rest
     },
     <>

@@ -82,7 +82,7 @@ const ConfigPicker: FC<ConfigPickerProps> = ({
     <>
       <button
         ref={triggerRef}
-        className="flex h-8 max-w-64 cursor-pointer items-center gap-2 rounded-lg px-2 text-left outline-none transition-colors hover:bg-white/6 focus-visible:ring-2 focus-visible:ring-white/40 disabled:pointer-events-none disabled:opacity-45"
+        className="flex h-8 max-w-64 cursor-pointer items-center gap-2 rounded-lg px-2 text-left outline-none transition-colors hover:bg-ink/6 focus-visible:ring-2 focus-visible:ring-ink/40 disabled:pointer-events-none disabled:opacity-45"
         type="button"
         aria-label="模型配置"
         disabled={disabled}
@@ -93,22 +93,22 @@ const ConfigPicker: FC<ConfigPickerProps> = ({
           className={cx(
             "size-1.5 shrink-0 rounded-full",
             activeConfig
-              ? "bg-[color-mix(in_srgb,var(--theme-color-main)_85%,white)] shadow-[0_0_5px_color-mix(in_srgb,var(--theme-color-main)_55%,transparent)]"
-              : "bg-amber-200/70"
+              ? "bg-m3-primary-70 shadow-[0_0_5px_color-mix(in_srgb,var(--theme-color-main)_55%,transparent)]"
+              : "bg-tertiary/70"
           )}
         />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[10.5px] font-medium text-white/68">
+          <span className="block truncate text-[10.5px] font-medium text-ink/68">
             {activeConfig?.name ?? "选择模型"}
           </span>
           {activeConfig && (
-            <span className="mt-px block truncate font-mono text-[8px] text-white/26">
+            <span className="mt-px block truncate font-mono text-[8px] text-ink/26">
               {activeConfig.model}
             </span>
           )}
         </span>
         <ChevronDown
-          className={cx("size-3 shrink-0 text-white/30 transition-transform", open && "rotate-180")}
+          className={cx("size-3 shrink-0 text-ink/30 transition-transform", open && "rotate-180")}
         />
       </button>
 
@@ -116,17 +116,17 @@ const ConfigPicker: FC<ConfigPickerProps> = ({
         createPortal(
           <div
             ref={popoverRef}
-            className="fixed z-100 overflow-hidden rounded-xl border border-white/10 bg-[#111216]/97 p-1.5 text-white shadow-2xl shadow-black/50 backdrop-blur-2xl"
+            className="fixed z-100 overflow-hidden rounded-xl border border-ink/10 bg-popover/97 p-1.5 text-ink shadow-2xl shadow-black/50 backdrop-blur-2xl"
             style={position}
             role="dialog"
             aria-label="选择模型配置">
             <header className="flex h-9 items-center justify-between gap-2 px-2">
               <div>
-                <div className="text-[11px] font-medium text-white/72">模型配置</div>
-                <div className="mt-px text-[8px] text-white/28">切换不会影响当前对话记录</div>
+                <div className="text-[11px] font-medium text-ink/72">模型配置</div>
+                <div className="mt-px text-[8px] text-ink/28">切换不会影响当前对话记录</div>
               </div>
               <button
-                className="grid size-7 cursor-pointer place-items-center rounded-lg text-white/35 outline-none hover:bg-white/7 hover:text-white/65 focus-visible:ring-2 focus-visible:ring-white/40 disabled:opacity-35"
+                className="grid size-7 cursor-pointer place-items-center rounded-lg text-ink/35 outline-none hover:bg-ink/7 hover:text-ink/65 focus-visible:ring-2 focus-visible:ring-ink/40 disabled:opacity-35"
                 title="刷新配置"
                 type="button"
                 aria-label="刷新配置"
@@ -146,28 +146,28 @@ const ConfigPicker: FC<ConfigPickerProps> = ({
                     key={config.id}
                     className={cx(
                       "group relative flex min-h-11 items-center rounded-lg border",
-                      active ? "border-white/9 bg-white/9" : "border-transparent hover:bg-white/5"
+                      active ? "border-ink/9 bg-ink/9" : "border-transparent hover:bg-ink/5"
                     )}>
                     {active && (
                       <span className="absolute top-2 bottom-2 left-0 w-0.5 rounded-full bg-primary" />
                     )}
                     <button
-                      className="min-w-0 flex-1 cursor-pointer px-2.5 py-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/35"
+                      className="min-w-0 flex-1 cursor-pointer px-2.5 py-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ink/35"
                       type="button"
                       onClick={() => {
                         onSelect(config.id);
                         setOpen(false);
                       }}>
-                      <span className="block truncate text-[11px] font-medium text-white/76">
+                      <span className="block truncate text-[11px] font-medium text-ink/76">
                         {config.name}
                       </span>
-                      <span className="mt-0.5 block truncate text-[9px] text-white/32">
+                      <span className="mt-0.5 block truncate text-[9px] text-ink/32">
                         {config.model} · {config.provider}
                       </span>
                     </button>
                     {active && <Check className="mr-1 size-3.5 shrink-0 text-primary" />}
                     <button
-                      className="mr-1 grid size-7 shrink-0 cursor-pointer place-items-center rounded-lg text-white/30 opacity-45 outline-none transition-all hover:bg-white/8 hover:text-white/65 hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white/35 group-hover:opacity-100"
+                      className="mr-1 grid size-7 shrink-0 cursor-pointer place-items-center rounded-lg text-ink/30 opacity-45 outline-none transition-all hover:bg-ink/8 hover:text-ink/65 hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ink/35 group-hover:opacity-100"
                       type="button"
                       title={`编辑 ${config.name}`}
                       aria-label={`编辑 ${config.name}`}
@@ -178,7 +178,7 @@ const ConfigPicker: FC<ConfigPickerProps> = ({
                       <Pencil className="size-3.5" />
                     </button>
                     <button
-                      className="mr-1 grid size-7 shrink-0 cursor-pointer place-items-center rounded-lg text-white/30 outline-none transition-colors hover:bg-red-300/10 hover:text-red-200/80 focus-visible:ring-2 focus-visible:ring-white/35"
+                      className="mr-1 grid size-7 shrink-0 cursor-pointer place-items-center rounded-lg text-ink/30 outline-none transition-colors hover:bg-danger/10 hover:text-danger/80 focus-visible:ring-2 focus-visible:ring-ink/35"
                       type="button"
                       title={`删除 ${config.name}`}
                       aria-label={`删除 ${config.name}`}
@@ -192,13 +192,11 @@ const ConfigPicker: FC<ConfigPickerProps> = ({
                 );
               })}
               {!configs.length && (
-                <div className="px-2.5 py-5 text-center text-[10px] text-white/35">
-                  暂无模型配置
-                </div>
+                <div className="px-2.5 py-5 text-center text-[10px] text-ink/35">暂无模型配置</div>
               )}
             </div>
 
-            <div className="mt-1 border-t border-white/8 pt-1">
+            <div className="mt-1 border-t border-ink/8 pt-1">
               <PickerAction
                 icon={Plus}
                 label="新增模型配置"
@@ -221,10 +219,10 @@ const PickerAction: FC<{ label: string; icon: LucideIcon; onClick: NormalFunc }>
   icon: Icon
 }) => (
   <button
-    className="flex h-8 w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 text-left text-[10px] font-medium text-white/58 outline-none hover:bg-white/6 hover:text-white/80 focus-visible:ring-2 focus-visible:ring-white/35"
+    className="flex h-8 w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 text-left text-[10px] font-medium text-ink/58 outline-none hover:bg-ink/6 hover:text-ink/80 focus-visible:ring-2 focus-visible:ring-ink/35"
     type="button"
     onClick={onClick}>
-    <Icon className="size-3.5 text-white/35" />
+    <Icon className="size-3.5 text-ink/35" />
     {label}
   </button>
 );

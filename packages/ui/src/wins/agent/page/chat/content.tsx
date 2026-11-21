@@ -177,12 +177,12 @@ const ChatContent: FC<ChatContentProps> = ({
             {timeline.map(renderTimelineItem)}
             {recovering && (
               <div
-                className="flex items-center gap-2.5 rounded-xl border border-[color-mix(in_srgb,var(--theme-color-main)_16%,transparent)] bg-[color-mix(in_srgb,var(--theme-color-main)_5%,transparent)] px-3 py-2.5 text-[11px] text-white/48"
+                className="flex items-center gap-2.5 rounded-xl border border-primary/16 bg-primary/5 px-3 py-2.5 text-[11px] text-ink/48"
                 role="status">
-                <LoaderCircle className="size-3.5 shrink-0 animate-spin text-[color-mix(in_srgb,var(--theme-color-main)_70%,white)]" />
+                <LoaderCircle className="size-3.5 shrink-0 animate-spin text-m3-primary-80" />
                 <div className="min-w-0">
-                  <div className="font-semibold text-white/62">正在重新连接运行中的对话</div>
-                  <div className="mt-0.5 text-[10px] text-white/32">
+                  <div className="font-semibold text-ink/62">正在重新连接运行中的对话</div>
+                  <div className="mt-0.5 text-[10px] text-ink/32">
                     完成后会自动同步完整消息，不会重复提交你的问题。
                   </div>
                 </div>
@@ -196,10 +196,10 @@ const ChatContent: FC<ChatContentProps> = ({
         <button
           className="
             absolute bottom-3 left-1/2 z-10 inline-flex -translate-x-1/2 cursor-pointer
-            items-center gap-1.5 rounded-full border border-white/13 bg-black/55 px-3 py-1.5
-            text-[11px] font-semibold text-white/72 shadow-lg shadow-black/20 backdrop-blur-xl
-            outline-none transition-colors hover:bg-black/72 focus-visible:ring-2
-            focus-visible:ring-white/45
+            items-center gap-1.5 rounded-full border border-ink/13 bg-scrim/55 px-3 py-1.5
+            text-[11px] font-semibold text-ink/72 shadow-lg shadow-black/20 backdrop-blur-xl
+            outline-none transition-colors hover:bg-scrim/72 focus-visible:ring-2
+            focus-visible:ring-ink/45
           "
           type="button"
           onClick={jumpToLatest}>
@@ -314,7 +314,7 @@ const EmptyWorkspace: FC<{
   if (!configured) {
     return (
       <EmptyStateFrame icon={KeyRound} title="先接入一个模型" eyebrow="MODEL SETUP">
-        <p className="max-w-sm text-[12px] leading-5 text-white/45">
+        <p className="max-w-sm text-[12px] leading-5 text-ink/45">
           API Key 仅交给主进程保存。配置完成后，Agent 才能搜索音乐、读取歌词并操作播放器。
         </p>
         <PrimaryAction icon={Plus} label="创建模型配置" onClick={onCreateConfig} />
@@ -325,7 +325,7 @@ const EmptyWorkspace: FC<{
   if (!hasConversation) {
     return (
       <EmptyStateFrame title="创建一段新对话" eyebrow="NEW SESSION" icon={MessageSquarePlus}>
-        <p className="max-w-sm text-[12px] leading-5 text-white/45">
+        <p className="max-w-sm text-[12px] leading-5 text-ink/45">
           每段对话独立保存上下文。你可以随时从左侧切换，运行中的任务也不会被打断。
         </p>
         <PrimaryAction label="新建对话" icon={MessageSquarePlus} onClick={onCreateConversation} />
@@ -337,20 +337,20 @@ const EmptyWorkspace: FC<{
     <div className="mx-auto flex min-h-full w-full max-w-[44rem] items-center py-4">
       <div className="grid w-full gap-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(17rem,1.08fr)] lg:items-end">
         <div className="min-w-0">
-          <div className="flex items-center gap-1.5 text-[9px] font-semibold tracking-[0.16em] text-[color-mix(in_srgb,var(--theme-color-main)_62%,white)]">
-            <span className="size-1 rounded-full bg-[color-mix(in_srgb,var(--theme-color-main)_80%,white)]" />
+          <div className="flex items-center gap-1.5 text-[9px] font-semibold tracking-[0.16em] text-m3-primary-80">
+            <span className="size-1 rounded-full bg-m3-primary-70" />
             从此刻开始
           </div>
-          <h2 className="mt-2.5 max-w-md text-[1.75rem] leading-[1.08] font-semibold tracking-[-0.03em] text-white/92 sm:text-[1.9rem]">
+          <h2 className="mt-2.5 max-w-md text-[1.75rem] leading-[1.08] font-semibold tracking-[-0.03em] text-ink/92 sm:text-[1.9rem]">
             从正在听的音乐开始
           </h2>
-          <p className="mt-3 max-w-md text-[11.5px] leading-5.5 text-white/42">
+          <p className="mt-3 max-w-md text-[11.5px] leading-5.5 text-ink/42">
             我可以读取 AiraMusic 当前状态、搜索站内音乐，也可以在需要时浏览公开网页。
           </p>
 
           {currentTrack && (
-            <div className="mt-5 flex min-w-0 items-center gap-2.5 rounded-xl border border-white/8 bg-white/[0.035] p-2 backdrop-blur-xl transition-colors hover:border-[color-mix(in_srgb,var(--theme-color-main)_22%,transparent)]">
-              <div className="size-10 shrink-0 overflow-hidden rounded-lg bg-black/20 ring-1 ring-[color-mix(in_srgb,var(--theme-color-main)_18%,transparent)]">
+            <div className="mt-5 flex min-w-0 items-center gap-2.5 rounded-xl border border-ink/8 bg-ink/[0.035] p-2 backdrop-blur-xl transition-colors hover:border-primary/22">
+              <div className="size-10 shrink-0 overflow-hidden rounded-lg bg-scrim/20 ring-1 ring-primary/18">
                 {cover ? (
                   <NeteaseImage
                     className="size-full rounded-lg"
@@ -363,18 +363,18 @@ const EmptyWorkspace: FC<{
                   />
                 ) : (
                   <div className="grid size-full place-items-center">
-                    <Music2 className="size-5 text-white/35" />
+                    <Music2 className="size-5 text-ink/35" />
                   </div>
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-[8px] font-semibold tracking-[0.12em] text-[color-mix(in_srgb,var(--theme-color-main)_52%,white)]">
+                <div className="text-[8px] font-semibold tracking-[0.12em] text-m3-primary-80">
                   正在播放
                 </div>
-                <div className="mt-0.5 truncate text-[12px] font-medium text-white/84">
+                <div className="mt-0.5 truncate text-[12px] font-medium text-ink/84">
                   {currentTrack.name}
                 </div>
-                <div className="mt-0.5 truncate text-[10px] text-white/38">
+                <div className="mt-0.5 truncate text-[10px] text-ink/38">
                   {currentTrack.detail.ar.map((artist) => artist.name).join(" / ") || "未知艺人"}
                 </div>
               </div>
@@ -384,7 +384,7 @@ const EmptyWorkspace: FC<{
         </div>
 
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-          <div className="mb-0.5 text-[9px] font-semibold tracking-[0.1em] text-white/30 sm:col-span-2 lg:col-span-1">
+          <div className="mb-0.5 text-[9px] font-semibold tracking-[0.1em] text-ink/30 sm:col-span-2 lg:col-span-1">
             可以这样问
           </div>
           {prompts.map((prompt, index) => (
@@ -392,19 +392,19 @@ const EmptyWorkspace: FC<{
               key={prompt}
               className="
                 group flex min-h-10 cursor-pointer items-center gap-2.5 rounded-xl border
-                border-white/7 bg-black/10 px-3 py-2 text-left text-[11px] leading-4
-                text-white/58 outline-none transition-all duration-200
-                hover:border-[color-mix(in_srgb,var(--theme-color-main)_26%,transparent)]
-                hover:bg-[color-mix(in_srgb,var(--theme-color-main)_7%,transparent)]
-                hover:text-white/84 focus-visible:ring-2 focus-visible:ring-white/45
+                border-ink/7 bg-scrim/10 px-3 py-2 text-left text-[11px] leading-4
+                text-ink/58 outline-none transition-all duration-200
+                hover:border-primary/26
+                hover:bg-primary/7
+                hover:text-ink/84 focus-visible:ring-2 focus-visible:ring-ink/45
               "
               type="button"
               onClick={() => void onSubmitPrompt(prompt)}>
-              <span className="text-[9px] font-bold tabular-nums text-[color-mix(in_srgb,var(--theme-color-main)_38%,white)]">
+              <span className="text-[9px] font-bold tabular-nums text-m3-primary-90">
                 {String(index + 1).padStart(2, "0")}
               </span>
               <span className="min-w-0 flex-1">{prompt}</span>
-              <ArrowDown className="size-3.5 shrink-0 -rotate-90 text-[color-mix(in_srgb,var(--theme-color-main)_62%,white)] opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:opacity-100" />
+              <ArrowDown className="size-3.5 shrink-0 -rotate-90 text-m3-primary-80 opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:opacity-100" />
             </button>
           ))}
         </div>
@@ -421,14 +421,12 @@ const EmptyStateFrame: FC<{
 }> = ({ title, eyebrow, children, icon: Icon }) => (
   <div className="grid h-full place-items-center py-6">
     <div className="grid max-w-md justify-items-center gap-4 text-center">
-      <div className="flex size-12 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--theme-color-main)_12%,transparent)] text-[color-mix(in_srgb,var(--theme-color-main)_72%,white)] ring-1 ring-[color-mix(in_srgb,var(--theme-color-main)_20%,transparent)]">
+      <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/12 text-m3-primary-80 ring-1 ring-primary/20">
         <Icon className="size-5.5" />
       </div>
       <div>
-        <div className="text-[9px] font-bold tracking-[0.2em] text-[color-mix(in_srgb,var(--theme-color-main)_48%,white)]">
-          {eyebrow}
-        </div>
-        <h2 className="mt-1.5 text-xl font-bold tracking-[-0.025em] text-white/88">{title}</h2>
+        <div className="text-[9px] font-bold tracking-[0.2em] text-m3-primary-90">{eyebrow}</div>
+        <h2 className="mt-1.5 text-xl font-bold tracking-[-0.025em] text-ink/88">{title}</h2>
       </div>
       {children}
     </div>
@@ -444,7 +442,7 @@ const PrimaryAction: FC<{
     className="
       inline-flex h-9 cursor-pointer items-center gap-2 rounded-xl bg-primary px-3.5
       text-[12px] font-semibold text-primary-text outline-none transition-opacity hover:opacity-85
-      focus-visible:ring-2 focus-visible:ring-white/50
+      focus-visible:ring-2 focus-visible:ring-ink/50
     "
     type="button"
     onClick={() => onClick()}>

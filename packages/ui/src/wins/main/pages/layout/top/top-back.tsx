@@ -23,7 +23,7 @@ const TopBack: FC = () => {
           animate={{ opacity: 1, transition: { ease: "easeInOut", duration: 0.6 } }}>
           <NoDrag>
             <ChevronDown
-              className="size-5 cursor-pointer hover:opacity-50 active:scale-90 ease-in-out duration-300 transition-all text-white"
+              className="size-5 cursor-pointer hover:opacity-50 active:scale-90 ease-in-out duration-300 transition-all text-ink"
               onClick={onClick}
             />
           </NoDrag>

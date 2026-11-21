@@ -23,12 +23,12 @@ const SideBtn: FC<SideBtnProps> = ({ openList, setOpenList, statusText }) => {
       <IconButton
         size="compact"
         variant="ghost"
+        iconClassName="size-4.5! text-ink/60!"
         label={openList ? "关闭对话列表" : "打开对话列表"}
-        iconClassName="size-4.5! text-white/60!"
         icon={openList ? PanelRightClose : PanelLeftOpen}
         onClick={() => setOpenList((opened) => !opened)}
       />
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/8 px-1.5 py-0.5 text-[11px] font-semibold text-white/60">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-ink/8 px-1.5 py-0.5 text-[11px] font-semibold text-ink/60">
         <Bot className="size-3.5" />
         {statusText}
       </span>

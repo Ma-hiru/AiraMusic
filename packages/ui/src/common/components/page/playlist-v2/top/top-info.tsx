@@ -123,11 +123,11 @@ const TopInfo: FC<TopInfoProps> = ({
       </Section>
       {isLikedList ? (
         <>
-          <p className="shrink-0 select-text text-[10px] leading-4 tabular-nums opacity-60">
+          <p className="shrink-0 select-text text-[10px] leading-4 tabular-nums text-ink-muted">
             {summary.trackCount || 0} 首 · {formatCollectionSpan(collection?.duration ?? 0)} ·{" "}
             {RendererFormat.time(summary.createTime, ".", true) || "-"} 创建
           </p>
-          <section className="shrink-0 border-t border-white/15 pt-2">
+          <section className="shrink-0 border-t border-ink/15 pt-2">
             <div className="flex shrink-0 items-center justify-between gap-1">
               <h2 className="min-w-0 truncate text-[12px] font-semibold">
                 {range === "week" ? "最近常听" : "最常听的歌曲"}
@@ -141,13 +141,13 @@ const TopInfo: FC<TopInfoProps> = ({
                 ))}
               </div>
             ) : (
-              <p className="mt-1.5 text-[11px] italic leading-4 opacity-40">
+              <p className="mt-1.5 text-[11px] italic leading-4 text-ink-muted">
                 {range === "week" ? "近一周暂无播放记录" : "暂无播放记录"}
               </p>
             )}
           </section>
           {shownArtists.length > 0 && (
-            <section className="flex min-h-24 flex-1 flex-col border-t border-white/15 pt-2">
+            <section className="flex min-h-24 flex-1 flex-col border-t border-ink/15 pt-2">
               <h2 className="shrink-0 truncate text-[12px] font-semibold">最常听的歌手</h2>
               <ul
                 className={cx(
@@ -176,11 +176,11 @@ const TopInfo: FC<TopInfoProps> = ({
             <dl className="grid select-text grid-cols-2 gap-x-3 gap-y-2.5 sm:grid-cols-3">
               {stats.map(({ label, value, icon: Icon }) => (
                 <div key={label} className="min-w-0">
-                  <dt className="flex items-center gap-1 text-[10px] leading-4 opacity-55">
+                  <dt className="flex items-center gap-1 text-[10px] leading-4 text-ink-muted">
                     <Icon className="size-3 shrink-0" />
                     {label}
                   </dt>
-                  <dd className="mt-0.5 truncate text-[12px] font-semibold leading-4 tabular-nums opacity-85">
+                  <dd className="mt-0.5 truncate text-[12px] font-semibold leading-4 tabular-nums">
                     {value}
                   </dd>
                 </div>
@@ -188,30 +188,28 @@ const TopInfo: FC<TopInfoProps> = ({
             </dl>
           </Section>
           <Section title="标签">
-            <div className="flex flex-row justify-start items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               {summary.tags.filter(Boolean).map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-sm bg-primary/50 text-primary-text px-1 py-px text-[10px] opacity-80">
+                <span key={tag} className="rounded-sm bg-ink/10 px-1.5 py-px text-[10px] text-ink">
                   {tag}
                 </span>
               ))}
               {summary.tags.length === 0 && (
-                <p className="text-[11px] italic opacity-45">暂无标签</p>
+                <p className="text-[11px] italic text-ink-muted">暂无标签</p>
               )}
             </div>
           </Section>
           <Section title="简介">
             <p
               className={cx(
-                "line-clamp-3 select-text whitespace-pre-wrap text-[11px] leading-4 wrap-break-word",
-                description ? "opacity-75" : "italic opacity-45"
+                "line-clamp-3 select-text whitespace-pre-wrap text-[11px] leading-4 wrap-break-word text-ink-muted",
+                !description && "italic"
               )}>
               {description || "暂无简介"}
             </p>
             {description && (
               <button
-                className="mt-1.5 flex cursor-pointer items-center gap-0.5 text-[11px] opacity-65 transition-opacity duration-200 hover:opacity-100"
+                className="mt-1.5 flex cursor-pointer items-center gap-0.5 text-[11px] text-ink-muted transition-colors duration-200 hover:text-ink"
                 type="button"
                 onClick={openDetails}>
                 展开
@@ -231,7 +229,7 @@ const RangeSwitch: FC<{
   value: ListeningRange;
   onChange: NormalFunc<[value: ListeningRange]>;
 }> = ({ onChange, value }) => (
-  <div className="flex shrink-0 items-center gap-px rounded-sm bg-white/10 p-px text-[10px] leading-4">
+  <div className="flex shrink-0 items-center gap-px rounded-sm bg-ink/8 p-px text-[10px] leading-4">
     {(
       [
         ["week", "近一周"],
@@ -242,7 +240,7 @@ const RangeSwitch: FC<{
         key={key}
         className={cx(
           "cursor-pointer rounded-sm px-1 transition-colors duration-200",
-          value === key ? "bg-white/20 font-semibold" : "opacity-50 hover:opacity-80"
+          value === key ? "bg-ink/18 font-semibold text-ink" : "text-ink-muted hover:text-ink"
         )}
         type="button"
         aria-pressed={value === key}
@@ -266,27 +264,27 @@ const ListeningArtistRow: FC<{
     <button
       className="
         group flex w-full min-w-0 cursor-pointer items-center gap-1.5 rounded-md py-0.5 text-left
-        transition-colors duration-200 hover:bg-white/10
-        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60
+        transition-colors duration-200 hover:bg-ink/10
+        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink/60
       "
       type="button"
       title={`${artist.name} · ${artist.playCount} 次 · ${artist.trackCount} 首`}
       onClick={() => onSelect?.({ kind: "artist", key: `id:${artist.id}` })}>
-      <span className="w-3 shrink-0 text-[10px] leading-4 tabular-nums opacity-45">{rank}</span>
+      <span className="w-3 shrink-0 text-[10px] leading-4 tabular-nums text-ink-muted">{rank}</span>
       <span className="min-w-0 flex-1">
         <span className="flex items-baseline justify-between gap-1.5">
           <span className="min-w-0 truncate text-[11px] font-semibold leading-4">
             {artist.name}
           </span>
-          <span className="shrink-0 text-[10px] leading-4 tabular-nums opacity-55">
+          <span className="shrink-0 text-[10px] leading-4 tabular-nums text-ink-muted">
             {artist.playCount}
           </span>
         </span>
-        <span className="mt-1 block h-1 overflow-hidden rounded-full bg-white/10">
+        <span className="mt-1 block h-1 overflow-hidden rounded-full bg-ink/10">
           <span
             className={cx(
               "block h-full rounded-full transition-colors duration-200",
-              highlight ? "bg-white/85" : "bg-white/45 group-hover:bg-white/70"
+              highlight ? "bg-tertiary/80" : "bg-ink/40 group-hover:bg-ink/60"
             )}
             style={{ width: `${percent}%` }}
           />
@@ -318,9 +316,9 @@ const SongCoverCell: FC<{
   return (
     <button
       className="
-        group relative aspect-square cursor-pointer overflow-hidden rounded-md bg-white/10
+        group relative aspect-square cursor-pointer overflow-hidden rounded-md bg-ink/10
         transition-transform duration-200 ease-in-out active:scale-97
-        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60
+        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink/60
       "
       type="button"
       title={`${description} · 在列表中定位`}
@@ -329,11 +327,11 @@ const SongCoverCell: FC<{
       <span
         className="
           pointer-events-none absolute inset-0 flex items-end justify-end p-1
-          bg-black/0 opacity-0 transition-all duration-200
-          group-hover:bg-black/30 group-hover:opacity-100
+          bg-scrim/0 opacity-0 transition-all duration-200
+          group-hover:bg-scrim/30 group-hover:opacity-100
         "
         aria-hidden="true">
-        <span className="rounded-sm bg-black/55 px-1 text-[10px] font-semibold tabular-nums text-white">
+        <span className="rounded-sm bg-scrim/55 px-1 text-[10px] font-semibold tabular-nums text-ink">
           ×{song.playCount}
         </span>
       </span>
@@ -366,7 +364,7 @@ const Section: FC<
     as,
     {
       title,
-      className: cx(!noPadding && "border-t border-white/15 pt-2", className),
+      className: cx(!noPadding && "border-t border-ink/15 pt-2", className),
       ...rest
     },
     <>

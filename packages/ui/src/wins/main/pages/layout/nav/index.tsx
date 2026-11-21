@@ -42,7 +42,7 @@ const Nav: FC<object> = () => {
           pb-(--playbar-height) pt-[calc(var(--top-control-height)+10px)]  overflow-hidden
           backdrop-saturate-120 backdrop-blur-lg contain-strict
           ease-in-out duration-300 transition-all
-          bg-[#f0f3f6]/20
+          bg-ink/14 text-ink
         `,
         sidebar ? "w-(--side-bar-expand-width)" : "w-(--side-bar-collapse-width)",
         isDarwin && "pt-7!"

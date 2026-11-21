@@ -51,7 +51,7 @@ export const defaultSettings: NeteaseSettingsModel = {
     homeFluidSpeed: 2,
     homeFluidWithPlaying: false,
     usePlayerFluid: true,
-    playerFluidSpeed: 3,
+    playerFluidSpeed: 2,
     playerFluidWithPlaying: true
   },
   preference: {

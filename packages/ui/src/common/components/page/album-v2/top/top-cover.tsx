@@ -40,7 +40,7 @@ const TopCover: FC<TopCoverProps> = ({ onCoverLoaded, size, album, dynamic, cove
 
   return (
     <button
-      className="group relative aspect-square w-full shrink-0 cursor-pointer overflow-hidden rounded-md focus-visible:ring-2 focus-visible:ring-white/60"
+      className="group relative aspect-square w-full shrink-0 cursor-pointer overflow-hidden rounded-md focus-visible:ring-2 focus-visible:ring-ink/60"
       type="button"
       aria-label="查看专辑详情"
       disabled={!album || !dynamic}
@@ -52,7 +52,7 @@ const TopCover: FC<TopCoverProps> = ({ onCoverLoaded, size, album, dynamic, cove
         onLoad={onLoaded}
         cache
       />
-      <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/20 group-focus-visible:bg-black/20" />
+      <div className="absolute inset-0 bg-scrim/0 transition-colors duration-300 group-hover:bg-scrim/20 group-focus-visible:bg-scrim/20" />
     </button>
   );
 };

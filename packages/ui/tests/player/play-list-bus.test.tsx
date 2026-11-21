@@ -26,7 +26,7 @@ const mocks = vi.hoisted(() => {
       consume: vi.fn()
     },
     player: null as unknown as RendererPlayer,
-    theme: {},
+    theme: { backgroundCover: undefined, theme: { mainColor: "#ff5358", themeColors: [] } },
     output: { views: [], selected: "default", setDevice: vi.fn() },
     setAtom: vi.fn(),
     loadTrack: vi.fn(),

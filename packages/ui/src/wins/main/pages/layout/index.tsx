@@ -47,7 +47,7 @@ const Layout: FC<object> = () => {
         relative w-screen h-screen overflow-hidden scrollbar-hide
         flex flex-row flex-nowrap
     `}>
-      <AppMask className="z-40 bg-white text-black" show={!loaded || wait} />
+      <AppMask className="z-40 bg-inverse-surface text-inverse-ink" show={!loaded || wait} />
       <TopBar className="h-(--top-control-height) z-30 contain-strict" />
       <TopBack />
       <NavSide />

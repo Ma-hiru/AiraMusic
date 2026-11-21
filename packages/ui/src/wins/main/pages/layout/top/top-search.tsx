@@ -19,7 +19,7 @@ const TopSearch: FC<object> = () => {
   return (
     <NoDrag className="flex justify-center items-center gap-2">
       <div
-        className="h-5 rounded-full border px-2 py-1 text-[10px] font-semibold flex justify-center items-center select-none border-white/10 bg-white/10 shadow-sm cursor-pointer"
+        className="h-5 rounded-full border px-2 py-1 text-[10px] font-semibold flex justify-center items-center select-none border-ink/10 bg-ink/10 shadow-sm cursor-pointer"
         onClick={() => openSearch(defaultKeywords ?? undefined)}>
         <span>{defaultKeywords || "搜索"}</span>
       </div>

@@ -33,7 +33,7 @@ const UserDetail: FC<UserDetailProps> = ({ user, login, logout }) => {
         {avatar ? (
           <NeteaseImage
             className="
-              size-16 rounded-md border border-white/30
+              size-16 rounded-md border border-ink/30
               cursor-pointer hover:opacity-50
               ease-in-out duration-300 transition-opacity
             "
@@ -47,7 +47,7 @@ const UserDetail: FC<UserDetailProps> = ({ user, login, logout }) => {
           <div
             className={`
               flex size-16 items-center justify-center rounded-md
-              border border-white/30
+              border border-ink/30
               shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.18)]
             `}
             children={<UserRound className="size-8" />}
@@ -58,7 +58,7 @@ const UserDetail: FC<UserDetailProps> = ({ user, login, logout }) => {
             <h1 className="truncate text-xl font-bold tracking-normal">{profileName}</h1>
             <span
               className={cx(
-                `text-[10px] font-semibold  rounded-sm px-1.5 border border-white/30`,
+                `text-[10px] font-semibold  rounded-sm px-1.5 border border-ink/30`,
                 user?.isVIP() && "bg-primary text-primary-text"
               )}>
               VIP
@@ -76,7 +76,7 @@ const UserDetail: FC<UserDetailProps> = ({ user, login, logout }) => {
         className={cx(
           `
           mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-md
-          border border-white/30 text-[12px] font-bold
+          border border-ink/30 text-[12px] font-bold
           transition-all duration-300 hover:border-primary/40
           hover:bg-primary hover:text-primary-text
           active:scale-[0.98] cursor-pointer

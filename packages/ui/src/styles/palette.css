@@ -1,0 +1,142 @@
+/**
+ * Material You 默认色阶与语义角色。
+ *
+ * 作用：首帧、无封面、以及没有接入取色的窗口（agent / lyric / tray / mini 等）
+ * 都能拿到一套完整且自洽的 m3 token；主窗口取色完成后由 applyMonetPalette 覆盖。
+ */
+
+:root {
+  /* primary */
+  --m3-primary-0: #000000;
+  --m3-primary-10: #410006;
+  --m3-primary-20: #68000f;
+  --m3-primary-25: #7d0015;
+  --m3-primary-30: #93001a;
+  --m3-primary-35: #a9001f;
+  --m3-primary-40: #bf0025;
+  --m3-primary-50: #e42a3a;
+  --m3-primary-60: #ff5358;
+  --m3-primary-70: #ff8986;
+  --m3-primary-80: #ffb3b0;
+  --m3-primary-90: #ffdad8;
+  --m3-primary-95: #ffedeb;
+  --m3-primary-99: #fffbff;
+  --m3-primary-100: #ffffff;
+
+  /* secondary */
+  --m3-secondary-0: #000000;
+  --m3-secondary-10: #2c1514;
+  --m3-secondary-20: #442928;
+  --m3-secondary-25: #503433;
+  --m3-secondary-30: #5d3f3e;
+  --m3-secondary-35: #6a4b49;
+  --m3-secondary-40: #775655;
+  --m3-secondary-50: #926e6d;
+  --m3-secondary-60: #ad8886;
+  --m3-secondary-70: #c9a2a0;
+  --m3-secondary-80: #e7bdba;
+  --m3-secondary-90: #ffdad8;
+  --m3-secondary-95: #ffedeb;
+  --m3-secondary-99: #fffbff;
+  --m3-secondary-100: #ffffff;
+
+  /* tertiary */
+  --m3-tertiary-0: #000000;
+  --m3-tertiary-10: #271900;
+  --m3-tertiary-20: #412d05;
+  --m3-tertiary-25: #4d380f;
+  --m3-tertiary-30: #5a4319;
+  --m3-tertiary-35: #664f24;
+  --m3-tertiary-40: #735a2e;
+  --m3-tertiary-50: #8e7344;
+  --m3-tertiary-60: #aa8c5c;
+  --m3-tertiary-70: #c6a774;
+  --m3-tertiary-80: #e3c28c;
+  --m3-tertiary-90: #ffdeaa;
+  --m3-tertiary-95: #ffeed9;
+  --m3-tertiary-99: #fffbff;
+  --m3-tertiary-100: #ffffff;
+
+  /* neutral */
+  --m3-neutral-0: #000000;
+  --m3-neutral-10: #201a1a;
+  --m3-neutral-20: #362f2e;
+  --m3-neutral-25: #413a39;
+  --m3-neutral-30: #4d4544;
+  --m3-neutral-35: #595050;
+  --m3-neutral-40: #655c5c;
+  --m3-neutral-50: #7f7574;
+  --m3-neutral-60: #998e8d;
+  --m3-neutral-70: #b4a9a8;
+  --m3-neutral-80: #d0c4c3;
+  --m3-neutral-90: #ede0de;
+  --m3-neutral-95: #fbeeed;
+  --m3-neutral-99: #fffbff;
+  --m3-neutral-100: #ffffff;
+
+  /* neutralVariant */
+  --m3-neutral-variant-0: #000000;
+  --m3-neutral-variant-10: #251918;
+  --m3-neutral-variant-20: #3b2d2c;
+  --m3-neutral-variant-25: #473837;
+  --m3-neutral-variant-30: #534342;
+  --m3-neutral-variant-35: #5f4f4e;
+  --m3-neutral-variant-40: #6b5a59;
+  --m3-neutral-variant-50: #857372;
+  --m3-neutral-variant-60: #a08c8b;
+  --m3-neutral-variant-70: #bba6a5;
+  --m3-neutral-variant-80: #d7c1c0;
+  --m3-neutral-variant-90: #f4dddc;
+  --m3-neutral-variant-95: #ffedeb;
+  --m3-neutral-variant-99: #fffbff;
+  --m3-neutral-variant-100: #ffffff;
+
+  /* error */
+  --m3-error-0: #000000;
+  --m3-error-10: #410002;
+  --m3-error-20: #690005;
+  --m3-error-25: #7e0007;
+  --m3-error-30: #93000a;
+  --m3-error-35: #a80710;
+  --m3-error-40: #ba1a1a;
+  --m3-error-50: #de3730;
+  --m3-error-60: #ff5449;
+  --m3-error-70: #ff897d;
+  --m3-error-80: #ffb4ab;
+  --m3-error-90: #ffdad6;
+  --m3-error-95: #ffedea;
+  --m3-error-99: #fffbff;
+  --m3-error-100: #ffffff;
+}
+
+/* 在局部容器重新解析语义角色，让该容器的色阶覆盖窗口色阶。 */
+:root,
+.monet-scope {
+  --m3-primary: var(--m3-primary-60);
+  --m3-on-primary: var(--m3-primary-0);
+  --m3-primary-container: var(--m3-primary-25);
+  --m3-on-primary-container: var(--m3-primary-95);
+  --m3-secondary: var(--m3-secondary-70);
+  --m3-on-secondary: var(--m3-secondary-10);
+  --m3-secondary-container: var(--m3-secondary-25);
+  --m3-on-secondary-container: var(--m3-secondary-95);
+  --m3-tertiary: var(--m3-tertiary-70);
+  --m3-on-tertiary: var(--m3-tertiary-10);
+  --m3-tertiary-container: var(--m3-tertiary-25);
+  --m3-on-tertiary-container: var(--m3-tertiary-95);
+  --m3-surface: var(--m3-neutral-10);
+  --m3-surface-container: var(--m3-neutral-20);
+  --m3-popover: color-mix(in oklab, var(--m3-neutral-25) 74%, var(--m3-primary-35));
+  --m3-surface-variant: var(--m3-neutral-variant-30);
+  --m3-on-surface: var(--m3-neutral-95);
+  --m3-on-surface-variant: var(--m3-neutral-variant-80);
+  --m3-outline: var(--m3-neutral-variant-60);
+  --m3-outline-variant: var(--m3-neutral-variant-35);
+  --m3-error: var(--m3-error-70);
+  --m3-on-error: var(--m3-error-10);
+  --m3-error-container: var(--m3-error-25);
+  --m3-on-error-container: var(--m3-error-95);
+  --m3-inverse-surface: var(--m3-neutral-95);
+  --m3-inverse-on-surface: var(--m3-neutral-10);
+  --m3-inverse-primary: var(--m3-primary-30);
+}

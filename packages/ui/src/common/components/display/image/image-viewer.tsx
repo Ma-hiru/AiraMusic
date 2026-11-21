@@ -445,7 +445,7 @@ const ImageViewer: FC<ImageViewerProps> = ({ onIndexChange, onToolBarChange, ind
 
   return (
     <div
-      className="relative h-full w-full overflow-hidden bg-[#050505] text-white"
+      className="relative h-full w-full overflow-hidden bg-scrim text-ink"
       onMouseMove={() => showToolbar(true)}>
       {/*背景*/}
       {current.url && (
@@ -474,8 +474,8 @@ const ImageViewer: FC<ImageViewerProps> = ({ onIndexChange, onToolBarChange, ind
         <div
           className="
             flex min-w-0 max-w-[60%] items-center gap-2 rounded-md
-            border border-white/10 bg-black/35 px-4 py-1.5 text-[12px] font-semibold
-            text-white/85 shadow-[0_8px_32px_rgba(0,0,0,0.25)]
+            border border-ink/10 bg-scrim/35 px-4 py-1.5 text-[12px] font-semibold
+            text-ink/85 shadow-[0_8px_32px_rgba(0,0,0,0.25)]
             backdrop-saturate-120 backdrop-blur-md
           ">
           <Marquee
@@ -488,7 +488,7 @@ const ImageViewer: FC<ImageViewerProps> = ({ onIndexChange, onToolBarChange, ind
             }}
           />
           {images.length > 1 && (
-            <span className="shrink-0 text-white/55">{`${index + 1}/${images.length}`}</span>
+            <span className="shrink-0 text-ink/55">{`${index + 1}/${images.length}`}</span>
           )}
         </div>
       </div>
@@ -523,7 +523,7 @@ const ImageViewer: FC<ImageViewerProps> = ({ onIndexChange, onToolBarChange, ind
         )}
 
         {status === "idle" && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-white/55">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-ink/55">
             <ImageIcon className="size-12 opacity-75" />
             <p className="text-[13px] font-semibold">等待图片</p>
           </div>
@@ -531,21 +531,21 @@ const ImageViewer: FC<ImageViewerProps> = ({ onIndexChange, onToolBarChange, ind
 
         {status === "loading" && (
           <AppLoading
-            className="absolute inset-0 z-10 bg-black/20 text-white"
+            className="absolute inset-0 z-10 bg-scrim/20 text-ink"
             tips="图片加载中"
             loading
           />
         )}
 
         {status === "error" && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 text-white/75">
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 text-ink/75">
             <ImageOff className="size-12 opacity-80" />
             <p className="text-[13px] font-semibold">图片加载失败</p>
             <button
               className="
-                rounded-md border border-white/15 bg-white/10 px-3 py-1.5 text-[12px]
-                font-semibold text-white/90 backdrop-blur-md transition-all duration-200
-                ease-in-out hover:bg-white/15 active:scale-95
+                rounded-md border border-ink/15 bg-ink/10 px-3 py-1.5 text-[12px]
+                font-semibold text-ink/90 backdrop-blur-md transition-all duration-200
+                ease-in-out hover:bg-ink/15 active:scale-95
               "
               type="button"
               onClick={retryLoad}>
@@ -560,7 +560,7 @@ const ImageViewer: FC<ImageViewerProps> = ({ onIndexChange, onToolBarChange, ind
         className={cx(
           `
             absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-1
-            rounded-lg border border-white/10 bg-black/35 px-2 py-1.5
+            rounded-lg border border-ink/10 bg-scrim/35 px-2 py-1.5
             shadow-[0_20px_60px_rgba(0,0,0,0.4)]
             backdrop-saturate-120 backdrop-blur-md
             transition-all duration-300 ease-in-out
@@ -585,9 +585,9 @@ const ImageViewer: FC<ImageViewerProps> = ({ onIndexChange, onToolBarChange, ind
           className={cx(
             `
               flex h-9 min-w-18 items-center justify-center gap-2 rounded-md px-2
-              text-[12px] font-semibold text-white/80 transition-all duration-200
-              ease-in-out hover:bg-white/15 hover:text-white active:scale-95
-              focus-visible:ring-2 focus-visible:ring-white/45
+              text-[12px] font-semibold text-ink/80 transition-all duration-200
+              ease-in-out hover:bg-ink/15 hover:text-ink active:scale-95
+              focus-visible:ring-2 focus-visible:ring-ink/45
             `,
             status !== "loaded" && "pointer-events-none opacity-35"
           )}
@@ -647,9 +647,9 @@ const ToolbarButton = ({
       className={cx(
         `
           flex size-9 items-center justify-center rounded-md
-          text-white/85 outline-none transition-all duration-200 ease-in-out
-          hover:bg-white/15 hover:text-white active:scale-[0.92]
-          focus-visible:ring-2 focus-visible:ring-white/45
+          text-ink/85 outline-none transition-all duration-200 ease-in-out
+          hover:bg-ink/15 hover:text-ink active:scale-[0.92]
+          focus-visible:ring-2 focus-visible:ring-ink/45
         `,
         disabled && "pointer-events-none opacity-35"
       )}

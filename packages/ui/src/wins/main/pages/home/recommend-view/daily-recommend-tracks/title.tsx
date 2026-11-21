@@ -15,13 +15,13 @@ const RecommendTrackTitle: FC<RecommendTrackTitleProps> = ({ lastPage, nextPage 
       </div>
       <div className="flex items-center justify-center gap-2">
         <button
-          className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-white/20 bg-white/5 transition-all duration-300 hover:bg-white/20 active:scale-95"
+          className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-ink/20 bg-ink/5 transition-all duration-300 hover:bg-ink/20 active:scale-95"
           title="上一页"
           onClick={lastPage}>
           <ChevronLeft className="size-4" />
         </button>
         <button
-          className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-white/20 bg-white/5 transition-all duration-300 hover:bg-white/20 active:scale-95"
+          className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-ink/20 bg-ink/5 transition-all duration-300 hover:bg-ink/20 active:scale-95"
           title="下一页"
           onClick={nextPage}>
           <ChevronRight className="size-4" />

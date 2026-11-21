@@ -73,7 +73,7 @@ const Header: FC<HeaderProps> = ({
           </div>
         </Avatar>
       </div>
-      <div className="w-full h-0.5 my-2 bg-white/20" />
+      <div className="w-full h-0.5 my-2 bg-ink/20" />
     </div>
   );
 };

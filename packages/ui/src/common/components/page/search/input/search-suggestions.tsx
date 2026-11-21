@@ -1,3 +1,4 @@
+import { cx } from "@emotion/css";
 import { memo, type FC, type Ref, type FocusEventHandler } from "react";
 import { User, Music2, Search, DiscAlbum, ListMusic, type LucideIcon } from "lucide-react";
 
@@ -10,6 +11,7 @@ export type Suggestion = {
 interface SearchSuggestionsProps {
   ref?: Ref<HTMLUListElement>;
   keyword?: string;
+  inDrawer?: boolean;
   suggestions: Suggestion[];
   onSearchAll?: NormalFunc;
   onBlur?: FocusEventHandler<HTMLUListElement>;
@@ -34,6 +36,7 @@ const SearchSuggestions: FC<SearchSuggestionsProps> = ({
   onFocus,
   onSearchAll,
   keyword,
+  inDrawer,
   suggestions
 }) => {
   const groups = groupOrder
@@ -47,20 +50,20 @@ const SearchSuggestions: FC<SearchSuggestionsProps> = ({
   return (
     <ul
       ref={ref}
-      className="
-        absolute top-12 z-60 w-full overflow-hidden rounded-xl border border-white/15
-        bg-black/90 shadow-2xl backdrop-blur-2xl backdrop-saturate-150
-      "
+      className={cx(
+        "absolute top-12 z-60 w-full overflow-hidden rounded-xl border shadow-2xl backdrop-blur-2xl backdrop-saturate-150",
+        inDrawer ? "border-hairline bg-surface-raised/95" : "border-ink/15 bg-popover/92"
+      )}
       aria-label="搜索建议"
       onBlur={onBlur}
       onFocus={onFocus}>
       {keyword && onSearchAll && (
         <li>
           <button
-            className="
-              flex w-full items-center gap-2 border-b border-white/10 px-3 py-2.5
-              text-left text-white/80 transition-colors duration-200 hover:bg-white/10
-            "
+            className={cx(
+              "flex w-full items-center gap-2 border-b border-ink/10 px-3 py-2.5 text-left transition-colors duration-200 hover:bg-ink/10",
+              inDrawer ? "text-ink" : "text-ink/80"
+            )}
             type="button"
             onClick={onSearchAll}>
             <Search className="size-4 shrink-0 text-primary" />
@@ -71,7 +74,11 @@ const SearchSuggestions: FC<SearchSuggestionsProps> = ({
       <li className="max-h-72 overflow-y-auto p-1 scrollbar scrollbar-show">
         {groups.map((group) => (
           <div key={group.type}>
-            <p className="px-2 pb-1 pt-2 text-[10px] font-semibold tracking-wider text-white/35">
+            <p
+              className={cx(
+                "px-2 pb-1 pt-2 text-[10px] font-semibold tracking-wider",
+                inDrawer ? "text-ink-muted" : "text-ink/35"
+              )}>
               {group.label}
             </p>
             <ul className="space-y-0.5">
@@ -81,13 +88,15 @@ const SearchSuggestions: FC<SearchSuggestionsProps> = ({
                 return (
                   <li key={`${suggestion.type}-${suggestion.id}`}>
                     <button
-                      className="
+                      className={cx(
+                        `
                         flex h-8 w-full items-center gap-2 rounded-md px-2 text-left
-                        text-[12px] text-white/75 outline-none transition-colors duration-200
-                        hover:bg-white/10 hover:text-white
-                        focus-visible:bg-white/10 focus-visible:text-white
-                        focus-visible:ring-2 focus-visible:ring-primary/40
-                      "
+                        text-[12px] outline-none transition-colors duration-200
+                      `,
+                        inDrawer
+                          ? "text-ink hover:bg-primary-container hover:text-on-primary-container focus-visible:bg-primary-container focus-visible:text-on-primary-container focus-visible:ring-2 focus-visible:ring-primary"
+                          : "text-ink/75 hover:bg-ink/10 hover:text-ink focus-visible:bg-ink/10 focus-visible:text-ink focus-visible:ring-2 focus-visible:ring-primary/40"
+                      )}
                       type="button"
                       onClick={() => onClick?.(suggestion)}>
                       <Icon className="size-4 shrink-0 opacity-70" />
@@ -100,7 +109,11 @@ const SearchSuggestions: FC<SearchSuggestionsProps> = ({
           </div>
         ))}
       </li>
-      <li className="border-t border-white/10 px-3 py-2 text-[10px] text-white/30">
+      <li
+        className={cx(
+          "border-t border-ink/10 px-3 py-2 text-[10px]",
+          inDrawer ? "text-ink-muted" : "text-ink/30"
+        )}>
         按 Enter 搜索完整关键词
       </li>
     </ul>

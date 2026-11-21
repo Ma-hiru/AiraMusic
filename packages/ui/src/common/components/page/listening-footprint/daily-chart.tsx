@@ -83,7 +83,7 @@ const DailyChart = ({
                         : "top"
                   }
                   content={
-                    <div className="whitespace-nowrap rounded-md border border-white/15 bg-black/85 px-3 py-2 text-white shadow-lg backdrop-blur-lg">
+                    <div className="whitespace-nowrap rounded-md border border-ink/15 bg-surface-raised/90 px-3 py-2 text-ink shadow-lg backdrop-blur-lg">
                       <p className="text-[10px] opacity-65">
                         {label}
                         {item.previousWeek && <span className="ml-2 opacity-70">上周</span>}
@@ -93,7 +93,7 @@ const DailyChart = ({
                   }
                   portal>
                   <button
-                    className="flex h-full w-full min-w-0 cursor-pointer flex-col gap-1 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                    className="flex h-full w-full min-w-0 cursor-pointer flex-col gap-1 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ink/60"
                     type="button"
                     aria-pressed={selected === index}
                     aria-label={`${label}${item.previousWeek ? "（上周）" : ""}，${value}`}
@@ -108,14 +108,14 @@ const DailyChart = ({
                         className={cx(
                           "absolute bottom-0 left-1/2 w-2.5 max-w-[60%] -translate-x-1/2 rounded-t-sm transition-colors duration-150",
                           item.duration == null
-                            ? "h-px border-t border-dashed border-white/35"
+                            ? "h-px border-t border-dashed border-ink/35"
                             : item.previousWeek
                               ? activeIndex === index
-                                ? "bg-white/60"
-                                : "bg-white/25"
+                                ? "bg-ink/60"
+                                : "bg-ink/25"
                               : activeIndex === index
-                                ? "bg-white/85"
-                                : "bg-white/40"
+                                ? "bg-ink/85"
+                                : "bg-ink/40"
                         )}
                         style={
                           item.duration == null

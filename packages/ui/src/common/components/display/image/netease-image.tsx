@@ -77,7 +77,12 @@ const NeteaseImage: FC<ImageProps> = ({
   const [visible, setVisible] = useState(false);
   const [error, setError] = useState(false);
   const [stopRetry, setStopRetry] = useState(false);
-  const [source, setSource] = useState<Nullable<NeteaseLocalImage | NeteaseNetworkImage>>(null);
+  const [resolved, setResolved] = useState<null | {
+    requestedSrc: string;
+    image: NeteaseLocalImage | NeteaseNetworkImage;
+  }>(null);
+  const requestedSrc = image?.src;
+  const source = resolved?.requestedSrc === requestedSrc ? resolved?.image : undefined;
   const notFoundDetectRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const retryStatus = useRef({
@@ -139,7 +144,7 @@ const NeteaseImage: FC<ImageProps> = ({
         // local不存在会重新使用network
         void NeteaseServicesImage.remove(image);
         if (is_not_found_cover(image.url)) return setStopRetry(true);
-        return setSource(image.toNetworkImage());
+        return setResolved({ requestedSrc: image.src, image: image.toNetworkImage() });
       } else if (source?.isNetwork() && retryOnError) {
         // network不存在就是404, 不再重试
         if (is_not_found_cover(source?.url)) return setStopRetry(true);
@@ -176,7 +181,7 @@ const NeteaseImage: FC<ImageProps> = ({
   useEffect(() => {
     setOk(false);
     setError(false);
-    setSource(null);
+    setResolved(null);
     setStopRetry(false);
     notFoundDetectRef.current = false;
     const status = retryStatus.current;
@@ -185,7 +190,7 @@ const NeteaseImage: FC<ImageProps> = ({
     return () => {
       status.token = Date.now();
     };
-  }, [image?.src]);
+  }, [requestedSrc]);
 
   // 懒加载
   useEffect(() => {
@@ -214,18 +219,21 @@ const NeteaseImage: FC<ImageProps> = ({
 
   // 加载缓存
   useEffect(() => {
-    if (pause || !image?.src || (cacheLazy && !visible)) return;
+    if (pause || !image || !requestedSrc || (cacheLazy && !visible)) return;
     // 这里检查url，因为local的src是local地址
     if (is_not_found_cover(image.url)) {
       setError(true);
       setStopRetry(true);
       return notFoundToast();
     }
-    NeteaseServicesImage.local(image, cache).then((local) => {
-      if (local) setSource(local);
-      else setSource(image);
+    let cancelled = false;
+    void NeteaseServicesImage.local(image, cache).then((local) => {
+      if (!cancelled) setResolved({ requestedSrc, image: local ?? image });
     });
-  }, [cache, cacheLazy, image, pause, notFoundToast, visible]);
+    return () => {
+      cancelled = true;
+    };
+  }, [cache, cacheLazy, image, pause, notFoundToast, requestedSrc, visible]);
 
   // 404检测
   useEffect(() => {
@@ -265,7 +273,7 @@ const NeteaseImage: FC<ImageProps> = ({
       className={cx(
         "overflow-hidden block",
         (error || !image) && "flex justify-center items-center",
-        !ok && "bg-white/10 backdrop-blur-sm",
+        !ok && "bg-ink/10 backdrop-blur-sm",
         shadowBaseDark && "shadow-sm",
         shadowBaseLight && "shadow-[0_1px_2px_rgba(0,0,0,0.12)]",
         shadowFloatDark && "shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.4)]",

@@ -1,7 +1,7 @@
 import { useAtom, useAtomValue } from "jotai";
 import { memo, type FC, useMemo, useEffect } from "react";
 import { RendererCache } from "@/common/lib/cache";
-import { useMMCQ } from "@/wins/main/hooks/use-mmcq";
+import { useMonet } from "@/common/hooks/use-monet";
 import { useSettings } from "@/common/store/settings";
 import { playModalAtom } from "@/wins/main/atoms/layout";
 import { NeteaseServicesImage } from "@/common/netease/services";
@@ -19,7 +19,7 @@ const Background: FC<object> = () => {
     () => RendererCache.service.read.updateKey(backgroundCover),
     [backgroundCover]
   );
-  const themeColors = useMMCQ(resolvedBackgroundCover);
+  const { colors } = useMonet({ url: playModal ? resolvedBackgroundCover : undefined });
 
   const paused = useMemo(() => {
     // player 不可见时 暂停
@@ -52,7 +52,7 @@ const Background: FC<object> = () => {
       brightness={0.4}
       fluidMode="shader"
       fluidPaused={paused}
-      themeColors={themeColors}
+      themeColors={colors?.coverColors}
       src={resolvedBackgroundCover ?? undefined}
       fluid={settings.performance.usePlayerFluid}
       fluidSpeed={NeteaseSettings.fluidSpeedMultiplier(settings.performance.playerFluidSpeed)}

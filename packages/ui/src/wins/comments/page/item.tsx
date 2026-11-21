@@ -62,7 +62,7 @@ const Item: FC<ItemProps> = ({
 
   return (
     <>
-      {border && <div className="border-b border-white/30 m-2" />}
+      {border && <div className="border-b border-ink/30 m-2" />}
       <div
         key={data.commentId}
         className={cx(

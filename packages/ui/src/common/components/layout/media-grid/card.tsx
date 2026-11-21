@@ -59,7 +59,7 @@ const MediaCard: FC<MediaCardProps> = ({
         onHover?.(item.id);
         onMouseEnter?.(item.id);
       }}>
-      <div className={cx("relative aspect-square w-full bg-white/10 shadow-md", roundedClass)}>
+      <div className={cx("relative aspect-square w-full bg-ink/10 shadow-md", roundedClass)}>
         <NeteaseImage
           className={cx("size-full object-cover surface-border", roundedClass)}
           image={image}
@@ -72,18 +72,18 @@ const MediaCard: FC<MediaCardProps> = ({
         />
         <div
           className={cx(
-            "absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/25 overflow-hidden",
+            "absolute inset-0 bg-scrim/0 transition-colors duration-300 group-hover:bg-scrim/25 overflow-hidden",
             item.shape === "circle" ? "rounded-full" : "rounded-md"
           )}
         />
         {typeof item.playCount === "number" && (
-          <div className="absolute right-1 top-1 flex items-center gap-1 rounded-md bg-black/35 px-1.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-md">
+          <div className="absolute right-1 top-1 flex items-center gap-1 rounded-md bg-scrim/35 px-1.5 py-0.5 text-[10px] font-semibold text-ink backdrop-blur-md">
             <Headphones className="size-3" />
             <span>{RendererFormat.count(item.playCount)}</span>
           </div>
         )}
         {item.badge && (
-          <div className="absolute bottom-1 left-1 max-w-[calc(100%-0.5rem)] truncate rounded-md bg-black/40 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-md">
+          <div className="absolute bottom-1 left-1 max-w-[calc(100%-0.5rem)] truncate rounded-md bg-scrim/40 px-1.5 py-0.5 text-[10px] font-bold text-ink backdrop-blur-md">
             {item.badge}
           </div>
         )}

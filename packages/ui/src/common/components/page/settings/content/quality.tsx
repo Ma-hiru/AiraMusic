@@ -47,7 +47,7 @@ const Quality: FC<QualityProps> = ({ vip, data, updateQuality }) => {
                     <span
                       className={cx(
                         `
-                          text-[8px] font-semibold rounded-sm px-1.5 border border-white/30
+                          text-[8px] font-semibold rounded-sm px-1.5 border border-ink/30
                         `,
                         active && "text-primary bg-primary-text"
                       )}>

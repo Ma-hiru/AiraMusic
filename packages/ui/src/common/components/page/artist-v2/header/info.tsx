@@ -38,14 +38,14 @@ const Info: FC<InfoProps> = ({
         <div className="space-y-1.5 select-text text-[11px] leading-5 wrap-break-word">
           {trans && (
             <p>
-              <span className="mr-1.5 opacity-50">译名</span>
-              <span className="opacity-80">{trans}</span>
+              <span className="mr-1.5 text-ink-muted">译名</span>
+              <span>{trans}</span>
             </p>
           )}
           {alias && (
             <p>
-              <span className="mr-1.5 opacity-50">别名</span>
-              <span className="opacity-80">{alias}</span>
+              <span className="mr-1.5 text-ink-muted">别名</span>
+              <span>{alias}</span>
             </p>
           )}
         </div>
@@ -53,9 +53,7 @@ const Info: FC<InfoProps> = ({
       {identities.length > 0 && (
         <div className="flex flex-wrap gap-1.5" aria-label="歌手身份">
           {identities.map((identity) => (
-            <span
-              key={identity}
-              className="rounded-sm bg-white/10 px-1.5 py-px text-[10px] opacity-70">
+            <span key={identity} className="rounded-sm bg-ink/10 px-1.5 py-px text-[10px] text-ink">
               {identity}
             </span>
           ))}
@@ -64,28 +62,28 @@ const Info: FC<InfoProps> = ({
       <dl className="grid select-text grid-cols-2 gap-x-3 gap-y-2.5">
         {stats.map(({ label, value, icon: Icon }) => (
           <div key={label} className="min-w-0">
-            <dt className="flex items-center gap-1 text-[10px] leading-4 opacity-55">
+            <dt className="flex items-center gap-1 text-[10px] leading-4 text-ink-muted">
               <Icon className="size-3 shrink-0" />
               {label}
             </dt>
-            <dd className="mt-0.5 truncate text-[12px] font-semibold leading-4 tabular-nums opacity-85">
+            <dd className="mt-0.5 truncate text-[12px] font-semibold leading-4 tabular-nums">
               {RendererFormat.count(value) || "0"}
             </dd>
           </div>
         ))}
       </dl>
       {hasIntro && (
-        <section className="border-t border-white/15 pt-3">
+        <section className="border-t border-ink/15 pt-3">
           {!showIntro && description && (
             <>
               <h2 className="mb-1.5 text-[12px] font-semibold">简介</h2>
-              <p className="line-clamp-4 select-text whitespace-pre-wrap text-[11px] leading-5 opacity-75 wrap-break-word">
+              <p className="line-clamp-4 select-text whitespace-pre-wrap text-[11px] leading-5 text-ink-muted wrap-break-word">
                 {description}
               </p>
             </>
           )}
           <button
-            className="mt-1.5 flex cursor-pointer items-center gap-0.5 text-[11px] opacity-65 transition-opacity duration-200 hover:opacity-100 disabled:cursor-default disabled:opacity-45"
+            className="mt-1.5 flex cursor-pointer items-center gap-0.5 text-[11px] text-ink-muted transition-colors duration-200 hover:text-ink disabled:cursor-default disabled:opacity-45"
             type="button"
             disabled={showIntro}
             onClick={onShowIntro}>

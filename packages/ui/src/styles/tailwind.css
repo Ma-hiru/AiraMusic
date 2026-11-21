@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "./palette.css";
+
+@custom-variant resource-page (&:where(.resource-page *));
 
 @theme static {
   --breakpoint-sm: 40rem;
@@ -9,33 +12,227 @@
 }
 
 @theme inline {
-  --color-normal-text: var(--text-color);
-  --color-primary: var(--theme-color-main);
-  --color-primary-text: var(--text-color-on-main);
-  --color-primary-hover: var(--primary-hover);
-  --color-primary-active: var(--primary-active);
-  --color-primary-soft: var(--primary-soft);
-  --color-secondary: var(--theme-color-secondary);
-  --color-secondary-text: var(--text-color-on-secondary);
+  /* 界面语义角色，直接映射到 Material You 的调色盘。 */
+  --color-normal-text: var(--m3-on-surface);
+  --color-ink: var(--m3-on-surface);
+  --color-ink-muted: var(--m3-on-surface-variant);
+  --color-ink-faint: var(--m3-outline);
+  --color-hairline: var(--m3-outline-variant);
+  --color-surface: var(--m3-surface);
+  --color-surface-raised: var(--m3-surface-container);
+  --color-popover: var(--m3-popover);
+  --color-scrim: var(--m3-surface);
+  --color-inverse-surface: var(--m3-inverse-surface);
+  --color-inverse-ink: var(--m3-inverse-on-surface);
+  --color-primary: var(--m3-primary);
+  --color-primary-text: var(--m3-on-primary);
+  --color-primary-hover: var(--m3-primary-70);
+  --color-primary-active: var(--m3-primary-50);
+  --color-primary-soft: color-mix(in srgb, var(--m3-primary) 18%, transparent);
+  --color-primary-container: var(--m3-primary-container);
+  --color-on-primary-container: var(--m3-on-primary-container);
+  --color-secondary: var(--m3-secondary);
+  --color-secondary-text: var(--m3-on-secondary);
+  --color-secondary-container: var(--m3-secondary-container);
+  --color-on-secondary-container: var(--m3-on-secondary-container);
+  --color-tertiary: var(--m3-tertiary);
+  --color-tertiary-container: var(--m3-tertiary-container);
+  --color-on-tertiary-container: var(--m3-on-tertiary-container);
+  --color-danger: var(--m3-error);
+  --color-on-danger: var(--m3-on-error);
+  --color-danger-container: var(--m3-error-container);
+  --color-on-danger-container: var(--m3-on-error-container);
+
+  /* Material You 调色盘：由封面取色注入（common/player/monet.ts），默认值见 palette.css */
+  /* primary */
+  --color-m3-primary-0: var(--m3-primary-0);
+  --color-m3-primary-10: var(--m3-primary-10);
+  --color-m3-primary-20: var(--m3-primary-20);
+  --color-m3-primary-25: var(--m3-primary-25);
+  --color-m3-primary-30: var(--m3-primary-30);
+  --color-m3-primary-35: var(--m3-primary-35);
+  --color-m3-primary-40: var(--m3-primary-40);
+  --color-m3-primary-50: var(--m3-primary-50);
+  --color-m3-primary-60: var(--m3-primary-60);
+  --color-m3-primary-70: var(--m3-primary-70);
+  --color-m3-primary-80: var(--m3-primary-80);
+  --color-m3-primary-90: var(--m3-primary-90);
+  --color-m3-primary-95: var(--m3-primary-95);
+  --color-m3-primary-99: var(--m3-primary-99);
+  --color-m3-primary-100: var(--m3-primary-100);
+
+  /* secondary */
+  --color-m3-secondary-0: var(--m3-secondary-0);
+  --color-m3-secondary-10: var(--m3-secondary-10);
+  --color-m3-secondary-20: var(--m3-secondary-20);
+  --color-m3-secondary-25: var(--m3-secondary-25);
+  --color-m3-secondary-30: var(--m3-secondary-30);
+  --color-m3-secondary-35: var(--m3-secondary-35);
+  --color-m3-secondary-40: var(--m3-secondary-40);
+  --color-m3-secondary-50: var(--m3-secondary-50);
+  --color-m3-secondary-60: var(--m3-secondary-60);
+  --color-m3-secondary-70: var(--m3-secondary-70);
+  --color-m3-secondary-80: var(--m3-secondary-80);
+  --color-m3-secondary-90: var(--m3-secondary-90);
+  --color-m3-secondary-95: var(--m3-secondary-95);
+  --color-m3-secondary-99: var(--m3-secondary-99);
+  --color-m3-secondary-100: var(--m3-secondary-100);
+
+  /* tertiary */
+  --color-m3-tertiary-0: var(--m3-tertiary-0);
+  --color-m3-tertiary-10: var(--m3-tertiary-10);
+  --color-m3-tertiary-20: var(--m3-tertiary-20);
+  --color-m3-tertiary-25: var(--m3-tertiary-25);
+  --color-m3-tertiary-30: var(--m3-tertiary-30);
+  --color-m3-tertiary-35: var(--m3-tertiary-35);
+  --color-m3-tertiary-40: var(--m3-tertiary-40);
+  --color-m3-tertiary-50: var(--m3-tertiary-50);
+  --color-m3-tertiary-60: var(--m3-tertiary-60);
+  --color-m3-tertiary-70: var(--m3-tertiary-70);
+  --color-m3-tertiary-80: var(--m3-tertiary-80);
+  --color-m3-tertiary-90: var(--m3-tertiary-90);
+  --color-m3-tertiary-95: var(--m3-tertiary-95);
+  --color-m3-tertiary-99: var(--m3-tertiary-99);
+  --color-m3-tertiary-100: var(--m3-tertiary-100);
+
+  /* neutral */
+  --color-m3-neutral-0: var(--m3-neutral-0);
+  --color-m3-neutral-10: var(--m3-neutral-10);
+  --color-m3-neutral-20: var(--m3-neutral-20);
+  --color-m3-neutral-25: var(--m3-neutral-25);
+  --color-m3-neutral-30: var(--m3-neutral-30);
+  --color-m3-neutral-35: var(--m3-neutral-35);
+  --color-m3-neutral-40: var(--m3-neutral-40);
+  --color-m3-neutral-50: var(--m3-neutral-50);
+  --color-m3-neutral-60: var(--m3-neutral-60);
+  --color-m3-neutral-70: var(--m3-neutral-70);
+  --color-m3-neutral-80: var(--m3-neutral-80);
+  --color-m3-neutral-90: var(--m3-neutral-90);
+  --color-m3-neutral-95: var(--m3-neutral-95);
+  --color-m3-neutral-99: var(--m3-neutral-99);
+  --color-m3-neutral-100: var(--m3-neutral-100);
+
+  /* neutralVariant */
+  --color-m3-neutral-variant-0: var(--m3-neutral-variant-0);
+  --color-m3-neutral-variant-10: var(--m3-neutral-variant-10);
+  --color-m3-neutral-variant-20: var(--m3-neutral-variant-20);
+  --color-m3-neutral-variant-25: var(--m3-neutral-variant-25);
+  --color-m3-neutral-variant-30: var(--m3-neutral-variant-30);
+  --color-m3-neutral-variant-35: var(--m3-neutral-variant-35);
+  --color-m3-neutral-variant-40: var(--m3-neutral-variant-40);
+  --color-m3-neutral-variant-50: var(--m3-neutral-variant-50);
+  --color-m3-neutral-variant-60: var(--m3-neutral-variant-60);
+  --color-m3-neutral-variant-70: var(--m3-neutral-variant-70);
+  --color-m3-neutral-variant-80: var(--m3-neutral-variant-80);
+  --color-m3-neutral-variant-90: var(--m3-neutral-variant-90);
+  --color-m3-neutral-variant-95: var(--m3-neutral-variant-95);
+  --color-m3-neutral-variant-99: var(--m3-neutral-variant-99);
+  --color-m3-neutral-variant-100: var(--m3-neutral-variant-100);
+
+  /* error */
+  --color-m3-error-0: var(--m3-error-0);
+  --color-m3-error-10: var(--m3-error-10);
+  --color-m3-error-20: var(--m3-error-20);
+  --color-m3-error-25: var(--m3-error-25);
+  --color-m3-error-30: var(--m3-error-30);
+  --color-m3-error-35: var(--m3-error-35);
+  --color-m3-error-40: var(--m3-error-40);
+  --color-m3-error-50: var(--m3-error-50);
+  --color-m3-error-60: var(--m3-error-60);
+  --color-m3-error-70: var(--m3-error-70);
+  --color-m3-error-80: var(--m3-error-80);
+  --color-m3-error-90: var(--m3-error-90);
+  --color-m3-error-95: var(--m3-error-95);
+  --color-m3-error-99: var(--m3-error-99);
+  --color-m3-error-100: var(--m3-error-100);
+
+  /* 语义角色 */
+  --color-m3-primary: var(--m3-primary);
+  --color-m3-on-primary: var(--m3-on-primary);
+  --color-m3-primary-container: var(--m3-primary-container);
+  --color-m3-on-primary-container: var(--m3-on-primary-container);
+  --color-m3-secondary: var(--m3-secondary);
+  --color-m3-on-secondary: var(--m3-on-secondary);
+  --color-m3-secondary-container: var(--m3-secondary-container);
+  --color-m3-on-secondary-container: var(--m3-on-secondary-container);
+  --color-m3-tertiary: var(--m3-tertiary);
+  --color-m3-on-tertiary: var(--m3-on-tertiary);
+  --color-m3-tertiary-container: var(--m3-tertiary-container);
+  --color-m3-on-tertiary-container: var(--m3-on-tertiary-container);
+  --color-m3-surface: var(--m3-surface);
+  --color-m3-surface-container: var(--m3-surface-container);
+  --color-m3-surface-variant: var(--m3-surface-variant);
+  --color-m3-on-surface: var(--m3-on-surface);
+  --color-m3-on-surface-variant: var(--m3-on-surface-variant);
+  --color-m3-outline: var(--m3-outline);
+  --color-m3-outline-variant: var(--m3-outline-variant);
+  --color-m3-error: var(--m3-error);
+  --color-m3-on-error: var(--m3-on-error);
+  --color-m3-error-container: var(--m3-error-container);
+  --color-m3-on-error-container: var(--m3-on-error-container);
+  --color-m3-inverse-surface: var(--m3-inverse-surface);
+  --color-m3-inverse-on-surface: var(--m3-inverse-on-surface);
+  --color-m3-inverse-primary: var(--m3-inverse-primary);
 }
 
 /* 浅磨砂表面层级 */
+/* 玻璃表面统一走调色盘中性色，随封面带一点色相 */
 @utility surface-1 {
-  @apply border border-white/15 bg-white/10 shadow-lg backdrop-blur-xl backdrop-saturate-150;
+  @apply border border-ink/15 bg-ink/10 shadow-lg backdrop-blur-xl backdrop-saturate-150;
 }
 
 @utility surface-2 {
-  @apply border border-white/12 bg-white/15;
+  @apply border border-ink/12 bg-ink/15;
 }
 
 @utility surface-3 {
-  @apply border border-white/30 bg-white/22 shadow-lg;
+  @apply border border-ink/30 bg-ink/22 shadow-lg;
 }
 
 @utility surface-popover {
-  @apply border border-white/25 bg-black/20 shadow-2xl backdrop-blur-2xl backdrop-saturate-150;
+  @apply border border-ink/20 bg-popover/65 text-ink shadow-2xl backdrop-blur-2xl backdrop-saturate-150;
 }
 
 @utility surface-border {
-  @apply border border-white/15 bg-white/10 shadow-lg;
+  @apply border border-ink/15 bg-ink/10 shadow-lg;
+}
+
+@layer components {
+  .resource-page {
+    isolation: isolate;
+    position: relative;
+    color: var(--m3-on-surface);
+  }
+
+  .resource-page::before {
+    --tint: color-mix(in oklab, var(--m3-primary-35) 62%, var(--m3-neutral-variant-30));
+
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    content: "";
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse at 18% 22%,
+      color-mix(in oklab, var(--tint) 58%, transparent),
+      color-mix(in oklab, var(--tint) 38%, transparent) 43%,
+      transparent 86%
+    );
+    mask-image:
+      linear-gradient(to right, transparent, #000 7%, #000 89%, transparent),
+      linear-gradient(to bottom, transparent, #000 11%, #000 85%, transparent);
+    mask-composite: intersect;
+    opacity: 0;
+    transition: opacity 250ms ease-out;
+  }
+
+  .resource-page[data-palette-ready]::before {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .resource-page::before {
+      transition: none;
+    }
+  }
 }

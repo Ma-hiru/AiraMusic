@@ -39,7 +39,7 @@ const TopCover: FC<TopCoverProps> = ({ onCoverLoaded, summary, coverCacheKey }) 
       type="button"
       disabled={!summary}
       onClick={openCoverModal}>
-      <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/25 overflow-hidden rounded-md cursor-pointer" />
+      <div className="absolute inset-0 bg-scrim/0 transition-colors duration-300 group-hover:bg-scrim/25 overflow-hidden rounded-md cursor-pointer" />
       <NeteaseImage className="size-44 rounded-md" image={image} onLoad={onLoad} cache />
     </button>
   );

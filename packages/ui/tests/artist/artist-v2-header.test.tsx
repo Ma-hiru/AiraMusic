@@ -173,8 +173,8 @@ it("offers primary playback, outline queue/follow actions and the complete-intro
   const queue = getByRole("button", { name: "加入队列" });
   const follow = getByRole("button", { name: "关注" });
   expect(play).toHaveClass("bg-primary", "text-primary-text", "hover:bg-primary-active");
-  expect(queue).toHaveClass("border-white/20", "bg-white/5");
-  expect(follow).toHaveClass("border-white/20", "bg-white/5");
+  expect(queue).toHaveClass("border-ink/20", "bg-ink/5");
+  expect(follow).toHaveClass("border-ink/20", "bg-ink/5");
   expect(follow.className).not.toMatch(/text-(?:primary|secondary)/);
   fireEvent.click(play);
   fireEvent.click(queue);

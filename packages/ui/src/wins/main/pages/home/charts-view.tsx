@@ -72,7 +72,7 @@ const HomeChartsView: FC<{ className?: string }> = ({ className }) => {
                         flex min-h-14 cursor-pointer
                         items-center gap-3 rounded-lg px-2 text-left
                         transition-all duration-300
-                        hover:bg-white/20
+                        hover:bg-ink/20
                         active:scale-[0.98]
                       "
                       type="button"
@@ -91,7 +91,7 @@ const HomeChartsView: FC<{ className?: string }> = ({ className }) => {
                           return (
                             <span
                               key={tag}
-                              className="shrink-0 rounded-md bg-white/10 px-2 py-1 text-[10px] font-bold">
+                              className="shrink-0 rounded-md bg-ink/10 px-2 py-1 text-[10px] font-bold">
                               {tag}
                             </span>
                           );

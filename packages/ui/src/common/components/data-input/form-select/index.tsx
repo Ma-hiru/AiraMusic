@@ -60,9 +60,9 @@ const FormSelect: FC<FormSelectProps> = ({
       <button
         className="
           flex h-9 w-full cursor-pointer items-center gap-2 rounded-md border
-          border-white/15 bg-white/10 px-3 text-left text-[13px] font-semibold
-          text-white/72 outline-none transition-colors duration-200 hover:bg-white/14
-          focus:border-primary focus:bg-white/15 focus-visible:ring-2
+          border-ink/15 bg-ink/10 px-3 text-left text-[13px] font-semibold
+          text-ink/72 outline-none transition-colors duration-200 hover:bg-ink/14
+          focus:border-primary focus:bg-ink/15 focus-visible:ring-2
           focus-visible:ring-primary/40 disabled:pointer-events-none
           disabled:cursor-not-allowed disabled:opacity-45
         "
@@ -76,7 +76,7 @@ const FormSelect: FC<FormSelectProps> = ({
         <span className="min-w-0 flex-1 truncate">{selected?.label ?? placeholder}</span>
         <ChevronDown
           className={cx(
-            "size-4 shrink-0 text-white/45 transition-transform duration-200",
+            "size-4 shrink-0 text-ink/45 transition-transform duration-200",
             open && "rotate-180"
           )}
         />
@@ -87,7 +87,7 @@ const FormSelect: FC<FormSelectProps> = ({
           className={cx(
             `
               absolute z-80 w-full min-w-48 overflow-hidden rounded-lg border
-              border-white/14 bg-black/80 p-1 shadow-2xl shadow-black/35
+              border-ink/14 bg-popover/90 p-1 shadow-2xl shadow-black/35
               backdrop-blur-2xl backdrop-saturate-150
             `,
             placement === "top"
@@ -106,10 +106,10 @@ const FormSelect: FC<FormSelectProps> = ({
                     `
                       flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2
                       text-left outline-none transition-colors duration-200
-                      focus-visible:ring-2 focus-visible:ring-white/45
+                      focus-visible:ring-2 focus-visible:ring-ink/45
                       disabled:pointer-events-none disabled:opacity-40
                     `,
-                    active ? "bg-primary/85 text-primary-text" : "text-white/74 hover:bg-white/10"
+                    active ? "bg-primary/85 text-primary-text" : "text-ink/74 hover:bg-ink/10"
                   )}
                   role="option"
                   type="button"
@@ -133,7 +133,7 @@ const FormSelect: FC<FormSelectProps> = ({
               );
             })
           ) : (
-            <div className="px-2.5 py-2 text-[12px] text-white/45">暂无可选项</div>
+            <div className="px-2.5 py-2 text-[12px] text-ink/45">暂无可选项</div>
           )}
         </div>
       )}

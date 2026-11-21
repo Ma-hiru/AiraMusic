@@ -1,10 +1,11 @@
-import { memo } from "react";
+import { memo, type FC } from "react";
 import { useSettings } from "@/common/store/settings";
 import { NeteaseSettings } from "@/common/netease/models";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import AcrylicBackground from "@/common/components/display/acrylic-background";
+import type { ResourceBackdrop } from "@/common/hooks/use-resource-page-theme";
 
-const Background = () => {
+const Background: FC<{ resource?: ResourceBackdrop }> = ({ resource }) => {
   const themeBus = useThemeInjectFromBus();
   const settings = useSettings();
 
@@ -16,9 +17,9 @@ const Background = () => {
         opacity={0.6}
         brightness={0.3}
         fluidMode="shader"
-        src={themeBus.data?.backgroundCover}
         fluid={settings.performance.useHomeFluid}
-        themeColors={themeBus.data?.theme.themeColors}
+        src={resource ? resource.src : themeBus.data?.backgroundCover}
+        themeColors={resource ? resource.themeColors : themeBus.data?.theme.themeColors}
         fluidSpeed={NeteaseSettings.fluidSpeedMultiplier(settings.performance.homeFluidSpeed)}
         fluidPaused
       />

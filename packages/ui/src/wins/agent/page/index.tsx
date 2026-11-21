@@ -116,12 +116,12 @@ const AgentPage: FC<object> = () => {
   );
 
   return (
-    <div className="agent-shell relative h-screen w-screen overflow-hidden text-white">
-      <AppMask className="z-60 bg-white text-black" show={!loaded} />
+    <div className="agent-shell relative h-screen w-screen overflow-hidden text-ink">
+      <AppMask className="z-60 bg-ink text-inverse-ink" show={!loaded} />
       <Drag className="absolute top-0 right-0 z-50 grid h-11 w-screen grid-cols-[1fr_2fr_1fr] items-center px-4">
         <SideBtn openList={openList} statusText={statusText} setOpenList={setOpenList} />
         <Marquee
-          className="flex flex-1 items-center justify-center text-center text-[12px] font-medium text-white/82"
+          className="flex flex-1 items-center justify-center text-center text-[12px] font-medium text-ink/82"
           text={currentTitle}
         />
         <div className="flex shrink-0 items-center justify-end gap-3">
@@ -132,7 +132,7 @@ const AgentPage: FC<object> = () => {
       <main className="relative top-11 flex h-[calc(100%-44px)] min-h-0 w-screen flex-row px-2 pb-2.5 sm:px-2.5 sm:pb-2.5">
         {compactLayout && openList && (
           <button
-            className="absolute inset-0 z-20 cursor-default bg-black/16"
+            className="absolute inset-0 z-20 cursor-default bg-scrim/16"
             type="button"
             aria-label="关闭对话列表"
             onClick={() => setOpenList(false)}

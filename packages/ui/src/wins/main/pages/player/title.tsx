@@ -53,7 +53,8 @@ const Title: FC<TitleProps> = ({ className }) => {
   const subTitleLonger = (title?.sub ?? "").length > (alias || "").length;
 
   return (
-    <section className={cx("flex flex-col justify-end text-center contain-layout", className)}>
+    <section
+      className={cx("flex flex-col justify-end text-center contain-layout select-text", className)}>
       <Marquee
         className="opacity-50 text-[70%] leading-normal"
         as="h2"

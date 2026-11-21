@@ -26,7 +26,7 @@ const Introduction: FC<IntroductionProps> = ({ className, artist }) => {
         {brief && (
           <section>
             <h2 className="mb-3 text-[14px] font-semibold">简介</h2>
-            <p className="whitespace-pre-wrap text-[13px] leading-7 opacity-80 wrap-break-word">
+            <p className="whitespace-pre-wrap text-[13px] leading-7 text-ink-muted wrap-break-word">
               {brief}
             </p>
           </section>
@@ -34,7 +34,7 @@ const Introduction: FC<IntroductionProps> = ({ className, artist }) => {
         {sections.map(({ ti, txt }, index) => (
           <section key={`${ti}-${index}`}>
             {ti && <h2 className="mb-3 text-[14px] font-semibold">{ti}</h2>}
-            <p className="whitespace-pre-wrap text-[13px] leading-7 opacity-80 wrap-break-word">
+            <p className="whitespace-pre-wrap text-[13px] leading-7 text-ink-muted wrap-break-word">
               {txt}
             </p>
           </section>

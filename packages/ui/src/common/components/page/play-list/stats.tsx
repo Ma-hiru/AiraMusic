@@ -83,7 +83,7 @@ const PlayListStats: FC<PlayListStatsProps> = ({ className, active = true, stats
                         aria-label={`${detail.period ?? "当日"}，${duration ?? "—"}分钟`}>
                         <div className="flex h-14 items-end justify-center" aria-hidden="true">
                           <div
-                            className="w-full max-w-5 rounded-t-sm bg-white/80"
+                            className="w-full max-w-5 rounded-t-sm bg-ink/80"
                             style={{ height: `${((duration ?? 0) / maxDuration) * 100}%` }}
                           />
                         </div>

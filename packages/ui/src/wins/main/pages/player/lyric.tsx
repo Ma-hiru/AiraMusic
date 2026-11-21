@@ -136,7 +136,7 @@ const Lyric: FC<object> = () => {
         onArtistClick={handleArtistClick}>
         {trackId !== undefined && lyric?.isLocalTTML && lyric.id === trackId && (
           <button
-            className="mx-4 my-1 cursor-pointer text-sm text-white/80 underline underline-offset-4 hover:text-white disabled:cursor-wait disabled:opacity-60"
+            className="mx-4 my-1 cursor-pointer text-sm text-ink/80 underline underline-offset-4 hover:text-ink disabled:cursor-wait disabled:opacity-60"
             type="button"
             disabled={restoringTrackId === trackId}
             onClick={restoreOriginalLyric}>

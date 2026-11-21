@@ -16,13 +16,12 @@ const FloatItem: FC<FloatItemProps> = ({ className, onClick, children, motionKey
       className={cx(
         `
         cursor-pointer backdrop-blur-sm rounded-full p-1
-        flex items-center justify-center text-primary
-        bg-(--text-color-on-main)/60 contain-layout
+        flex items-center justify-center bg-popover/75 text-ink
+        contain-layout hover:bg-popover/90
         `,
         className
       )}
       whileTap={{ scale: 0.98 }}
-      whileHover={{ opacity: 0.7 }}
       initial={{ opacity: 0, scale: 0 }}
       exit={{ opacity: 0, scale: 0, transition: { ease: "easeInOut", duration: 0.3 } }}
       animate={{ opacity: 1, scale: 1, transition: { ease: "easeInOut", duration: 0.6 } }}

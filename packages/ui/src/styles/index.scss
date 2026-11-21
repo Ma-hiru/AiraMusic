@@ -8,16 +8,17 @@ $z-index-modal-content: 10;
 $z-index-drawer: auto;
 $z-index-drawer-resize-handle: 10;
 
+:root,
+.monet-scope {
+  --theme-color-main: var(--m3-primary);
+  --theme-color-secondary: var(--m3-secondary);
+  --text-color-on-main: var(--m3-on-primary);
+  --text-color-on-secondary: var(--m3-on-secondary);
+  --text-color: var(--m3-on-surface);
+}
+
 :root {
-  --theme-color-main: #fc3d49;
-  --theme-color-secondary: #ffffff;
-  --text-color-on-main: #000000;
-  --text-color-on-secondary: #000000;
-  --text-color: #000000;
-  --primary-hover: #ff5c6b;
-  --primary-active: #d12a3a;
-  --primary-soft: rgba(252, 61, 73, 0.18);
-  --default-bg-color: #000000;
+  --default-bg-color: var(--m3-neutral-0);
   --z-index-toast: #{$z-index-toast};
   --z-index-context-menu: #{$z-index-context-menu};
   --z-index-modal: #{$z-index-modal};
@@ -85,15 +86,15 @@ img[src=""] {
 
 /* 显示状态 */
 .scrollbar.scrollbar-show::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.25);
+  background-color: color-mix(in srgb, var(--m3-on-surface) 25%, transparent);
 }
 
 .scrollbar.scrollbar-show::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: color-mix(in srgb, var(--m3-on-surface) 50%, transparent);
 }
 
 .scrollbar.scrollbar-show::-webkit-scrollbar-thumb:active {
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: color-mix(in srgb, var(--m3-on-surface) 70%, transparent);
 }
 
 /* 自定义悬浮滚动条（配合 VirtualScrollbar 组件） */
@@ -124,7 +125,7 @@ img[src=""] {
   right: 0;
   width: 8px;
   border-radius: 9999px;
-  background-color: rgba(255, 255, 255, 0.25);
+  background-color: color-mix(in srgb, var(--m3-on-surface) 25%, transparent);
   opacity: 0;
   transition:
     opacity 0.2s ease,
@@ -137,9 +138,9 @@ img[src=""] {
 }
 
 .virtual-scrollbar__thumb:hover {
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: color-mix(in srgb, var(--m3-on-surface) 50%, transparent);
 }
 
 .virtual-scrollbar__thumb:active {
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: color-mix(in srgb, var(--m3-on-surface) 70%, transparent);
 }

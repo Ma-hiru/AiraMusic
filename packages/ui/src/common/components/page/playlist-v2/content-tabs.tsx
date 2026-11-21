@@ -50,17 +50,17 @@ const ContentTabs: FC<ContentTabsProps> = ({
           ? "搜索喜欢的音乐"
           : "搜索此歌单";
   return (
-    <div className="mt-4 flex min-h-10 shrink-0 items-center justify-between gap-3 border-b border-white/15">
+    <div className="mt-4 flex min-h-10 shrink-0 items-center justify-between gap-3 border-b border-ink/15">
       <div className="flex self-stretch gap-5" role="tablist" aria-label="歌单内容">
         {tabs.map(([value, label, count]) => (
           <button
             key={value}
             id={`${id}-${value}-tab`}
             className={cx(
-              "relative flex cursor-pointer items-center gap-1.5 py-2 text-[12px] font-semibold outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-white/60",
+              "relative flex cursor-pointer items-center gap-1.5 whitespace-nowrap py-2 text-[12px] font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ink/60",
               active === value
-                ? "after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full after:bg-secondary"
-                : "opacity-60"
+                ? "text-m3-primary-90 after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full after:bg-m3-primary-80"
+                : "text-ink/70 hover:text-ink"
             )}
             role="tab"
             type="button"
@@ -69,7 +69,7 @@ const ContentTabs: FC<ContentTabsProps> = ({
             onClick={() => onChange(value)}>
             {label}
             {count !== undefined && (
-              <span className="text-[10px] font-medium tabular-nums opacity-60">{count}</span>
+              <span className="text-[10px] font-medium tabular-nums opacity-70">{count}</span>
             )}
           </button>
         ))}
@@ -83,7 +83,7 @@ const ContentTabs: FC<ContentTabsProps> = ({
           placeholder={placeholder}
           setIsTyping={setIsTyping}
           containerClass="w-36 max-w-full"
-          inputClass="h-6! w-full! rounded-md! border-white/10! bg-white/5 pl-2! text-[11px]! focus:w-full!"
+          inputClass="h-6! w-full! rounded-md! border-ink/15! bg-ink/5! pl-2! text-ink! text-[11px]! placeholder:text-ink/65! focus:w-full!"
           onSearch={searchTracks}
           onValueChange={onKeywordChange}
         />

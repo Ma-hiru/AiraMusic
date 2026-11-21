@@ -31,6 +31,7 @@ import { NeteaseServicesPlaylist } from "@/common/netease/services";
 import { type RequestStatus } from "@/common/hooks/use-request-wrap";
 import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
 import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
+import { useResourcePageTheme } from "@/common/hooks/use-resource-page-theme";
 import { useTrackCoverPreload } from "@/common/hooks/use-track-cover-preload";
 import { NeteaseUser, NeteasePlaylist, NeteaseTrackRecord } from "@/common/netease/models";
 import {
@@ -153,6 +154,7 @@ const Playlist: FC<PlaylistProps> = ({
     artists: [],
     albums: []
   });
+  const pageTheme = useResourcePageTheme(playlist?.coverImgUrl, routerActive, onCoverLoaded);
   const collectionIndex = useRef<Nullable<PlaylistCollectionIndex>>(null);
   const totalTracks = useRef<NeteaseTrackRecord[]>([]);
   const trackListRef = useRef<Nullable<TrackListRef>>(null);
@@ -600,7 +602,13 @@ const Playlist: FC<PlaylistProps> = ({
   );
 
   return (
-    <div className={cx("flex h-full min-h-0 flex-col overflow-hidden", className)}>
+    <div
+      ref={pageTheme.ref}
+      className={cx(
+        "monet-scope resource-page flex h-full min-h-0 flex-col overflow-hidden",
+        className
+      )}
+      data-palette-ready={pageTheme.ready ? "" : undefined}>
       <AppError
         reset={reload}
         when={status === "error"}
@@ -627,7 +635,7 @@ const Playlist: FC<PlaylistProps> = ({
             onLocateSong={locateSong}
             onPageAction={onPageAction}
             onSelectScope={selectScope}
-            onCoverLoaded={onCoverLoaded}
+            onCoverLoaded={pageTheme.onImageLoad}
             onToggleSelectionMode={toggleSelectionMode}>
             <ContentTabs
               id={tabsID}
@@ -654,9 +662,9 @@ const Playlist: FC<PlaylistProps> = ({
                 aria-hidden={activeTab !== "tracks"}
                 aria-labelledby={`${tabsID}-tracks-tab`}>
                 {selectedGroup && currentScope && (
-                  <div className="flex shrink-0 items-center gap-2 border-b border-white/10 py-2 text-[12px]">
+                  <div className="flex shrink-0 items-center gap-2 border-b border-ink/10 py-2 text-[12px]">
                     <button
-                      className="flex shrink-0 cursor-pointer items-center gap-0.5 opacity-65 transition-opacity hover:opacity-100"
+                      className="flex shrink-0 cursor-pointer items-center gap-0.5 text-ink-muted transition-colors hover:text-ink"
                       type="button"
                       onClick={() =>
                         changeTab(currentScope.kind === "artist" ? "artists" : "albums")
@@ -665,11 +673,11 @@ const Playlist: FC<PlaylistProps> = ({
                       {currentScope.kind === "artist" ? "返回歌手" : "返回专辑"}
                     </button>
                     <span className="min-w-0 truncate font-semibold">{selectedGroup.name}</span>
-                    <span className="shrink-0 text-[11px] tabular-nums opacity-55">
+                    <span className="shrink-0 text-[11px] tabular-nums text-ink-muted">
                       已喜欢 {selectedGroup.trackIDs.length} 首
                     </span>
                     <button
-                      className="ml-auto shrink-0 cursor-pointer text-[11px] opacity-65 transition-opacity hover:opacity-100"
+                      className="ml-auto shrink-0 cursor-pointer text-[11px] text-ink-muted transition-colors hover:text-ink"
                       type="button"
                       onClick={() => {
                         exitSelection();

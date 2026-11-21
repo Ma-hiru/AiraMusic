@@ -71,22 +71,22 @@ const Chat: FC<ChatProps> = ({
         "agent-panel flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl! p-0!",
         className
       )}>
-      <header className="flex min-h-11 shrink-0 items-center justify-between gap-3 border-b border-white/6 px-3 sm:px-4">
+      <header className="flex min-h-11 shrink-0 items-center justify-between gap-3 border-b border-ink/6 px-3 sm:px-4">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[color-mix(in_srgb,var(--theme-color-main)_14%,transparent)] text-[color-mix(in_srgb,var(--theme-color-main)_78%,white)] ring-1 ring-[color-mix(in_srgb,var(--theme-color-main)_22%,transparent)]">
+          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary/14 text-m3-primary-70 ring-1 ring-primary/22">
             <Sparkles className="size-3" />
           </span>
           <div className="min-w-0">
-            <div className="truncate text-[12px] font-semibold text-white/84">音乐助手</div>
-            <div className="mt-px flex items-center gap-1 text-[9px] text-white/30">
+            <div className="truncate text-[12px] font-semibold text-ink/84">音乐助手</div>
+            <div className="mt-px flex items-center gap-1 text-[9px] text-ink/30">
               <span
                 className={cx(
                   "size-1 rounded-full",
                   running
-                    ? "animate-pulse bg-[color-mix(in_srgb,var(--theme-color-main)_80%,white)]"
+                    ? "animate-pulse bg-m3-primary-70"
                     : activeConfig
-                      ? "bg-emerald-300/70"
-                      : "bg-amber-200/70"
+                      ? "bg-secondary/70"
+                      : "bg-tertiary/70"
                 )}
               />
               Aira Agent

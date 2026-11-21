@@ -104,7 +104,7 @@ const Dialog = ({
             active:scale-96
           `,
             important
-              ? "bg-red-500/80 text-white hover:opacity-50"
+              ? "bg-danger-container text-on-danger-container hover:bg-danger-container/80"
               : "hover:bg-primary hover:text-primary-text"
           )}
           onClick={() => {

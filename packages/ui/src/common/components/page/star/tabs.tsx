@@ -36,7 +36,7 @@ const StarTabs: FC<StarTabsProps> = ({ className, onChange, active }) => {
                 px-2 py-1.5 text-[12px] font-bold
                 transition-all duration-300 ease-in-out active:scale-[0.98]
               `,
-              selected ? "bg-primary text-primary-text" : "text-normal-text hover:bg-white/20"
+              selected ? "bg-primary text-primary-text" : "text-normal-text hover:bg-ink/20"
             )}
             type="button"
             aria-pressed={selected}

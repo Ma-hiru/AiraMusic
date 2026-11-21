@@ -89,7 +89,7 @@ const UsageTooltip: FC<UsageTooltipProps> = ({
           <div
             ref={popupRef}
             id={id}
-            className="pointer-events-none fixed z-110 w-max max-w-[min(18rem,calc(100vw-16px))] rounded-lg border border-white/10 bg-[#111216]/97 px-2.5 py-2 text-[10px] leading-4 text-white/68 shadow-lg shadow-black/30 backdrop-blur-xl"
+            className="pointer-events-none fixed z-110 w-max max-w-[min(18rem,calc(100vw-16px))] rounded-lg border border-ink/10 bg-popover/97 px-2.5 py-2 text-[10px] leading-4 text-ink/68 shadow-lg shadow-black/30 backdrop-blur-xl"
             style={position ?? { visibility: "hidden" }}
             role="tooltip">
             {content}

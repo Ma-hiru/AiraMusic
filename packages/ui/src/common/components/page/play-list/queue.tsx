@@ -114,7 +114,7 @@ const PlayListQueue = ({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
-      <div className="flex shrink-0 items-center gap-3 rounded-md border border-white/10 bg-white/5 px-3 py-2">
+      <div className="flex shrink-0 items-center gap-3 rounded-md border border-ink/10 bg-ink/5 px-3 py-2">
         <NeteaseImage
           className="size-10 shrink-0 rounded-md"
           cacheLazy={false}
@@ -151,7 +151,7 @@ const PlayListQueue = ({
           </div>
         )}
       </div>
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2.5">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-ink/10 pb-2.5">
         <div className="flex w-full items-center justify-between gap-3">
           <button
             className="flex items-center gap-1 text-[12px] leading-none opacity-70 transition-opacity hover:opacity-100 disabled:opacity-35 cursor-pointer"
@@ -161,7 +161,7 @@ const PlayListQueue = ({
             <LocateFixed className="size-3.5" />
             定位当前
           </button>
-          <label className="flex h-7 w-44 max-w-[60%] items-center gap-1.5 rounded-md border border-white/15 bg-white/5 px-2 focus-within:border-primary/60">
+          <label className="flex h-7 w-44 max-w-[60%] items-center gap-1.5 rounded-md border border-ink/15 bg-ink/5 px-2 focus-within:border-primary/60">
             <Search className="size-3 shrink-0 opacity-50" />
             <input
               className="min-w-0 flex-1 bg-transparent text-[11px] outline-none placeholder:opacity-50"

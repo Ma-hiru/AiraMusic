@@ -29,7 +29,7 @@ const BarControl: FC<object> = () => {
         onClick={() => !fmMode && player.playlist.last(true)}
       />
       <div
-        className="hover:opacity-60 active:scale-90 cursor-pointer ease-in-out transition-all duration-300 text-primary bg-primary-text p-2 rounded-full"
+        className="hover:opacity-60 active:scale-90 cursor-pointer ease-in-out transition-all duration-300 text-primary bg-primary-text p-2 rounded-full shadow-[0_0_18px_-4px_var(--m3-primary)]"
         onClick={player.playing ? () => player.audio.pause() : () => player.audio.play()}>
         {centerIcon}
       </div>

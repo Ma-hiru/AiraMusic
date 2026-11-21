@@ -24,7 +24,7 @@ const iconSizeClass = {
 } satisfies Record<NonNullable<IconButtonProps["size"]>, string>;
 
 const variantClass = {
-  ghost: "hover:bg-white/15 hover:text-white active:scale-95",
+  ghost: "hover:bg-ink/15 hover:text-ink active:scale-95",
   plain: "hover:opacity-50 active:scale-95"
 } satisfies Record<NonNullable<IconButtonProps["variant"]>, string>;
 
@@ -50,7 +50,7 @@ const IconButton: FC<IconButtonProps> = ({
         `
           inline-flex shrink-0 cursor-pointer items-center justify-center
           rounded-md outline-none transition-all duration-200 ease-in-out
-          focus-visible:ring-2 focus-visible:ring-white/60
+          focus-visible:ring-2 focus-visible:ring-ink/60
           disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-35
         `,
         buttonSizeClass[size],

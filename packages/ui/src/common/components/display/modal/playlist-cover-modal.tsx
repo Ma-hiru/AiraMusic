@@ -131,7 +131,7 @@ const CoverModal: FC<CoverModalProps> = ({
           <button
             className="
             group relative aspect-square size-[min(100cqw,100cqh)] overflow-hidden rounded-lg
-            bg-white/10 outline-none
+            bg-ink/10 outline-none
             transition-all duration-300 ease-in-out
           "
             title="查看封面"
@@ -148,7 +148,7 @@ const CoverModal: FC<CoverModalProps> = ({
             <span
               className="
               absolute right-2 top-2 flex size-8 items-center justify-center rounded-md
-              border border-white/20 bg-black/30 text-white opacity-0 backdrop-blur-md
+              border border-ink/20 bg-scrim/30 text-ink opacity-0 backdrop-blur-md
               transition-all duration-300 ease-in-out group-hover:opacity-100 cursor-pointer
             ">
               <Maximize2 className="size-4" />
@@ -157,7 +157,7 @@ const CoverModal: FC<CoverModalProps> = ({
         </div>
         <div
           className="
-            rounded-lg border border-white/10 bg-white/10 px-3 py-3
+            rounded-lg border border-ink/10 bg-ink/10 px-3 py-3
             shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]
           ">
           <div className="grid grid-cols-3 gap-3 text-[11px] font-semibold">

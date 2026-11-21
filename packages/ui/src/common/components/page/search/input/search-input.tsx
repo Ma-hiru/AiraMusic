@@ -30,11 +30,12 @@ export type SearchInputRef = {
 interface SearchInputProps {
   ref?: Ref<SearchInputRef>;
   className?: string;
+  inDrawer?: boolean;
   setTabs: NormalFunc<[tab: "albums" | "tracks" | "artists" | "playlists"]>;
   onSearch: NormalFunc<[keyword: string]>;
 }
 
-const SearchInput: FC<SearchInputProps> = ({ ref, className, setTabs, onSearch }) => {
+const SearchInput: FC<SearchInputProps> = ({ ref, className, setTabs, onSearch, inDrawer }) => {
   const [focus, setFocus] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [suggestions, setSuggestions] =
@@ -133,14 +134,12 @@ const SearchInput: FC<SearchInputProps> = ({ ref, className, setTabs, onSearch }
       <section className="relative h-10 min-w-0 flex-1">
         <input
           ref={inputRef}
-          className={`
-            h-full w-full rounded-full border border-white/25
-            bg-white/10 px-4 pr-9 text-sm font-semibold text-(--text-color)
-            shadow-md outline-none backdrop-blur-lg
-            transition-all duration-300 ease-in-out
-            placeholder:text-(--text-color)/35
-            focus:border-primary focus:bg-white/15
-        `}
+          className={cx(
+            "h-full w-full rounded-full border px-4 pr-9 text-sm font-semibold shadow-md outline-none backdrop-blur-lg transition-all duration-300 ease-in-out focus:border-primary",
+            inDrawer
+              ? "border-hairline bg-surface-raised text-ink placeholder:text-ink-muted"
+              : "border-ink/25 bg-ink/10 text-(--text-color) placeholder:text-(--text-color)/35 focus:bg-ink/15"
+          )}
           type="text"
           value={keyword}
           placeholder={recommendKeyword ?? "请输入搜索关键词"}
@@ -161,9 +160,11 @@ const SearchInput: FC<SearchInputProps> = ({ ref, className, setTabs, onSearch }
           className={cx(
             `
               absolute right-3 top-1/2 size-4 -translate-y-1/2 cursor-pointer rounded-full
-              text-(--text-color)/55 transition-all duration-300 ease-in-out
-              hover:bg-white/10 hover:text-(--text-color)
+              transition-all duration-300 ease-in-out hover:bg-ink/10
             `,
+            inDrawer
+              ? "text-ink-muted hover:text-ink"
+              : "text-(--text-color)/55 hover:text-(--text-color)",
             focus ? "opacity-100" : "opacity-0"
           )}
           onClick={() => {
@@ -175,6 +176,7 @@ const SearchInput: FC<SearchInputProps> = ({ ref, className, setTabs, onSearch }
         <SearchSuggestions
           ref={ulRef}
           keyword={keyword}
+          inDrawer={inDrawer}
           suggestions={renderSuggestions}
           onSearchAll={searchAll}
           onFocus={() => setFocus(true)}

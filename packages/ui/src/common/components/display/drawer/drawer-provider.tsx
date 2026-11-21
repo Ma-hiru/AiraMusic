@@ -307,7 +307,7 @@ const DrawerProvider: FC<{ className?: string }> = ({ className }) => {
             className={cx(
               `
                 absolute inset-y-2 right-2 flex w-full max-w-[calc(100%-1rem)] flex-col
-                overflow-hidden rounded-xl border border-white/10 pointer-events-auto surface-popover
+                overflow-hidden rounded-xl border border-ink/10 pointer-events-auto surface-popover
               `,
               render.className
             )}
@@ -338,7 +338,7 @@ const DrawerProvider: FC<{ className?: string }> = ({ className }) => {
                 <div className="pointer-events-none absolute inset-y-0 left-0 w-px bg-primary opacity-0 transition-opacity group-hover:opacity-60 group-focus-visible:opacity-60" />
               </div>
             )}
-            <header className="flex min-h-14 shrink-0 items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+            <header className="flex min-h-14 shrink-0 items-center justify-between gap-3 border-b border-ink/10 px-4 py-3">
               <div className="min-w-0">
                 {render.title && (
                   <h2 className="truncate text-lg font-bold tracking-normal">{render.title}</h2>
@@ -367,9 +367,7 @@ const DrawerProvider: FC<{ className?: string }> = ({ className }) => {
               {render.content}
             </div>
             {render.footer && (
-              <footer className="shrink-0 border-t border-white/10 px-4 py-3">
-                {render.footer}
-              </footer>
+              <footer className="shrink-0 border-t border-ink/10 px-4 py-3">{render.footer}</footer>
             )}
           </motion.section>
         )}

@@ -27,6 +27,7 @@ import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { useShortcutForwarder } from "@/common/hooks/use-shortcut-forwarder";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import { NeteaseURL, NeteaseArtist, NeteaseNetworkImage } from "@/common/netease/models";
+import RendererTheme from "@/common/player/ui";
 import Drag from "@/common/components/layout/drag/drag";
 import Marquee from "@/common/components/display/marquee";
 import NoDrag from "@/common/components/layout/drag/no-drag";
@@ -66,6 +67,9 @@ const MiniPlayerPage: FC = () => {
   const cover = useMemo(() => {
     return NeteaseNetworkImage.fromTrackCover(track)?.setSize(NeteaseImageSize.sm);
   }, [track]);
+  const progressColor =
+    themeBus.data?.theme.palette?.["neutral"]?.[bg ? 95 : 20] ??
+    (bg ? RendererTheme.themeDefault.text : RendererTheme.themeDefault.textOnSecondary);
 
   const close = useCallback(() => {
     RendererWindow.current.hide();
@@ -101,7 +105,7 @@ const MiniPlayerPage: FC = () => {
   useWindowTitle(track);
 
   return (
-    <Drag className={cx("relative overflow-hidden", !bg && "text-black")}>
+    <Drag className={cx("relative overflow-hidden", !bg && "bg-inverse-surface text-inverse-ink")}>
       <section className="fixed inset-0 z-[-1]">
         <AcrylicBackground
           className="absolute inset-0"
@@ -115,7 +119,7 @@ const MiniPlayerPage: FC = () => {
       </section>
       <section className="relative z-10 grid h-screen w-screen grid-rows-[44px_12px_24px] content-center gap-1 px-2.5">
         <div className="grid min-w-0 grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-2">
-          <NoDrag className="relative size-11 rounded-md border overflow-hidden border-white/30 bg-primary/30">
+          <NoDrag className="relative size-11 rounded-md border overflow-hidden border-current/30 bg-primary/30">
             {cover ? (
               <NeteaseImage
                 className="
@@ -192,12 +196,7 @@ const MiniPlayerPage: FC = () => {
             <ControlButton icon={X} label="隐藏迷你播放器" onClick={close} />
           </NoDrag>
         </div>
-        <MiniProgress
-          track={track}
-          visible={visible}
-          playing={isPlaying}
-          color={bg ? "#ffffff" : "#171717"}
-        />
+        <MiniProgress track={track} visible={visible} playing={isPlaying} color={progressColor} />
         <NoDrag className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1">
             <ControlButton

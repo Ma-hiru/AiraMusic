@@ -13,7 +13,7 @@ const resolveAbortSignal = (input?: AbortInput) =>
 
 export default class _NeteaseLyricSource {
   //region cache
-  private static readonly cacheKey = "netease_lyric_v29";
+  private static readonly cacheKey = "netease_lyric_v30";
   private static readonly extraTTMLExclusionKey = "netease_lyric_extra_ttml_excluded";
 
   static excludeExtraTTML(id: number) {

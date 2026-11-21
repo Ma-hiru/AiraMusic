@@ -128,8 +128,8 @@ const RowComponent: VirtualListRow<
             ease-in-out transition-all duration-300 group
           `,
           active
-            ? extra.opened && "bg-primary text-primary-text"
-            : extra.opened && "hover:bg-black/5"
+            ? cx("text-on-primary-container", extra.opened && "bg-primary-container")
+            : extra.opened && "hover:bg-ink/8"
         )}>
         <div
           className={cx(
@@ -138,7 +138,9 @@ const RowComponent: VirtualListRow<
               flex justify-center items-center py-1 rounded-md
               ease-in-out transition-all duration-300
             `,
-            active ? "bg-primary text-primary-text" : !extra.opened && "hover:bg-black/5"
+            active &&
+              "before:absolute before:left-1 before:h-4 before:w-0.5 before:rounded-full before:bg-m3-primary-80",
+            !extra.opened && (active ? "bg-primary-container" : "hover:bg-ink/8")
           )}>
           <NeteaseImage
             className="w-[60%] rounded-md"
@@ -147,7 +149,7 @@ const RowComponent: VirtualListRow<
             cache
           />
           {isPrivate && (
-            <div className="absolute w-[60%] aspect-square left-[20%] justify-center items-center bg-black/30 rounded-md hidden group-hover:flex">
+            <div className="absolute w-[60%] aspect-square left-[20%] justify-center items-center bg-scrim/30 rounded-md hidden group-hover:flex">
               <Lock className="size-3" />
             </div>
           )}
@@ -162,7 +164,7 @@ const RowComponent: VirtualListRow<
             !extra.opened && "opacity-0"
           )}>
           <span className="text-[11px] w-full font-semibold line-clamp-2">{data.name}</span>
-          <span className="text-[10px] w-full font-normal opacity-50">{data.trackCount} 首</span>
+          <span className="text-[10px] w-full font-medium text-ink/85">{data.trackCount} 首</span>
         </div>
       </div>
     </div>

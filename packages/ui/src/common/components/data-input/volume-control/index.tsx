@@ -43,7 +43,7 @@ const VolumeControl: FC<VolumeControlProps> = ({
       popupClassName="right-0 left-auto! translate-x-0!"
       onWheel={onWheel}
       content={
-        <div className="surface-popover w-60 rounded-xl px-3.5 py-3 text-white">
+        <div className="surface-popover w-60 rounded-xl px-3.5 py-3 text-ink">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs font-semibold">音量</span>
             <span className="text-[13px] font-semibold tabular-nums">{volumePercent}%</span>
@@ -60,7 +60,7 @@ const VolumeControl: FC<VolumeControlProps> = ({
             />
             <div className="flex h-6 min-w-0 flex-1 items-center">
               <RangeSlider
-                className="bg-white/15! focus-visible:ring-white/40! [&>div]:bg-white!"
+                className="bg-ink/15! focus-visible:ring-ink/40! [&>div]:bg-ink!"
                 min={0}
                 step={1}
                 max={100}

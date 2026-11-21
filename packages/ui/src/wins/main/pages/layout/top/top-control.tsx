@@ -193,7 +193,7 @@ const AskMemo = ({ setMemo, memo }: { memo: boolean; setMemo: NormalFunc<[memo: 
       className="hover:text-normal-text/50! focus-visible:ring-normal-text/40!"
       label="记住选择"
       checked={check}
-      underlineClassName="bg-white!"
+      underlineClassName="bg-ink!"
       onChange={setCheck}
     />
   );

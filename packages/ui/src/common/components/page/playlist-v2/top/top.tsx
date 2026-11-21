@@ -100,7 +100,7 @@ const Top: FC<TopProps> = ({
   if (loading) return null;
   return (
     <div className="grid h-full min-h-0 w-full grid-cols-[12rem_minmax(0,1fr)] gap-6">
-      <aside className="flex min-h-0 min-w-0 flex-col overflow-y-auto border-r border-white/10 pb-2 pr-3 [scrollbar-gutter:stable] scrollbar scrollbar-show">
+      <aside className="flex min-h-0 min-w-0 flex-col overflow-y-auto border-r border-ink/10 pb-2 pr-3 [scrollbar-gutter:stable] scrollbar scrollbar-show">
         <TopCover summary={summary} coverCacheKey={coverCacheKey} onCoverLoaded={onCoverLoaded} />
         <TopInfo
           summary={summary}
@@ -157,7 +157,9 @@ const Top: FC<TopProps> = ({
                 disabled={!summary}
                 aria-pressed={summary?.subscribed ?? false}
                 onClick={onStar}>
-                <Heart className={cx("size-3.5", summary?.subscribed && "fill-current")} />
+                <Heart
+                  className={cx("size-3.5", summary?.subscribed && "fill-current text-secondary")}
+                />
                 {summary?.subscribed ? "已收藏" : "收藏"}
               </ActionButton>
             )}
@@ -199,9 +201,10 @@ const ActionButton: FC<ActionButtonProps> = ({
         rounded-md px-1.5 py-0.5 text-[12px] font-semibold
         transition-all duration-200 ease-in-out active:scale-98
         disabled:pointer-events-none disabled:opacity-35
-        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60
+        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink/60
       `,
-        type === "outline" && `border border-white/20 bg-white/5 hover:bg-white/15`,
+        type === "outline" &&
+          "border border-ink/20 bg-ink/5 text-ink hover:bg-ink/15 aria-pressed:bg-ink/15",
         className
       )}
       type="button"

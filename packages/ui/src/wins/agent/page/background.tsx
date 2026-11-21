@@ -16,7 +16,7 @@ const Background = () => {
         src={themeBus.data?.backgroundCover}
         themeColors={themeBus.data?.theme.themeColors}
       />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_18%,rgba(255,255,255,0.055),transparent_34%),linear-gradient(145deg,rgba(5,7,11,0.34),rgba(5,7,11,0.58))]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_18%,color-mix(in_srgb,var(--m3-on-surface)_5.5%,transparent),transparent_34%),linear-gradient(145deg,color-mix(in_srgb,var(--m3-surface)_34%,transparent),color-mix(in_srgb,var(--m3-surface)_58%,transparent))]" />
     </div>
   );
 };

@@ -318,7 +318,8 @@ class Parser {
         rmExisted: Parser.hasExtraLyric(rmCount, lyricLineCount),
         tlExisted: Parser.hasExtraLyric(tlCount, lyricLineCount),
         noteExisted: noteCount > 0,
-        tips: data.length >= 5 ? (isLocalTTML ? localTTMLTips : "歌词来源：AppleMusic") : undefined
+        tips:
+          data.length >= 5 ? (isLocalTTML ? localTTMLTips : "歌词来源：amll-ttml-db") : undefined
       },
       metadata: ttml.metadata
     };

@@ -156,7 +156,7 @@ const PlaylistEditForm: FC<{
       <div className="flex gap-4 items-center">
         {/* 封面 */}
         <button
-          className="group relative aspect-square size-33 shrink-0 overflow-hidden rounded-lg bg-white/10 outline-none"
+          className="group relative aspect-square size-33 shrink-0 overflow-hidden rounded-lg bg-ink/10 outline-none"
           title="更换封面"
           type="button"
           onClick={() => fileRef.current?.click()}>
@@ -164,7 +164,7 @@ const PlaylistEditForm: FC<{
           <span
             className="
               absolute inset-0 flex flex-col items-center justify-center gap-1
-              bg-black/40 text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100
+              bg-scrim/40 text-ink opacity-0 transition-opacity duration-300 group-hover:opacity-100
             ">
             <ImagePlus className="size-5" />
             <span className="text-[11px] font-bold">更换封面</span>
@@ -174,7 +174,7 @@ const PlaylistEditForm: FC<{
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <input
             className="
-              w-full rounded-md border border-white/15 bg-white/10 px-3 py-2 font-bold
+              w-full rounded-md border border-ink/15 bg-ink/10 px-3 py-2 font-bold
               outline-none transition-colors focus:border-primary
             "
             value={name}
@@ -186,7 +186,7 @@ const PlaylistEditForm: FC<{
           />
           <textarea
             className="
-              h-20 w-full resize-none rounded-md border border-white/15 bg-white/10 px-3 py-2
+              h-20 w-full resize-none rounded-md border border-ink/15 bg-ink/10 px-3 py-2
               outline-none transition-colors scrollbar scrollbar-show focus:border-primary
             "
             value={desc}
@@ -217,7 +217,7 @@ const PlaylistEditForm: FC<{
                   key={tag}
                   className={cx(
                     "rounded-md px-2 py-1 text-[11px] font-bold transition-all duration-300",
-                    active ? "bg-primary text-primary-text" : "bg-white/10 hover:bg-white/20"
+                    active ? "bg-primary text-primary-text" : "bg-ink/10 hover:bg-ink/20"
                   )}
                   type="button"
                   onClick={() => toggleTag(tag)}>
@@ -229,7 +229,7 @@ const PlaylistEditForm: FC<{
         </div>
       </div>
       {/* 可见性 */}
-      <div className="flex items-center justify-between rounded-md bg-white/5 px-3 py-2">
+      <div className="flex items-center justify-between rounded-md bg-ink/5 px-3 py-2">
         <span className="flex items-center gap-2">
           {isPrivate ? (
             <Lock className="size-4 opacity-70" />
@@ -257,7 +257,7 @@ const PlaylistEditForm: FC<{
                 {settingPublic ? "处理中..." : "确认公开（不可撤销）"}
               </button>
               <button
-                className="rounded-md px-3 py-1 font-bold hover:bg-white/10 transition-all active:scale-96 disabled:opacity-50"
+                className="rounded-md px-3 py-1 font-bold hover:bg-ink/10 transition-all active:scale-96 disabled:opacity-50"
                 type="button"
                 disabled={settingPublic}
                 onClick={() => setConfirmingPublic(false)}>

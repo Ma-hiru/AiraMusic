@@ -32,11 +32,11 @@ const TrayPlayer: FC<TrayPlayerProps> = ({ track, status, duration, currentTime 
   return (
     <section
       className="
-        w-full min-h-16 bg-white/10 backdrop-blur-2xl px-2.5 py-2
+        w-full min-h-16 bg-ink/10 backdrop-blur-2xl px-2.5 py-2
         grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-lg
-        border border-black/6 shadow-[0_8px_24px_rgba(0,0,0,0.08)]
+        border border-ink/10 shadow-[0_8px_24px_rgba(0,0,0,0.08)]
       ">
-      <div className="relative size-11 overflow-hidden rounded-md bg-black/5">
+      <div className="relative size-11 overflow-hidden rounded-md bg-ink/8">
         {cover ? (
           <NeteaseImage
             className="size-full cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-opacity"
@@ -69,18 +69,18 @@ const TrayPlayer: FC<TrayPlayerProps> = ({ track, status, duration, currentTime 
           <p className="truncate text-[12px] font-semibold leading-4">
             {track?.name || "暂无播放"}
           </p>
-          <p className="truncate text-[10px] font-semibold leading-3 opacity-45">
+          <p className="truncate text-[10px] font-semibold leading-3 text-ink-muted">
             {artist || track?.al.name || import.meta.env.APP_NAME}
           </p>
         </div>
         <div className="grid grid-cols-[1fr_auto] items-center gap-2">
-          <div className="h-1 overflow-hidden rounded-full bg-white/50">
+          <div className="h-1 overflow-hidden rounded-full bg-ink/15">
             <span
               className="block h-full rounded-full bg-primary transition-[width] duration-300 ease-in-out"
               style={{ width: `${percent}%` }}
             />
           </div>
-          <span className="text-[9px] font-semibold opacity-40">
+          <span className="text-[9px] font-semibold text-ink-muted">
             {RendererFormat.duration(currentTime, "s")}
           </span>
         </div>

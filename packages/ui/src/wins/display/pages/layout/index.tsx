@@ -1,14 +1,19 @@
 import { cx } from "@emotion/css";
 import { useLocation, useNavigate } from "react-router-dom";
-import { memo, type FC, useMemo, useState, useEffect } from "react";
+import { memo, useRef, type FC, useMemo, useState, useEffect, useLayoutEffect } from "react";
 import { BackCtx } from "@/wins/display/ctx/back";
 import { RendererDevice } from "@/common/lib/device";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RendererModified } from "@/common/lib/modified";
+import { applyMonetPalette } from "@/common/player/monet";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RoutePath, RoutePathDisplay } from "@/common/routes";
+import {
+  type ResourceBackdrop,
+  ResourceBackdropContext
+} from "@/common/hooks/use-resource-page-theme";
 import Drag from "@/common/components/layout/drag/drag";
 import AppModal from "@/common/components/display/modal";
 import AppToast from "@/common/components/display/toast";
@@ -132,6 +137,12 @@ const LayoutDisplay: FC<object> = () => {
   }, [modifiedBus.data, modifiedBus.type, navigate, locationRef]);
 
   const [back, setBack] = useState(false);
+  const [resourceBackdrop, setResourceBackdrop] = useState<ResourceBackdrop>();
+  const themeRef = useRef<HTMLDivElement>(null);
+  const resourcePalette = resourceBackdrop?.palette;
+  useLayoutEffect(() => {
+    if (themeRef.current) applyMonetPalette(resourcePalette ?? null, themeRef.current.style);
+  }, [resourcePalette]);
   const backCtxValue = useMemo(
     () => ({
       back,
@@ -143,7 +154,10 @@ const LayoutDisplay: FC<object> = () => {
   );
 
   return (
-    <div className="w-screen h-screen relative overflow-hidden">
+    <div
+      ref={themeRef}
+      className="monet-scope relative h-screen w-screen overflow-hidden text-ink"
+      data-monet-portal="">
       <Title />
       <Drag className="absolute w-screen top-0 right-0 h-10  flex flex-row justify-between items-center px-4 z-50">
         <TopBack
@@ -165,9 +179,11 @@ const LayoutDisplay: FC<object> = () => {
         />
       </Drag>
       <AppErrorBoundary name="LayoutDisplayContent" canReset showError>
-        <Background />
+        <Background resource={resourceBackdrop} />
         <BackCtx value={backCtxValue}>
-          <KeepAliveOutlet maxCache={3} />
+          <ResourceBackdropContext value={setResourceBackdrop}>
+            <KeepAliveOutlet maxCache={3} />
+          </ResourceBackdropContext>
         </BackCtx>
         <DisplayFloat />
         <AppToast.Provider className="z-(--z-index-display-toast)!" />

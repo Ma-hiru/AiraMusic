@@ -20,9 +20,9 @@ const TrayItem: FC<TrayItemProps> = ({ onClick, text, active, danger, disabled, 
           text-[12px] font-semibold outline-none transition-all duration-300 ease-in-out
           focus-visible:ring-2 focus-visible:ring-primary/40
         `,
-        active ? "bg-primary text-(--text-color-on-main)" : "hover:bg-black/20 active:scale-[0.98]",
-        danger && "text-red-600 hover:bg-red-500/10 hover:text-red-700",
-        disabled && "pointer-events-none opacity-35"
+        active ? "bg-primary text-primary-text" : "hover:bg-ink/12 active:scale-[0.98]",
+        danger && "text-danger hover:bg-danger/10",
+        disabled && "pointer-events-none opacity-55"
       )}
       title={text}
       type="button"

@@ -51,7 +51,7 @@ export function createStarContextMenu({
       },
       {
         prefix: <Trash2 size={14} />,
-        label: <p className="text-[12px] text-red-500">取消收藏</p>,
+        label: <p className="text-[12px] text-danger">取消收藏</p>,
         onClick: onUnstar
       }
     ]

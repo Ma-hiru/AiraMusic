@@ -18,7 +18,7 @@ const Indicator: FC<IndicatorProps> = ({
   showDot = true
 }) => {
   return (
-    <section className="absolute inset-x-0 bottom-0 z-20 flex items-end justify-between gap-3 bg-linear-to-t from-black/60 via-black/20 to-transparent px-4 pb-3 pt-14 pointer-events-none">
+    <section className="absolute inset-x-0 bottom-0 z-20 flex items-end justify-between gap-3 bg-linear-to-t from-scrim/60 via-scrim/20 to-transparent px-4 pb-3 pt-14 pointer-events-none">
       <p className="truncate text-sm font-semibold">{title}</p>
       {showDot && (
         <div className="flex shrink-0 gap-1 pointer-events-auto">
@@ -31,7 +31,7 @@ const Indicator: FC<IndicatorProps> = ({
                   h-2.5 cursor-pointer rounded-full transition-all duration-300 ease-in-out
                   active:scale-90
                 `,
-                  i === activeIdx ? "w-6 bg-white" : "w-2.5 bg-white/35 hover:bg-white/70"
+                  i === activeIdx ? "w-6 bg-ink" : "w-2.5 bg-ink/35 hover:bg-ink/70"
                 )}
                 title={`切换到第 ${i + 1} 张`}
                 onClick={() => onDotClick?.(i)}

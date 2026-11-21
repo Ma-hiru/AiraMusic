@@ -49,7 +49,7 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
   const [scope, animate] = useAnimate();
   const [visible, setVisible] = useState(false);
   const [render, setRender] = useState<Nullable<ContextMenuRender>>(null);
-  // 子菜单挂到 body：父级带 backdrop-filter 会成为 backdrop root，嵌套后采样不到页面内容
+  // 子菜单和主菜单处在同一配色作用域，避开主菜单的 backdrop-filter。
   const [submenu, setSubmenu] =
     useState<Nullable<{ key: string; top: number; left: number; items: ContextMenuItem[] }>>(null);
   const listRef = useRef<Nullable<HTMLDivElement>>(null);
@@ -269,7 +269,7 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
         return (
           <div
             key={key}
-            className="mx-1 h-px shrink-0 bg-white/10"
+            className="mx-1 h-px shrink-0 bg-ink/10"
             role="separator"
             aria-orientation="horizontal"
           />
@@ -289,8 +289,8 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
             `,
             item.disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer",
             item.danger
-              ? `text-red-400 hover:bg-red-500/90 hover:text-white
-                 focus-visible:bg-red-500/90 focus-visible:text-white focus-visible:ring-red-400/60`
+              ? `text-danger hover:bg-danger/15
+                 focus-visible:bg-danger/15 focus-visible:ring-danger/60`
               : `hover:bg-primary hover:text-primary-text
                  focus-visible:bg-primary focus-visible:text-primary-text focus-visible:ring-primary/60`
           )}
@@ -348,7 +348,7 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
       {!!render?.header && (
         <>
           <div className="px-1 h-10">{render.header}</div>
-          <div className="mx-2 my-1 h-px bg-neutral-700/10" />
+          <div className="mx-2 my-1 h-px bg-ink/12" />
         </>
       )}
       <div
@@ -378,7 +378,7 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
               </div>
             </div>
           </div>,
-          document.body
+          scope.current?.closest("[data-monet-portal]") ?? document.body
         )}
     </motion.div>
   );

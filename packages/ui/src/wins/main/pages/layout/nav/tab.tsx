@@ -1,6 +1,5 @@
 import { cx } from "@emotion/css";
 import { memo, type FC, useState, useEffect } from "react";
-import SectionTab from "@/common/components/data-input/tab";
 
 const tab = ["创建", "收藏"];
 
@@ -32,16 +31,31 @@ const NavTab: FC<NavTabProps> = ({ setCategory, sidebar, category }) => {
       className="w-full flex justify-center items-center shrink-0 contain-layout"
       onMouseOver={() => setHoverTab(true)}
       onMouseLeave={() => setHoverTab(false)}>
-      <SectionTab
+      <div
         className={cx(
-          "text-[10px] ease-in-out duration-300 transition-all my-3 text-(--text-color)/20",
-          (!sidebar || !showTab) && "opacity-0 scale-0 my-0!"
+          "my-3 inline-flex items-center gap-0.5 rounded-full bg-surface-raised/80 p-0.5 text-[10px] font-semibold transition-all duration-300 ease-in-out",
+          (!sidebar || !showTab) && "opacity-0 scale-0 my-0!",
+          sidebar && "focus-within:my-3! focus-within:scale-100 focus-within:opacity-100"
         )}
-        data={tab}
-        mode="less-theme"
-        activeIndex={category}
-        onChange={setCategory}
-      />
+        role="group"
+        inert={!sidebar}
+        aria-label="歌单分类">
+        {tab.map((label, index) => (
+          <button
+            key={label}
+            className={cx(
+              "cursor-pointer rounded-full px-2 py-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-primary",
+              category === index
+                ? "bg-secondary-container text-on-secondary-container"
+                : "text-ink hover:bg-ink/12"
+            )}
+            type="button"
+            aria-pressed={category === index}
+            onClick={() => setCategory(index)}>
+            {label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 };

@@ -99,7 +99,7 @@ const Shortcut: FC<ShortcutSettings> = ({ data, patchSettings }) => {
                   transition-all duration-300 ease-in-out
                   cursor-pointer hover:opacity-50 active:scale-95
                 `,
-                  isRecording ? "border-primary animate-pulse" : "border-white/50"
+                  isRecording ? "border-primary animate-pulse" : "border-ink/50"
                 )}
                 type="button"
                 title={isRecording ? "按 Esc 取消" : "点击修改快捷键"}
@@ -121,7 +121,7 @@ const Shortcut: FC<ShortcutSettings> = ({ data, patchSettings }) => {
           </div>
           <button
             className={`
-              h-7 shrink-0 rounded-md border border-white/50 px-3
+              h-7 shrink-0 rounded-md border border-ink/50 px-3
               text-xs font-semibold
               transition-all duration-300 ease-in-out
               cursor-pointer hover:opacity-50 active:scale-95

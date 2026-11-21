@@ -55,7 +55,7 @@ const mocks = vi.hoisted(() => {
     logError: vi.fn(),
     setAtom: vi.fn(),
     navigate: vi.fn(),
-    theme: {},
+    theme: { backgroundCover: undefined, theme: { mainColor: "#ff5358", themeColors: [] } },
     location: { pathname: "/home" },
     output: { setDevice: vi.fn(), views: [], selected: "default" },
     window: {

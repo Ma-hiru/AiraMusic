@@ -157,12 +157,18 @@ const Search: FC<SearchProps> = ({
           className="relative z-50 shrink-0"
           setTabs={handleSetTabs}
           onSearch={applySearch}
+          inDrawer
         />
       )}
 
-      <Card className="flex min-h-0 flex-1 flex-col overflow-hidden p-0!">
+      <Card
+        className={cx(
+          "flex min-h-0 flex-1 flex-col overflow-hidden p-0!",
+          variant === "drawer" && "border-hairline/65! bg-surface-raised/70!"
+        )}>
         <HotRecommend
           className={cx("min-h-0 flex-1", keyword && "hidden")}
+          inDrawer={variant === "drawer"}
           onSearch={(nextKeyword) => {
             applySearch(nextKeyword);
             inputRef.current?.setKeyword(nextKeyword);
@@ -176,7 +182,7 @@ const Search: FC<SearchProps> = ({
             !keyword && "hidden"
           )}>
           {variant === "page" ? (
-            <aside className="flex w-48 shrink-0 flex-col border-r border-white/6 px-4 py-4">
+            <aside className="flex w-48 shrink-0 flex-col border-r border-ink/6 px-4 py-4">
               <div className="min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">
                   Matches
@@ -201,7 +207,7 @@ const Search: FC<SearchProps> = ({
                       `,
                         active
                           ? "bg-primary text-primary-text"
-                          : "text-(--text-color)/55 hover:bg-white/6 hover:text-normal-text"
+                          : "text-(--text-color)/55 hover:bg-ink/6 hover:text-normal-text"
                       )}
                       type="button"
                       aria-pressed={active}
@@ -219,7 +225,7 @@ const Search: FC<SearchProps> = ({
               </nav>
             </aside>
           ) : (
-            <div className="flex shrink-0 items-center gap-2 border-b border-white/6 px-3 py-2">
+            <div className="flex shrink-0 items-center gap-2 border-b border-ink/6 px-3 py-2">
               <div
                 className="grid min-w-0 flex-1 grid-cols-4 gap-1"
                 role="group"
@@ -236,10 +242,11 @@ const Search: FC<SearchProps> = ({
                         flex min-w-0 cursor-pointer items-center justify-center gap-1 rounded-md
                         px-1.5 py-1.5 text-[11px] font-semibold
                         transition-colors duration-200 ease-in-out
+                        focus-visible:outline-2 focus-visible:outline-primary
                       `,
                         active
-                          ? "bg-primary text-primary-text"
-                          : "text-(--text-color)/55 hover:bg-white/6 hover:text-normal-text"
+                          ? "bg-primary-container text-on-primary-container"
+                          : "text-ink-muted hover:bg-ink/8 hover:text-ink"
                       )}
                       type="button"
                       aria-pressed={active}
@@ -250,7 +257,7 @@ const Search: FC<SearchProps> = ({
                   );
                 })}
               </div>
-              <span className="shrink-0 text-[10px] font-semibold tabular-nums opacity-40">
+              <span className="shrink-0 rounded-full bg-secondary-container px-2 py-1 text-[10px] font-semibold text-on-secondary-container tabular-nums">
                 {count} 条
               </span>
             </div>

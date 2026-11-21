@@ -58,8 +58,8 @@ const StarHeader: FC<StarHeaderProps> = ({
           {showTabs ? (
             <div
               className="
-                inline-flex items-center gap-0.5 rounded-full border border-white/20
-                bg-white/10 p-0.5 px-1.5 relative left-0.5 shadow-md backdrop-blur-lg
+                inline-flex items-center gap-0.5 rounded-full border border-ink/20
+                bg-ink/10 p-0.5 px-1.5 relative left-0.5 shadow-md backdrop-blur-lg
               ">
               <StarTabs active={active} onChange={onChange} />
               <span className="mx-0.5 h-4.5 w-px bg-(--text-color)/15" />
@@ -76,7 +76,7 @@ const StarHeader: FC<StarHeaderProps> = ({
                       `,
                       selected
                         ? "bg-(--text-color)/15 text-normal-text"
-                        : "text-(--text-color)/45 hover:bg-white/20 hover:text-normal-text"
+                        : "text-(--text-color)/45 hover:bg-ink/20 hover:text-normal-text"
                     )}
                     title={label}
                     type="button"
@@ -92,7 +92,7 @@ const StarHeader: FC<StarHeaderProps> = ({
                 className="
                   flex size-8 cursor-pointer items-center justify-center rounded-full
                   text-normal-text transition-all duration-200 ease-in-out
-                  hover:bg-white/20 active:scale-95
+                  hover:bg-ink/20 active:scale-95
                 "
                 title="刷新"
                 type="button"

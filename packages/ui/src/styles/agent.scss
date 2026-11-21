@@ -1,14 +1,14 @@
 :root {
   --side-bar-expand-width: calc(var(--spacing) * 57); /* 14.25rem = 228px */
-  --background: rgba(255, 255, 255, 0.1);
-  --foreground: rgba(255, 255, 255, 0.86);
-  --card: rgba(0, 0, 0, 0.18);
-  --card-foreground: rgba(255, 255, 255, 0.86);
-  --muted: rgba(255, 255, 255, 0.1);
-  --muted-foreground: rgba(255, 255, 255, 0.54);
-  --border: rgba(255, 255, 255, 0.14);
-  --input: rgba(255, 255, 255, 0.14);
-  --ring: rgba(255, 255, 255, 0.42);
+  --background: color-mix(in srgb, var(--m3-on-surface) 10%, transparent);
+  --foreground: color-mix(in srgb, var(--m3-on-surface) 86%, transparent);
+  --card: color-mix(in srgb, var(--m3-surface) 18%, transparent);
+  --card-foreground: color-mix(in srgb, var(--m3-on-surface) 86%, transparent);
+  --muted: color-mix(in srgb, var(--m3-on-surface) 10%, transparent);
+  --muted-foreground: color-mix(in srgb, var(--m3-on-surface) 54%, transparent);
+  --border: color-mix(in srgb, var(--m3-on-surface) 14%, transparent);
+  --input: color-mix(in srgb, var(--m3-on-surface) 14%, transparent);
+  --ring: color-mix(in srgb, var(--m3-on-surface) 42%, transparent);
   --primary: var(--theme-color-main);
   --primary-foreground: var(--text-color-on-main);
   --radius: 0.5rem;
@@ -20,11 +20,11 @@
 }
 
 .agent-panel {
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  background: rgba(12, 13, 16, 0.42) !important;
+  border-color: color-mix(in srgb, var(--m3-on-surface) 10%, transparent) !important;
+  background: color-mix(in srgb, var(--m3-popover) 42%, transparent) !important;
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.04) inset,
-    0 8px 28px rgba(0, 0, 0, 0.12) !important;
+    0 1px 0 color-mix(in srgb, var(--m3-on-surface) 4%, transparent) inset,
+    0 8px 28px color-mix(in srgb, var(--m3-surface) 12%, transparent) !important;
   backdrop-filter: blur(28px) saturate(1.12);
 }
 
@@ -49,17 +49,17 @@
   &:hover,
   &:focus-within,
   &.scrollbar-show {
-    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+    scrollbar-color: color-mix(in srgb, var(--m3-on-surface) 18%, transparent) transparent;
   }
 
   &:hover::-webkit-scrollbar-thumb,
   &:focus-within::-webkit-scrollbar-thumb,
   &.scrollbar-show::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.18);
+    background: color-mix(in srgb, var(--m3-on-surface) 18%, transparent);
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: color-mix(in srgb, var(--m3-on-surface) 30%, transparent);
   }
 }
 
@@ -88,21 +88,21 @@
 }
 
 .agent-config-modal-scroll.scrollbar.scrollbar-show:hover {
-  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+  scrollbar-color: color-mix(in srgb, var(--m3-on-surface) 18%, transparent) transparent;
 }
 
 .agent-config-modal-scroll.scrollbar.scrollbar-show:hover::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.18);
+  background: color-mix(in srgb, var(--m3-on-surface) 18%, transparent);
 }
 
 .agent-config-modal {
   max-height: calc(100vh - 32px) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
+  border-color: color-mix(in srgb, var(--m3-on-surface) 12%, transparent) !important;
   border-radius: 16px !important;
-  background: rgba(15, 16, 20, 0.965) !important;
+  background: color-mix(in srgb, var(--m3-popover) 96.5%, transparent) !important;
   box-shadow:
-    0 28px 90px rgba(0, 0, 0, 0.52),
-    inset 0 1px rgba(255, 255, 255, 0.045) !important;
+    0 28px 90px color-mix(in srgb, var(--m3-surface) 52%, transparent),
+    inset 0 1px color-mix(in srgb, var(--m3-on-surface) 4.5%, transparent) !important;
   backdrop-filter: blur(28px) saturate(1.12) !important;
 }
 
@@ -115,13 +115,13 @@
   font-size: 9px;
   font-weight: 500;
   letter-spacing: 0.12em;
-  color: rgba(255, 255, 255, 0.36);
+  color: color-mix(in srgb, var(--m3-on-surface) 36%, transparent);
 }
 
 .agent-config-modal > header h2 {
   font-size: 16px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.88);
+  color: color-mix(in srgb, var(--m3-on-surface) 88%, transparent);
 }
 
 @media (max-height: 520px) {
@@ -213,7 +213,7 @@
     font-weight: 650;
     line-height: 1.38;
     letter-spacing: 0;
-    color: rgba(255, 255, 255, 0.94);
+    color: color-mix(in srgb, var(--m3-on-surface) 94%, transparent);
   }
 
   [data-streamdown="heading-1"] {
@@ -260,7 +260,7 @@
     border-left: 2px solid color-mix(in srgb, var(--theme-color-main) 58%, transparent);
     padding-block: 0.05rem;
     padding-left: 0.75rem;
-    color: rgba(255, 255, 255, 0.66);
+    color: color-mix(in srgb, var(--m3-on-surface) 66%, transparent);
     font-style: normal;
   }
 
@@ -273,11 +273,11 @@
   }
 
   [data-streamdown="inline-code"] {
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid color-mix(in srgb, var(--m3-on-surface) 10%, transparent);
     border-radius: 0.35rem;
-    background: rgba(255, 255, 255, 0.12);
+    background: color-mix(in srgb, var(--m3-on-surface) 12%, transparent);
     padding: 0.08rem 0.32rem;
-    color: rgba(255, 255, 255, 0.94);
+    color: color-mix(in srgb, var(--m3-on-surface) 94%, transparent);
     font-size: 0.88em;
   }
 
@@ -285,9 +285,9 @@
     max-width: 100%;
     margin-block: 0.75rem 0.95rem;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid color-mix(in srgb, var(--m3-on-surface) 10%, transparent);
     border-radius: 0.9rem;
-    background: rgba(0, 0, 0, 0.34);
+    background: color-mix(in srgb, var(--m3-surface) 34%, transparent);
     font-size: 0.82rem;
     line-height: 1.65;
   }
@@ -305,9 +305,9 @@
     margin-block: 0.75rem 0.95rem;
     overflow-x: auto;
     overflow-y: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid color-mix(in srgb, var(--m3-on-surface) 10%, transparent);
     border-radius: 0.9rem;
-    background: rgba(0, 0, 0, 0.12);
+    background: color-mix(in srgb, var(--m3-surface) 12%, transparent);
   }
 
   [data-streamdown="table"] {
@@ -322,14 +322,14 @@
   }
 
   [data-streamdown="table-header"] {
-    background: rgba(255, 255, 255, 0.06);
+    background: color-mix(in srgb, var(--m3-on-surface) 6%, transparent);
   }
 
   [data-streamdown="table"] th,
   [data-streamdown="table"] td,
   [data-streamdown="table-header-cell"],
   [data-streamdown="table-cell"] {
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid color-mix(in srgb, var(--m3-on-surface) 10%, transparent);
     padding: 0.45rem 0.6rem;
     text-align: left;
     vertical-align: top;
@@ -341,17 +341,17 @@
   [data-streamdown="table"] th,
   [data-streamdown="table-header-cell"] {
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.92);
+    color: color-mix(in srgb, var(--m3-on-surface) 92%, transparent);
   }
 
   [data-streamdown="table"] td,
   [data-streamdown="table-cell"] {
-    color: rgba(255, 255, 255, 0.78);
+    color: color-mix(in srgb, var(--m3-on-surface) 78%, transparent);
   }
 
   [data-streamdown="thematic-break"] {
     margin-block: 1.05rem;
-    border-color: rgba(255, 255, 255, 0.14);
+    border-color: color-mix(in srgb, var(--m3-on-surface) 14%, transparent);
   }
 
   [data-streamdown="link"] {
@@ -367,7 +367,7 @@
   [data-streamdown="code-block-body"],
   [data-streamdown="table-wrapper"] {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.24) transparent;
+    scrollbar-color: color-mix(in srgb, var(--m3-on-surface) 24%, transparent) transparent;
 
     &::-webkit-scrollbar {
       width: 0.38rem;
@@ -380,11 +380,11 @@
 
     &::-webkit-scrollbar-thumb {
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.2);
+      background: color-mix(in srgb, var(--m3-on-surface) 20%, transparent);
     }
 
     &::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.32);
+      background: color-mix(in srgb, var(--m3-on-surface) 32%, transparent);
     }
   }
 
@@ -414,7 +414,7 @@
     background: color-mix(in srgb, var(--theme-color-main) 11%, transparent);
     box-decoration-break: clone;
     padding-inline: 0.2rem;
-    color: color-mix(in srgb, var(--theme-color-main) 88%, white);
+    color: var(--m3-primary-70);
     font: inherit;
     font-weight: 560;
     line-height: inherit;
@@ -428,7 +428,7 @@
     &:hover,
     &:focus-visible {
       background: color-mix(in srgb, var(--theme-color-main) 20%, transparent);
-      color: white;
+      color: var(--m3-on-surface);
       outline: none;
     }
 
@@ -447,22 +447,22 @@
   grid-template-columns: 4.5rem minmax(0, 1fr);
   gap: 0.85rem;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.105);
+  border: 1px solid color-mix(in srgb, var(--m3-on-surface) 10.5%, transparent);
   border-radius: 0.9rem;
-  background: rgba(255, 255, 255, 0.045);
+  background: color-mix(in srgb, var(--m3-on-surface) 4.5%, transparent);
   box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.08),
-    inset 0 1px rgba(255, 255, 255, 0.025);
+    0 12px 32px color-mix(in srgb, var(--m3-surface) 8%, transparent),
+    inset 0 1px color-mix(in srgb, var(--m3-on-surface) 2.5%, transparent);
   padding: 0.75rem;
-  color: rgba(255, 255, 255, 0.88);
+  color: color-mix(in srgb, var(--m3-on-surface) 88%, transparent);
   transition:
     border-color 180ms ease,
     background-color 180ms ease;
 
   &:hover,
   &:focus-within {
-    border-color: rgba(255, 255, 255, 0.16);
-    background: rgba(255, 255, 255, 0.058);
+    border-color: color-mix(in srgb, var(--m3-on-surface) 16%, transparent);
+    background: color-mix(in srgb, var(--m3-on-surface) 5.8%, transparent);
   }
 
   &.featured {
@@ -478,9 +478,9 @@
   aspect-ratio: 1;
   cursor: pointer;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid color-mix(in srgb, var(--m3-on-surface) 8%, transparent);
   border-radius: 0.72rem;
-  background: rgba(0, 0, 0, 0.18);
+  background: color-mix(in srgb, var(--m3-surface) 18%, transparent);
   padding: 0;
   outline: none;
 
@@ -511,10 +511,10 @@
   width: 1.65rem !important;
   height: 1.65rem !important;
   place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border: 1px solid color-mix(in srgb, var(--m3-on-surface) 22%, transparent);
   border-radius: 999px;
-  background: rgba(10, 10, 12, 0.7);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  background: color-mix(in srgb, var(--m3-popover) 70%, transparent);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--m3-surface) 25%, transparent);
   backdrop-filter: blur(9px);
 
   svg {
@@ -529,7 +529,7 @@
   width: 100%;
   height: 100%;
   place-items: center;
-  color: rgba(255, 255, 255, 0.28);
+  color: color-mix(in srgb, var(--m3-on-surface) 28%, transparent);
 
   svg {
     width: 1.6rem;
@@ -550,7 +550,7 @@
   align-items: center;
   gap: 0.34rem;
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.46);
+  color: color-mix(in srgb, var(--m3-on-surface) 46%, transparent);
   font-size: 0.68rem;
   font-weight: 620;
   letter-spacing: 0.045em;
@@ -561,7 +561,7 @@
     width: 0.72rem;
     height: 0.72rem;
     flex: none;
-    color: color-mix(in srgb, var(--theme-color-main) 72%, white);
+    color: var(--m3-primary-80);
   }
 
   span {
@@ -586,7 +586,7 @@
   overflow: hidden;
   border-radius: 0.2rem;
   padding: 0;
-  color: rgba(255, 255, 255, 0.93);
+  color: color-mix(in srgb, var(--m3-on-surface) 93%, transparent);
   font-size: 0.94rem;
   font-weight: 650;
   line-height: 1.4;
@@ -597,9 +597,9 @@
 
   &:hover,
   &:focus-visible {
-    color: white;
+    color: var(--m3-on-surface);
     text-decoration: underline;
-    text-decoration-color: rgba(255, 255, 255, 0.32);
+    text-decoration-color: color-mix(in srgb, var(--m3-on-surface) 32%, transparent);
     text-underline-offset: 0.2rem;
   }
 }
@@ -607,7 +607,7 @@
 .agent-resource-subtitle {
   max-width: 100%;
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.58);
+  color: color-mix(in srgb, var(--m3-on-surface) 58%, transparent);
   font-size: 0.75rem;
   line-height: 1.45;
   text-overflow: ellipsis;
@@ -619,7 +619,7 @@
   max-width: 100%;
   margin-top: 0.32rem;
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.52);
+  color: color-mix(in srgb, var(--m3-on-surface) 52%, transparent);
   font-size: 0.74rem;
   line-height: 1.5;
   -webkit-box-orient: vertical;
@@ -640,11 +640,11 @@
     cursor: pointer;
     align-items: center;
     gap: 0.3rem;
-    border: 1px solid rgba(255, 255, 255, 0.085);
+    border: 1px solid color-mix(in srgb, var(--m3-on-surface) 8.5%, transparent);
     border-radius: 0.48rem;
-    background: rgba(255, 255, 255, 0.04);
+    background: color-mix(in srgb, var(--m3-on-surface) 4%, transparent);
     padding: 0.24rem 0.55rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: color-mix(in srgb, var(--m3-on-surface) 60%, transparent);
     font-size: 0.72rem;
     font-weight: 560;
     outline: none;
@@ -661,14 +661,14 @@
     &.primary {
       border-color: color-mix(in srgb, var(--theme-color-main) 30%, transparent);
       background: color-mix(in srgb, var(--theme-color-main) 15%, transparent);
-      color: color-mix(in srgb, var(--theme-color-main) 75%, white);
+      color: var(--m3-primary-80);
     }
 
     &:hover:not(:disabled),
     &:focus-visible:not(:disabled) {
-      border-color: rgba(255, 255, 255, 0.16);
-      background: rgba(255, 255, 255, 0.09);
-      color: white;
+      border-color: color-mix(in srgb, var(--m3-on-surface) 16%, transparent);
+      background: color-mix(in srgb, var(--m3-on-surface) 9%, transparent);
+      color: var(--m3-on-surface);
     }
 
     &:disabled {
@@ -681,7 +681,7 @@
 .agent-resource-preview {
   width: 100%;
   margin-top: 0.65rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid color-mix(in srgb, var(--m3-on-surface) 7%, transparent);
   padding-top: 0.35rem;
 
   li {
@@ -692,11 +692,11 @@
     gap: 0.35rem;
     border-radius: 0.38rem;
     padding: 0.22rem 0.28rem;
-    color: rgba(255, 255, 255, 0.3);
+    color: color-mix(in srgb, var(--m3-on-surface) 30%, transparent);
 
     &:hover {
-      background: rgba(255, 255, 255, 0.04);
-      color: rgba(255, 255, 255, 0.6);
+      background: color-mix(in srgb, var(--m3-on-surface) 4%, transparent);
+      color: color-mix(in srgb, var(--m3-on-surface) 60%, transparent);
     }
 
     > span {
@@ -738,13 +738,13 @@
       }
 
       strong {
-        color: rgba(255, 255, 255, 0.72);
+        color: color-mix(in srgb, var(--m3-on-surface) 72%, transparent);
         font-size: 0.72rem;
         font-weight: 540;
       }
 
       small {
-        color: rgba(255, 255, 255, 0.34);
+        color: color-mix(in srgb, var(--m3-on-surface) 34%, transparent);
         font-size: 0.68rem;
       }
     }
@@ -760,7 +760,7 @@
   width: 100%;
   aspect-ratio: 1;
   border-radius: 0.72rem;
-  background: rgba(255, 255, 255, 0.06);
+  background: color-mix(in srgb, var(--m3-on-surface) 6%, transparent);
   animation: agent-resource-pulse 1.5s ease-in-out infinite;
 }
 
@@ -772,7 +772,7 @@
     width: min(18rem, 72%);
     height: 0.55rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.055);
+    background: color-mix(in srgb, var(--m3-on-surface) 5.5%, transparent);
     animation: agent-resource-pulse 1.5s ease-in-out infinite;
 
     &:nth-child(2) {
@@ -794,7 +794,7 @@
 
   > .agent-resource-cover-fallback {
     border-radius: 0.65rem;
-    background: rgba(255, 255, 255, 0.045);
+    background: color-mix(in srgb, var(--m3-on-surface) 4.5%, transparent);
   }
 
   strong,
@@ -803,14 +803,14 @@
   }
 
   strong {
-    color: rgba(255, 255, 255, 0.7);
+    color: color-mix(in srgb, var(--m3-on-surface) 70%, transparent);
     font-size: 0.76rem;
     font-weight: 580;
   }
 
   small {
     margin-top: 0.16rem;
-    color: rgba(255, 255, 255, 0.34);
+    color: color-mix(in srgb, var(--m3-on-surface) 34%, transparent);
     font-size: 0.64rem;
   }
 
@@ -819,10 +819,10 @@
     cursor: pointer;
     align-items: center;
     gap: 0.3rem;
-    border: 1px solid rgba(255, 255, 255, 0.09);
+    border: 1px solid color-mix(in srgb, var(--m3-on-surface) 9%, transparent);
     border-radius: 0.48rem;
     padding: 0.3rem 0.55rem;
-    color: rgba(255, 255, 255, 0.58);
+    color: color-mix(in srgb, var(--m3-on-surface) 58%, transparent);
     font-size: 0.65rem;
 
     svg {
@@ -855,7 +855,7 @@
     width: 3px;
     height: 3px;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--theme-color-main) 72%, white);
+    background: var(--m3-primary-80);
     animation: agent-typing-bounce 1.15s ease-in-out infinite;
 
     &:nth-child(2) {
@@ -885,7 +885,7 @@
 /* think 推理内容：默认收起、展开后整体淡化，与正式回答保持层级差 */
 .agent-think {
   min-width: 0;
-  border-left: 1px solid rgba(255, 255, 255, 0.09);
+  border-left: 1px solid color-mix(in srgb, var(--m3-on-surface) 9%, transparent);
   padding-left: 0.65rem;
 }
 
@@ -898,7 +898,7 @@
   gap: 0.4rem;
   border-radius: 0.4rem;
   padding-block: 0.12rem;
-  color: rgba(255, 255, 255, 0.34);
+  color: color-mix(in srgb, var(--m3-on-surface) 34%, transparent);
   font-size: 10.5px;
   font-weight: 550;
   letter-spacing: 0.02em;
@@ -908,16 +908,16 @@
 
   &:hover:not(:disabled),
   &:focus-visible {
-    color: rgba(255, 255, 255, 0.58);
+    color: color-mix(in srgb, var(--m3-on-surface) 58%, transparent);
   }
 
   &:focus-visible {
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.28);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--m3-on-surface) 28%, transparent);
   }
 
   &:disabled {
     cursor: default;
-    color: color-mix(in srgb, var(--theme-color-main) 52%, white);
+    color: var(--m3-primary-80);
   }
 
   svg {
@@ -928,7 +928,7 @@
 .agent-think-body {
   margin-top: 0.3rem;
   padding-bottom: 0.15rem;
-  color: rgba(255, 255, 255, 0.34);
+  color: color-mix(in srgb, var(--m3-on-surface) 34%, transparent);
   font-size: 11.5px;
   font-weight: 400;
   letter-spacing: 0.003em;
@@ -939,7 +939,7 @@
 }
 
 .agent-think-body-live {
-  color: rgba(255, 255, 255, 0.44);
+  color: color-mix(in srgb, var(--m3-on-surface) 44%, transparent);
 }
 
 /* 输入区上方的工作状态行（取代旧的全宽横幅） */
@@ -949,7 +949,7 @@
   gap: 0.45rem;
   min-height: 1.5rem;
   padding-inline: 0.25rem;
-  color: color-mix(in srgb, var(--theme-color-main) 62%, white);
+  color: var(--m3-primary-80);
   font-size: 10.5px;
   font-weight: 550;
 }
@@ -960,7 +960,7 @@
   height: 5px;
   flex: none;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--theme-color-main) 85%, white);
+  background: var(--m3-primary-70);
 
   &::after {
     position: absolute;

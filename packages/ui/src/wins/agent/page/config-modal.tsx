@@ -63,13 +63,13 @@ type ProviderFieldControlProps = {
 const SupportedFieldTypes = new Set<ProviderFieldType>(["string", "number", "integer", "boolean"]);
 
 const inputClassName = `
-  h-9 w-full rounded-lg border border-white/10 bg-white/5 px-2.5 text-[12px]
-  text-white/82 outline-none transition-[border-color,background-color,box-shadow]
-  placeholder:text-white/24 hover:bg-white/7 focus:border-primary/60 focus:bg-white/8
+  h-9 w-full rounded-lg border border-ink/10 bg-ink/5 px-2.5 text-[12px]
+  text-ink/82 outline-none transition-[border-color,background-color,box-shadow]
+  placeholder:text-ink/24 hover:bg-ink/7 focus:border-primary/60 focus:bg-ink/8
   focus:ring-2 focus:ring-primary/12 disabled:cursor-not-allowed disabled:opacity-40
 `;
 
-const cardClassName = "rounded-xl border border-white/8 bg-white/[0.025]";
+const cardClassName = "rounded-xl border border-ink/8 bg-ink/[0.025]";
 
 const isConfigValue = (value: unknown): value is ProviderConfigValue =>
   typeof value === "string" || typeof value === "number" || typeof value === "boolean";
@@ -365,12 +365,12 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
           </FieldLabel>
         </div>
         {selectedProvider?.description && (
-          <p className="text-[10px] leading-4 text-white/32">{selectedProvider.description}</p>
+          <p className="text-[10px] leading-4 text-ink/32">{selectedProvider.description}</p>
         )}
       </section>
 
       {unsupportedRequiredFields.length > 0 && (
-        <div className="rounded-lg border border-amber-300/18 bg-amber-300/7 px-3 py-2 text-[10px] leading-4 text-amber-100/72">
+        <div className="rounded-lg border border-tertiary/18 bg-tertiary/7 px-3 py-2 text-[10px] leading-4 text-tertiary/72">
           当前界面暂不支持必填字段：{unsupportedRequiredFields.join("、")}
         </div>
       )}
@@ -444,19 +444,19 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
       )}
 
       {!fields.length && selectedProvider && (
-        <div className="rounded-lg border border-white/8 bg-white/[0.025] px-3 py-3 text-center text-[11px] text-white/38">
+        <div className="rounded-lg border border-ink/8 bg-ink/[0.025] px-3 py-3 text-center text-[11px] text-ink/38">
           该 Provider 没有可编辑字段。
         </div>
       )}
 
-      <div className="sticky -bottom-4 z-10 -mx-1 flex items-center justify-between gap-3 border-t border-white/8 bg-black/35 px-1 pt-3 pb-0.5 backdrop-blur-xl">
-        <div className="flex min-w-0 items-center gap-1.5 text-[9px] text-white/30">
+      <div className="sticky -bottom-4 z-10 -mx-1 flex items-center justify-between gap-3 border-t border-ink/8 bg-scrim/35 px-1 pt-3 pb-0.5 backdrop-blur-xl">
+        <div className="flex min-w-0 items-center gap-1.5 text-[9px] text-ink/30">
           <KeyRound className="size-3.5 shrink-0" />
           <span className="truncate">凭据由 Rust Agent 加密保存</span>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           <button
-            className="h-8 cursor-pointer rounded-lg px-3 text-[11px] font-medium text-white/48 outline-none hover:bg-white/6 hover:text-white/72 focus-visible:ring-2 focus-visible:ring-white/35"
+            className="h-8 cursor-pointer rounded-lg px-3 text-[11px] font-medium text-ink/48 outline-none hover:bg-ink/6 hover:text-ink/72 focus-visible:ring-2 focus-visible:ring-ink/35"
             type="button"
             onClick={() => AppModal.close()}>
             取消
@@ -465,7 +465,7 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
             className={cx(
               "inline-flex h-8 items-center justify-center gap-1.5 rounded-lg px-3 text-[11px] font-medium outline-none transition-all focus-visible:ring-2 focus-visible:ring-primary/35 disabled:pointer-events-none disabled:opacity-35",
               disabled
-                ? "bg-white/8 text-white/40"
+                ? "bg-ink/8 text-ink/40"
                 : "bg-primary text-primary-text hover:brightness-105"
             )}
             type="submit"
@@ -512,23 +512,23 @@ const ProviderFieldControl: FC<ProviderFieldControlProps> = ({
     return (
       <FieldLabel title={field.title} required={field.required} description={field.description}>
         <button
-          className="flex h-9 w-full items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2.5 text-left outline-none transition-colors hover:bg-white/8 focus-visible:ring-2 focus-visible:ring-primary/30"
+          className="flex h-9 w-full items-center justify-between rounded-lg border border-ink/10 bg-ink/5 px-2.5 text-left outline-none transition-colors hover:bg-ink/8 focus-visible:ring-2 focus-visible:ring-primary/30"
           role="switch"
           type="button"
           aria-checked={checked}
           aria-label={field.title}
           onClick={() => onChange(!checked)}>
-          <span className="text-[11px] font-medium text-white/60">
+          <span className="text-[11px] font-medium text-ink/60">
             {checked ? "已启用" : "已关闭"}
           </span>
           <span
             className={cx(
               "relative h-5 w-9 rounded-full transition-colors",
-              checked ? "bg-primary" : "bg-white/15"
+              checked ? "bg-primary" : "bg-ink/15"
             )}>
             <span
               className={cx(
-                "absolute top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform",
+                "absolute top-0.5 size-4 rounded-full bg-ink shadow-sm transition-transform",
                 checked ? "translate-x-[18px]" : "translate-x-0.5"
               )}
             />
@@ -574,12 +574,12 @@ const FieldLabel: FC<{
   description?: string;
 }> = ({ title, children, required, description }) => (
   <label className="grid min-w-0 content-start gap-1">
-    <span className="flex items-center gap-1 text-[10px] font-medium text-white/52">
+    <span className="flex items-center gap-1 text-[10px] font-medium text-ink/52">
       {title}
       {required && <span className="text-primary/80">*</span>}
     </span>
     {children}
-    {description && <span className="text-[9px] leading-4 text-white/28">{description}</span>}
+    {description && <span className="text-[9px] leading-4 text-ink/28">{description}</span>}
   </label>
 );
 
@@ -590,12 +590,12 @@ const SectionHeading: FC<{
   description: string;
 }> = ({ title, icon: Icon, description }) => (
   <span className="flex min-w-0 items-center gap-2">
-    <span className="grid size-6 shrink-0 place-items-center rounded-lg border border-white/8 bg-white/4">
-      <Icon className="size-3.5 text-white/40" aria-hidden="true" />
+    <span className="grid size-6 shrink-0 place-items-center rounded-lg border border-ink/8 bg-ink/4">
+      <Icon className="size-3.5 text-ink/40" aria-hidden="true" />
     </span>
     <span className="min-w-0">
-      <span className="block text-[11px] font-medium text-white/67">{title}</span>
-      <span className="mt-px block text-[9px] leading-4 text-white/27">{description}</span>
+      <span className="block text-[11px] font-medium text-ink/67">{title}</span>
+      <span className="mt-px block text-[9px] leading-4 text-ink/27">{description}</span>
     </span>
   </span>
 );

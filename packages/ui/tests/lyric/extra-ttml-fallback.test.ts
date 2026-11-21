@@ -47,7 +47,7 @@ vi.mock("@/common/store/settings", () => ({
 
 const { default: lyricService } = await import("@mahiru/ui/common/netease/services/lyric");
 
-const CACHE_PREFIX = "netease_lyric_v29";
+const CACHE_PREFIX = "netease_lyric_v30";
 const TTML = `<tt xmlns="http://www.w3.org/ns/ttml" itunes:timing="Line" xmlns:itunes="http://music.apple.com/lyric-ttml-internal"><head><metadata/></head><body dur="10s"><div begin="1.000" end="9.000"><p begin="1.000" end="9.000" itunes:key="L1"><span begin="1.000" end="2.000">补</span><span begin="2.000" end="3.000">充</span></p></div></body></tt>`;
 
 describe("歌词来源回退链", () => {
@@ -258,10 +258,10 @@ describe("歌词来源回退链", () => {
     ]);
   });
 
-  it("v29 跳过 v28 的缓存并保存带来源的结果", async () => {
+  it("v30 跳过 v29 的缓存并保存带来源的结果", async () => {
     const cache = useMemoryCache();
-    cache.set("netease_lyric_v28_3105_1", cachedLyric("旧补充"));
-    cache.set("netease_lyric_v28_3105_0", cachedLyric("旧常规"));
+    cache.set("netease_lyric_v29_3105_1", cachedLyric("旧补充"));
+    cache.set("netease_lyric_v29_3105_0", cachedLyric("旧常规"));
     mocks.useExtraTTML = true;
 
     const lyric = await lyricService.id(3105);

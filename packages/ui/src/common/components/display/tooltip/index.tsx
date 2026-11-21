@@ -280,7 +280,7 @@ const Tooltip: FC<TooltipProps> = ({
               {content}
             </div>
           </div>,
-          document.body
+          triggerRef.current?.closest("[data-monet-portal]") ?? document.body
         )}
     </section>
   );

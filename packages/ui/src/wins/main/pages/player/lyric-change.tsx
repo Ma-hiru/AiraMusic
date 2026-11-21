@@ -63,7 +63,7 @@ const LyricChange: FC<object> = () => {
               transition-all duration-300 ease-in-out
               active:scale-98 surface-1 cursor-pointer
             `,
-            active && existed && "bg-white text-black",
+            active && existed && "bg-ink text-inverse-ink",
             !existed && "cursor-not-allowed! opacity-60"
           )}
           title={title}
