@@ -29,6 +29,20 @@ const Performance: FC<PerformanceSettings> = ({ data, patchSettings }) => {
           })
         }
       />
+      <ToggleRow
+        icon={Sparkles}
+        title="强制使用 CSS 流体背景"
+        checked={data.forceCssFluid}
+        description="让主窗口、独立窗口和播放页统一使用 CSS 渲染背景"
+        onClick={() =>
+          patchSettings({
+            performance: {
+              ...data,
+              forceCssFluid: !data.forceCssFluid
+            }
+          })
+        }
+      />
       <BaseGroup
         expand={data.usePlayerFluid}
         items={[

@@ -50,11 +50,11 @@ const Background: FC<object> = () => {
       saturate={3}
       opacity={0.4}
       brightness={0.4}
-      fluidMode="shader"
       fluidPaused={paused}
       themeColors={colors?.coverColors}
       src={resolvedBackgroundCover ?? undefined}
       fluid={settings.performance.usePlayerFluid}
+      fluidMode={settings.performance.forceCssFluid ? "css" : "shader"}
       fluidSpeed={NeteaseSettings.fluidSpeedMultiplier(settings.performance.playerFluidSpeed)}
     />
   );

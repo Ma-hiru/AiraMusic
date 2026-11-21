@@ -80,11 +80,11 @@ const Background: FC<{ className?: string; onLoaded?: NormalFunc }> = ({ classNa
         saturate={3}
         opacity={0.6}
         brightness={0.3}
-        fluidMode="shader"
         fluidPaused={paused}
         themeColors={colors?.coverColors}
         fluid={settings.performance.useHomeFluid}
         src={resolvedBackgroundCover ?? undefined}
+        fluidMode={settings.performance.forceCssFluid ? "css" : "shader"}
         fluidSpeed={NeteaseSettings.fluidSpeedMultiplier(settings.performance.homeFluidSpeed)}
         onLoaded={onLoaded}
       />

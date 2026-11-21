@@ -273,6 +273,25 @@ it("lets the shader own its tone and restores CSS overlays when falling back", a
   expect(getByRole("img", { name: "专辑封面" })).toBe(image);
 });
 
+it("switches between CSS and the shader without reloading the cover", async () => {
+  const view = (fluidMode: "css" | "shader") => (
+    <AcrylicBackground fluidMode={fluidMode} src="https://covers.test/one.png" fluid />
+  );
+  const { rerender, container, getByTestId, queryByTestId } = render(view("css"));
+  await act(async () => images[0]!.resolve());
+  expect(queryByTestId("fluid-shader")).toBeNull();
+  expect(container.querySelectorAll("canvas")).toHaveLength(4);
+
+  rerender(view("shader"));
+  const shader = getByTestId("fluid-shader");
+  expect(container.querySelectorAll("canvas")).toHaveLength(1);
+
+  rerender(view("css"));
+  expect(shader).not.toBeInTheDocument();
+  expect(container.querySelectorAll("canvas")).toHaveLength(4);
+  expect(images).toHaveLength(1);
+});
+
 it("keeps the latest shader cover while a replacement decodes or fails", async () => {
   const view = (name: string) => (
     <AcrylicBackground fluidMode="shader" src={`https://covers.test/${name}.png`} />

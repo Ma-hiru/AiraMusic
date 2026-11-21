@@ -16,9 +16,9 @@ const Background: FC<{ resource?: ResourceBackdrop }> = ({ resource }) => {
         saturate={3}
         opacity={0.6}
         brightness={0.3}
-        fluidMode="shader"
         fluid={settings.performance.useHomeFluid}
         src={resource ? resource.src : themeBus.data?.backgroundCover}
+        fluidMode={settings.performance.forceCssFluid ? "css" : "shader"}
         themeColors={resource ? resource.themeColors : themeBus.data?.theme.themeColors}
         fluidSpeed={NeteaseSettings.fluidSpeedMultiplier(settings.performance.homeFluidSpeed)}
         fluidPaused
