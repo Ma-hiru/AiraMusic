@@ -3,14 +3,21 @@
 一个面向桌面端的第三方网易云音乐播放器，也是一个探索音乐 Agent 的工程化项目。AiraMusic 以 Electron 与
 React 构建多窗口播放体验，并使用 Rust Agent、Rust WASM 和 Go 本地服务承载模型循环、计算密集任务与缓存能力。
 
-[下载](https://github.com/Ma-hiru/AiraMusic/releases) · [功能概览](#功能概览) · [界面截图](#界面预览) · [音乐 Agent](#音乐-agent) · [架构设计](#架构设计) · [本地开发](#本地开发)
+[下载](https://github.com/Ma-hiru/AiraMusic/releases) · [功能概览](#功能概览) · [完整截图](#界面预览) · [音乐 Agent](#音乐-agent) · [架构设计](#架构设计) · [本地开发](#本地开发)
 
-![AiraMusic 多窗口1](docs/images/all_windows.png)
-![AiraMusic 喜欢列表](docs/images/liked.png)
-![AiraMusic 播放页2](docs/images/player2.png)
-![AiraMusic 播放页](docs/images/player3.png)
-![AiraMusic 播放列表](docs/images/list.png)
-![AiraMusic 歌手](docs/images/artist.png)
+<p align="center"><img src="docs/images/all_windows.png" alt="AiraMusic 多窗口" width="1600" /></p>
+
+<p align="center"><img src="docs/images/home.png" alt="AiraMusic 主页" width="800" /></p>
+
+<p align="center"><img src="docs/images/player.png" alt="AiraMusic 播放页" width="800" /></p>
+
+<p align="center"><img src="docs/images/player2.png" alt="AiraMusic 播放页 2" width="800" /></p>
+
+<p align="center"><img src="docs/images/list.png" alt="AiraMusic 播放页 3" width="800" /></p>
+
+<p align="center"><img src="docs/images/artist.png" alt="AiraMusic 歌手" width="800" /></p>
+
+<p align="center"><img src="docs/images/mini.png" alt="AiraMusic 迷你播放器" width="372" /></p>
 
 > [!IMPORTANT]
 > AiraMusic 是非官方第三方客户端，不直接或间接提供任何音乐下载功能，推荐开通网易云黑胶会员使用。
@@ -57,7 +64,7 @@ React 构建多窗口播放体验，并使用 Rust Agent、Rust WASM 和 Go 本�
 |-----------------------------------------------|------------------------------------------------|
 | ![AiraMusic 播放页 1](docs/images/player.png) | ![AiraMusic 播放页 2](docs/images/player2.png) |
 
-| 播放页 · 注音                              | 播放列表抽屉                                |
+| 播放页 · 注音                                  | 播放列表抽屉                                |
 |------------------------------------------------|---------------------------------------------|
 | ![AiraMusic 播放页 3](docs/images/player3.png) | ![AiraMusic 播放列表](docs/images/list.png) |
 
@@ -113,10 +120,9 @@ React 构建多窗口播放体验，并使用 Rust Agent、Rust WASM 和 Go 本�
 
 ### 其他
 
-| 迷你播放器                                                                | 托盘菜单&胶囊歌词(mac)                                                                |
+| 迷你播放器                                                                | 托盘菜单&胶囊歌词(mac)                                                  |
 |---------------------------------------------------------------------------|-------------------------------------------------------------------------|
 | <img src="docs/images/mini.png" width="372" alt="AiraMusic 迷你播放器" /> | <img src="docs/images/tray.png" width="188" alt="AiraMusic 托盘菜单" /> |
-
 
 ## 音乐 Agent
 
@@ -151,7 +157,7 @@ AiraMusic 的 Agent 工作区把模型循环、应用上下文、音乐工具和
 页面实际提供的文件为准。
 
 | 平台                | 当前范围       | 打包目标                   |
-| ------------------- | -------------- | -------------------------- |
+|---------------------|----------------|----------------------------|
 | Windows x64 / arm64 | 已配置发布构建 | NSIS、MSI                  |
 | Linux x64 / arm64   | 已配置发布构建 | AppImage、deb、rpm、tar.gz |
 | macOS x64 / arm64   | 已配置发布构建 | DMG                        |
@@ -196,7 +202,7 @@ flowchart LR
 ### 工作区概览
 
 | Package           | 职责                                                                                                                                | 核心技术                                         |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+|-------------------|-------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------|
 | `packages/ui`     | 多窗口渲染层，11 个 Vite 入口：`index`、`login`、`mini`、`lyric`、`tray`、`image`、`comments`、`display`、`radio`、`agent`、`about` | React 19、Vite 8、Tailwind CSS 4、Zustand、Jotai |
 | `packages/app`    | Electron 主进程、窗口与托盘、IPC、自定义协议、子服务生命周期及打包入口                                                              | Electron 45、tsdown、Express、`http-proxy-3`     |
 | `packages/agent`  | Agent HTTP/SSE 服务、模型与工具循环、MCP 客户端、会话持久化、进程封装和生成的 DTO                                                   | Rust、Axum、Tokio、rmcp、AG-UI                   |
