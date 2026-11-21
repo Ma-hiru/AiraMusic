@@ -26,8 +26,8 @@
   --color-inverse-ink: var(--m3-inverse-on-surface);
   --color-primary: var(--m3-primary);
   --color-primary-text: var(--m3-on-primary);
-  --color-primary-hover: var(--m3-primary-70);
-  --color-primary-active: var(--m3-primary-50);
+  --color-primary-hover: var(--m3-primary-hover);
+  --color-primary-active: var(--m3-primary-active);
   --color-primary-soft: color-mix(in srgb, var(--m3-primary) 18%, transparent);
   --color-primary-container: var(--m3-primary-container);
   --color-on-primary-container: var(--m3-on-primary-container);

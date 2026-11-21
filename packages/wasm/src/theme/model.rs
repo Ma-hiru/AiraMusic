@@ -170,11 +170,10 @@ impl ColorBox {
     pub fn score(&self) -> f32 {
         let population = self.pixels_count() as f32;
         let hsv = HSV::from(self.average_color());
-        // 饱和度权重：越鲜艳越好
-        let sat_weight = hsv.s.powf(1.5);
-        // 亮度权重：中间亮度最好，太暗太亮都惩罚
-        let val_weight = 1.0 - (hsv.v - 0.5).abs() * 2.0;
-        population * sat_weight * val_weight.max(0.0)
+        let saturation_bonus = (hsv.s / 0.55).min(1.0);
+        let value_bonus = 1.0 - (hsv.v - 0.5).abs() * 2.0;
+        // 面积决定基础分，饱和度和亮度的加分最多占 35%。
+        population * (0.65 + 0.15 * saturation_bonus + 0.20 * value_bonus)
     }
 }
 
@@ -267,5 +266,32 @@ impl PartialOrd for PriorityBox {
 impl Ord for PriorityBox {
     fn cmp(&self, other: &Self) -> Ordering {
         self.priority.cmp(&other.priority)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ColorBox, Pixel};
+
+    #[test]
+    fn prominent_muted_color_outranks_small_vivid_accent() {
+        let muted_purple = Pixel {
+            r: 0x51,
+            g: 0x41,
+            b: 0x50,
+            a: 255,
+        };
+        let vivid_blue = Pixel {
+            r: 0x2b,
+            g: 0x77,
+            b: 0xa0,
+            a: 255,
+        };
+        let purple = ColorBox::from(vec![muted_purple; 376]);
+        let small_blue = ColorBox::from(vec![vivid_blue; 94]);
+        let large_blue = ColorBox::from(vec![vivid_blue; 376]);
+
+        assert!(purple.score() > small_blue.score());
+        assert!(large_blue.score() > purple.score());
     }
 }

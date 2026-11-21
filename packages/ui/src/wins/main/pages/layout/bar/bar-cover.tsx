@@ -38,7 +38,12 @@ const BarCover: FC<object> = () => {
         cache
       />
       <div className="w-full pl-2 pr-6 flex flex-col items-start overflow-hidden">
-        <Marquee className="text-sm font-bold" text={track?.name} options={marqueeOpts} />
+        <Marquee
+          className="text-sm font-bold cursor-pointer"
+          text={track?.name}
+          options={marqueeOpts}
+          onClick={() => setPlayModal(true)}
+        />
         <Marquee className="text-xs font-medium opacity-70" options={marqueeOpts}>
           {track?.ar?.map((a, index) => {
             return (

@@ -109,7 +109,7 @@ const FormSelect: FC<FormSelectProps> = ({
                       focus-visible:ring-2 focus-visible:ring-ink/45
                       disabled:pointer-events-none disabled:opacity-40
                     `,
-                    active ? "bg-primary/85 text-primary-text" : "text-ink/74 hover:bg-ink/10"
+                    active ? "bg-primary text-primary-text" : "text-ink/74 hover:bg-ink/10"
                   )}
                   role="option"
                   type="button"

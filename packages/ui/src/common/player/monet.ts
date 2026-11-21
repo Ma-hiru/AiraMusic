@@ -32,13 +32,16 @@ const PALETTE_CSS_NAME: Record<MonetPaletteName, string> = {
   error: "error"
 };
 
-/** 与 palette.css 的主色角色保持一致。 */
+/** 未提供独立主色时，沿用 palette.css 的默认色阶。 */
 export const MONET_ACCENT_TONE: MonetTone = 60;
+const MONET_ACCENT_ROLES = ["fill", "ink", "hover", "active"] as const;
 
 export type TonalColors = Record<MonetTone, string>;
 
 /** 六组色板构成的完整调色盘，可跨窗口传输 */
-export type MonetPalettes = Record<MonetPaletteName, TonalColors>;
+export type MonetPalettes = Record<MonetPaletteName, TonalColors> & {
+  accent?: Record<(typeof MONET_ACCENT_ROLES)[number], string>;
+};
 
 export interface ImageColors {
   /** CSS 背景使用的封面候选色，独立于 UI 色阶。 */
@@ -69,14 +72,18 @@ export function applyMonetPalette(
   palettes: Nullable<MonetPalettes>,
   style = document.documentElement.style
 ) {
+  const setColor = (name: string, color = "") => {
+    if (style.getPropertyValue(name) === color) return;
+    if (color) style.setProperty(name, color);
+    else style.removeProperty(name);
+  };
+
   for (const palette of MONET_PALETTES) {
     for (const tone of MONET_TONES) {
-      const name = `--m3-${PALETTE_CSS_NAME[palette]}-${tone}`;
-      const value = palettes?.[palette]?.[tone] ?? "";
-      if (style.getPropertyValue(name) !== value) {
-        if (value) style.setProperty(name, value);
-        else style.removeProperty(name);
-      }
+      setColor(`--m3-${PALETTE_CSS_NAME[palette]}-${tone}`, palettes?.[palette]?.[tone]);
     }
+  }
+  for (const role of MONET_ACCENT_ROLES) {
+    setColor(`--m3-accent-${role}`, palettes?.accent?.[role]);
   }
 }

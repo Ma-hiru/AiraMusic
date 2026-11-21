@@ -72,6 +72,7 @@ type MessageBus = {
     | PlayerAction
     | "repeat-cycle"
     | "shuffle-toggle"
+    | { type: "repeat"; mode: "all" | "off" | "one" }
     | { type: "seek"; percent: number; trackID: number };
   bus_deliver_track_progress: {
     /** 实际已加载音频的歌曲，避免切歌时与先后到达的 meta 串用。 */

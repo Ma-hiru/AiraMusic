@@ -112,8 +112,10 @@
 /* 在局部容器重新解析语义角色，让该容器的色阶覆盖窗口色阶。 */
 :root,
 .monet-scope {
-  --m3-primary: var(--m3-primary-60);
-  --m3-on-primary: var(--m3-primary-0);
+  --m3-primary: var(--m3-accent-fill, var(--m3-primary-60));
+  --m3-on-primary: var(--m3-accent-ink, var(--m3-primary-0));
+  --m3-primary-hover: var(--m3-accent-hover, var(--m3-primary-70));
+  --m3-primary-active: var(--m3-accent-active, var(--m3-primary-50));
   --m3-primary-container: var(--m3-primary-25);
   --m3-on-primary-container: var(--m3-primary-95);
   --m3-secondary: var(--m3-secondary-70);

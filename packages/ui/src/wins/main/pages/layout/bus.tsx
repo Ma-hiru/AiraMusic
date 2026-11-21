@@ -201,6 +201,10 @@ const Bus: FC<object> = () => {
 
     for (const action of actions) {
       if (typeof action !== "string") {
+        if (action?.type === "repeat") {
+          player.playlist.repeat = action.mode;
+          continue;
+        }
         if (
           action?.type === "seek" &&
           player.current.track?.id === action.trackID &&

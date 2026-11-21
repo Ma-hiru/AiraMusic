@@ -37,7 +37,10 @@ const Background: FC<{ className?: string; onLoaded?: NormalFunc }> = ({ classNa
     setTheme({
       backgroundCover: resolvedBackgroundCover ?? undefined,
       theme: {
-        mainColor: palette?.primary[MONET_ACCENT_TONE] ?? RendererTheme.themeDefault.main,
+        mainColor:
+          palette?.accent?.fill ??
+          palette?.primary[MONET_ACCENT_TONE] ??
+          RendererTheme.themeDefault.main,
         themeColors: colors?.coverColors ?? [],
         palette
       }

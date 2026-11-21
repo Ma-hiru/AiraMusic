@@ -25,7 +25,11 @@ it("clears the received cover colors when the next theme falls back to the defau
     theme: {
       mainColor: "#4193ed",
       themeColors: ["#4193ed"],
-      palette: { primary: { 60: "#4193ed", 70: "#6daeff" }, neutral: { 95: "#f1f0f4" } }
+      palette: {
+        primary: { 60: "#4193ed", 70: "#6daeff" },
+        neutral: { 95: "#f1f0f4" },
+        accent: { fill: "#4193ed", ink: "#000000", hover: "#6daeff", active: "#3284e0" }
+      }
     }
   };
   const { rerender } = renderHook(() => useThemeInjectFromBus());
@@ -33,6 +37,8 @@ it("clears the received cover colors when the next theme falls back to the defau
   expect(style.getPropertyValue("--m3-primary-60")).toBe("#4193ed");
   expect(style.getPropertyValue("--m3-primary-70")).toBe("#6daeff");
   expect(style.getPropertyValue("--m3-neutral-95")).toBe("#f1f0f4");
+  expect(style.getPropertyValue("--m3-accent-fill")).toBe("#4193ed");
+  expect(style.getPropertyValue("--m3-accent-ink")).toBe("#000000");
 
   bus.theme.data = {
     backgroundCover: undefined,
@@ -42,19 +48,28 @@ it("clears the received cover colors when the next theme falls back to the defau
   expect(style.getPropertyValue("--m3-primary-60")).toBe("");
   expect(style.getPropertyValue("--m3-primary-70")).toBe("");
   expect(style.getPropertyValue("--m3-neutral-95")).toBe("");
+  expect(style.getPropertyValue("--m3-accent-fill")).toBe("");
+  expect(style.getPropertyValue("--m3-accent-ink")).toBe("");
 });
 
 it("applies and clears a resource palette without changing the window palette", () => {
   const page = document.createElement("div");
   const windowStyle = document.documentElement.style;
   windowStyle.setProperty("--m3-primary-60", "#4193ed");
-  const resourcePalette = { primary: { 60: "#d4793a" } } as MonetPalettes;
+  windowStyle.setProperty("--m3-accent-fill", "#4193ed");
+  const resourcePalette = {
+    primary: { 60: "#d4793a" },
+    accent: { fill: "#b35c23", ink: "#ffffff", hover: "#b35c23", active: "#9c4f1d" }
+  } as MonetPalettes;
 
   applyMonetPalette(resourcePalette, page.style);
   expect(page.style.getPropertyValue("--m3-primary-60")).toBe("#d4793a");
+  expect(page.style.getPropertyValue("--m3-accent-fill")).toBe("#b35c23");
+  expect(windowStyle.getPropertyValue("--m3-accent-fill")).toBe("#4193ed");
   expect(windowStyle.getPropertyValue("--m3-primary-60")).toBe("#4193ed");
 
   applyMonetPalette(null, page.style);
   expect(page.style.getPropertyValue("--m3-primary-60")).toBe("");
+  expect(page.style.getPropertyValue("--m3-accent-fill")).toBe("");
   expect(windowStyle.getPropertyValue("--m3-primary-60")).toBe("#4193ed");
 });

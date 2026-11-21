@@ -3,6 +3,7 @@ import { MainTray } from "@/lib/tray";
 import { MainAgent } from "@/inner/agent";
 import { MainServices } from "@/services";
 import { MainIPC } from "@mahiru/ipc/main";
+import { MainDockMenu } from "@/lib/dock-menu";
 import { Log, runWithLogContext } from "@/lib/log";
 import { MainWindowPreset } from "@/lib/window-preset";
 import { MainWindowCreator } from "@/lib/window-creator";
@@ -11,6 +12,7 @@ import { MainScreenResolver } from "@/lib/screen-resolver";
 import { MainExitCodeConstants } from "@/constants/exit-code";
 import { MainTaskBarCoverPreview } from "@/lib/taskbar-cover";
 import { ipcInit, broadcastAgentFeatureSettings } from "@/inner/ipc";
+import { MainNowPlayingNotification } from "@/lib/now-playing-notification";
 
 /**
  * @desc 应用实例 \
@@ -178,6 +180,30 @@ export class MainApp {
   }
 
   /**
+   * @desc 注册 Dock 菜单（macOS） \
+   * error: log
+   * */
+  private registerDockMenu() {
+    try {
+      MainDockMenu.register();
+    } catch (err) {
+      Log.warn("dock", "failed to register dock menu", err);
+    }
+  }
+
+  /**
+   * @desc 注册切歌通知（macOS） \
+   * error: log
+   * */
+  private registerNowPlayingNotification() {
+    try {
+      MainNowPlayingNotification.register();
+    } catch (err) {
+      Log.warn("notification", "failed to register now playing notification", err);
+    }
+  }
+
+  /**
    * @desc 注册系统任务栏 \
    * error: log
    * */
@@ -269,6 +295,14 @@ export class MainApp {
           this.registerAppTray(); // 注册托盘
           if (this.isExiting) return;
           Log.info("App tray registered");
+
+          this.registerDockMenu(); // 注册 Dock 菜单（macOS）
+          if (this.isExiting) return;
+          Log.info("App dock menu registered");
+
+          this.registerNowPlayingNotification(); // 注册切歌通知（macOS）
+          if (this.isExiting) return;
+          Log.info("App now playing notification registered");
 
           this.registerTaskBar(); // 注册任务栏
           if (this.isExiting) return;

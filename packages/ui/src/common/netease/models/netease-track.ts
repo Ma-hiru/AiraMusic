@@ -123,6 +123,20 @@ export class NeteaseTrack implements NeteaseTrackModel {
       return result;
     }
 
+    // 已购单曲：播放权限关闭、下载权限保留（实测 pl=0、playMaxbr=0，dl/downloadMaxbr 仍有值）
+    // 官方客户端对这类曲目提示“应版权方要求，该歌曲不支持在线播放，可下载至本地播放”
+    // 目前仅做提示，不支持用下载链接在线播放
+    if (
+      NeteaseUser.isLoggedIn &&
+      this.privilege.pl === 0 &&
+      (this.privilege.playMaxbr ?? 0) === 0 &&
+      (this.privilege.dl ?? 0) > 0
+    ) {
+      result.playable = false;
+      result.reason = "已购单曲目前不支持播放";
+      return result;
+    }
+
     // 0: 免费或无版权 1: VIP 歌曲 4: 购买专辑 8: 非会员可免费播放低音质，会员可播放高音质及下载
     if (
       (this.fee === 1 || this.privilege.fee === 1) && // vip

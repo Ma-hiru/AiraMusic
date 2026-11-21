@@ -85,10 +85,12 @@ export function createTrackInfoModal({ track }: { track: NeteaseTrackRecord }): 
           />
           {/* 歌曲 ID 只对开发者有意义，仅在 dev 构建里挂在封面下方 */}
           {import.meta.env.DEV && (
-            <p className="text-[10px] leading-4 tabular-nums opacity-40">歌曲 ID · {detail.id}</p>
+            <p className="text-[10px] leading-4 tabular-nums opacity-40 select-text">
+              歌曲 ID · {detail.id}
+            </p>
           )}
         </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-3 select-text">
           <div className="min-w-0">
             <p className="truncate text-[15px] font-semibold leading-tight">{detail.name}</p>
             <p className="mt-1 truncate text-[12px] opacity-60">

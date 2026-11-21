@@ -297,6 +297,8 @@ export default class RendererPlayer extends Listenable<
           // 此时还是loading，但是不赋值，因为 connect 内部已经处理，ok下，默认play，自动变化状态机
           return "ok";
         } else {
+          const { reason } = current.detail.playable(userStoreSnapshot()._user);
+          AppToast.show({ type: "error", text: reason || "该歌曲暂不支持播放" });
           this.status = RendererPlayerStatus.error;
           return "error";
         }

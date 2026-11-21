@@ -136,7 +136,7 @@ const LyricLine: FC<LyricLineProps> = ({
             contain-layout
             font-semibold flex flex-wrap
         `,
-          active && "font-medium",
+          active && "font-medium select-text!",
           spring && active && "scale-102",
           crossAlign === "left" && "text-left justify-start",
           crossAlign === "center" && "text-center justify-center",
@@ -209,7 +209,7 @@ const LyricLine: FC<LyricLineProps> = ({
             contain-content
             font-normal text-[60%]
           `,
-            active && "font-medium",
+            active && "font-medium select-text!",
             spring && active && "scale-102",
             crossAlign === "left" && "text-left",
             crossAlign === "center" && "text-center",
@@ -229,7 +229,7 @@ const LyricLine: FC<LyricLineProps> = ({
             contain-content
             font-normal text-[60%]
           `,
-            active && "font-medium",
+            active && "font-medium select-text!",
             spring && active && "scale-102",
             crossAlign === "left" && "text-left",
             crossAlign === "center" && "text-center",

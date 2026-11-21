@@ -12,6 +12,7 @@ interface MarqueeProps {
   children?: ReactNode;
   options?: MarqueeOpts;
   itemClassName?: string;
+  onClick?: NormalFunc;
 }
 
 const DEFAULT_OPTIONS: MarqueeOpts = {
@@ -23,6 +24,7 @@ const DEFAULT_OPTIONS: MarqueeOpts = {
 
 const Marquee: FC<MarqueeProps> = ({
   className,
+  onClick,
   text,
   options,
   children,
@@ -40,7 +42,8 @@ const Marquee: FC<MarqueeProps> = ({
     {
       ref: titleRef,
       className: cx("truncate overflow-hidden max-w-full", className),
-      title: text
+      title: text,
+      onClick
     },
     <span className={cx("inline-block", itemClassName)}>
       {text}

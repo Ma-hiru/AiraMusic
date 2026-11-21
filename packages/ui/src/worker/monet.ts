@@ -1,7 +1,10 @@
 import {
+  Hct,
   Score,
+  argbFromHex,
   argbFromRgb,
   hexFromArgb,
+  TonalPalette,
   QuantizerCelebi,
   themeFromSourceColor
 } from "@material/material-color-utilities";
@@ -14,10 +17,13 @@ import {
   type MonetWorkerResult,
   type MonetWorkerRequest
 } from "@/common/player/monet";
+import Color from "color";
+import init, { extractPalette } from "@mahiru/wasm";
 
 /** 封面下载超时，避免个别请求永久占住 worker 队列 */
 const FETCH_TIMEOUT = 15_000;
 const COVER_COLOR_LIMIT = 16;
+let wasmReady: undefined | ReturnType<typeof init>;
 
 self.addEventListener("message", (event: MessageEvent<MonetWorkerRequest>) => {
   const request = event.data;
@@ -41,8 +47,7 @@ async function extract(request: MonetWorkerRequest) {
 /**
  * 从图片 URL 提取 Material 3 调色盘。
  *
- * 全流程在 worker 内完成：fetch → ImageBitmap 解码 → OffscreenCanvas 缩放 → 取色。
- * 主线程只接收序列化后的纯数据，切歌时不会掉帧。
+ * 由现有 MMCQ WASM 解码封面并提取种子色，再用 Material 3 生成色阶。
  */
 async function extractImageColors(url: string, maxDimension: number): Promise<ImageColors> {
   if (!url.trim()) throw new Error("图片 URL 不能为空");
@@ -53,7 +58,24 @@ async function extractImageColors(url: string, maxDimension: number): Promise<Im
   const response = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT) });
   if (!response.ok) throw new Error(`图片加载失败：HTTP ${response.status}（${url}）`);
 
-  const bitmap = await createImageBitmap(await response.blob());
+  const image = await response.blob();
+  try {
+    await (wasmReady ??= init().catch((error) => {
+      wasmReady = undefined;
+      throw error;
+    }));
+    const bytes = new Uint8Array(await image.arrayBuffer());
+    const coverColors = extractPalette(bytes, maxDimension, maxDimension, COVER_COLOR_LIMIT).map(
+      (color) => Color(color).hex()
+    );
+    const [seed] = coverColors;
+    if (seed) return buildPalette(argbFromHex(seed), coverColors);
+  } catch (error) {
+    console.warn("[Monet] MMCQ 取色失败，回退到浏览器解码", error);
+  }
+
+  // WASM 无法解码或没有取到颜色时，复用已下载的封面走原有路径。
+  const bitmap = await createImageBitmap(image);
   try {
     const { width, height } = fitSize(bitmap.width, bitmap.height, maxDimension);
     const canvas = new OffscreenCanvas(width, height);
@@ -106,13 +128,42 @@ function colorsFromPixels(data: Uint8ClampedArray): ImageColors {
     .slice(0, COVER_COLOR_LIMIT)
     .map(hexFromArgb);
 
+  return buildPalette(seed, coverColors);
+}
+
+function buildPalette(seed: number, coverColors: string[]): ImageColors {
   const { palettes } = themeFromSourceColor(seed);
+  const source = Hct.fromInt(seed);
+  const channels = Color(hexFromArgb(seed)).rgb().array();
+  const isGrayscale = Math.max(...channels) - Math.min(...channels) <= 2;
+  // 让灰度图保持无彩，同时保留浅粉、灰棕等封面的轻微色相。
+  const primary = TonalPalette.fromHueAndChroma(source.hue, isGrayscale ? 0 : source.chroma);
+  const tones = Object.fromEntries(
+    MONET_PALETTES.map((name) => [
+      name,
+      serializePalette(name === "primary" ? primary : palettes[name])
+    ])
+  ) as Record<MonetPaletteName, TonalColors>;
   return {
     coverColors,
-    palettes: Object.fromEntries(
-      MONET_PALETTES.map((name) => [name, serializePalette(palettes[name])])
-    ) as Record<MonetPaletteName, TonalColors>
+    palettes: { ...tones, accent: selectAccent(primary, source.tone) }
   };
+}
+
+function selectAccent(primary: TonalPalette, sourceTone: number) {
+  // 留出和深色玻璃底的明度差，也压住接近纯白的封面色。
+  const tone = Math.min(82, Math.max(46, sourceTone));
+  const fill = hexFromArgb(primary.tone(tone));
+  const base = Color(fill);
+  const black = Color("#000");
+  const white = Color("#fff");
+  const ink = base.contrast(black) >= base.contrast(white) ? black : white;
+
+  const readableColor = (targetTone: number) => {
+    const color = hexFromArgb(primary.tone(targetTone));
+    return Color(color).contrast(ink) >= 4.5 ? color : fill;
+  };
+  return { fill, ink: ink.hex(), hover: readableColor(tone + 6), active: readableColor(tone - 6) };
 }
 
 function serializePalette(palette: { tone(tone: number): number }): TonalColors {
